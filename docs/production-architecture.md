@@ -30,6 +30,7 @@ Create database `annadatha` with these containers:
 | `orders` | `/userId` |
 | `notifications` | `/userId` |
 | `otp-challenges` | `/phone` |
+| `rate-limits` | `/scope` |
 | `public-data` | `/id` |
 
 ## Authentication
@@ -42,7 +43,16 @@ For minimum-cost launch, hosted Static Web Apps authentication remains the produ
 
 Optional farmer phone OTP endpoints are available at `/api/otp/request` and `/api/otp/verify`. Set `OTP_PROVIDER=azure-communication-services`, `OTP_HASH_SECRET`, `ACS_CONNECTION_STRING`, and `ACS_SMS_FROM` only after an Azure Communication Services SMS sender is provisioned. OTP challenges are HMAC-hashed, expire after five minutes, and require Cosmos TTL on `otp-challenges`. Add rate limiting and abuse monitoring at the edge before public OTP traffic.
 
+The API also keeps fixed-window rate-limit counters in Cosmos `rate-limits` with per-item TTL. Production throttles OTP requests by source address and phone number, OTP verification by source address, listing/profile writes by signed-in user, and inquiry/message writes by signed-in user. These backend throttles are a last line of defense; keep External ID protections for sign-in traffic and add edge or WAF policy before high-volume public traffic.
+
 `NOTIFICATION_DELIVERY_MODE=in-app` is the low-budget default. Keep inquiry and reply notifications in the `notifications` container first; add SMS or push fan-out only for events that need off-app delivery and after user consent is collected.
+
+## Launch Monitoring And Recovery
+
+- The linked Function App authentication layer permits requests proxied through Static Web Apps; direct Azure Functions requests should stay unauthorized.
+- Application Insights remains enabled for the Function App.
+- Azure Monitor action group `AnnadathaLaunchAlerts` emails the subscription owner for Function HTTP 5xx spikes, high Function response time, Cosmos 429 throttles, and Cosmos availability drops.
+- Cosmos production backup mode uses the 7-day continuous point-in-time tier after migration completes. Record a restore drill before broad launch; restore creates recovery resources and should be tested without overwriting production data.
 
 ## CI/CD Secrets
 

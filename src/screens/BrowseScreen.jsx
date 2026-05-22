@@ -478,7 +478,7 @@ const PostListingScreen = ({ onBack, onPost, lang, prefill }) => {
     other:      "eg. ",
   };
 
-  const canSubmit = category && title.length >= 6;
+  const canSubmit = category && title.length >= 6 && coordinates;
   const captureLocation = () => {
     if (!navigator.geolocation) {
       setLocationError("Browser location is not available on this device.");

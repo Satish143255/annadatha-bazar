@@ -28,7 +28,7 @@ The app does not replace failed public-data requests with invented prices or new
 
 Production starts from hosted Static Web Apps authentication and never initializes marketplace listing, order, inquiry, or notification seed data. The Function App has HTTP endpoints for profiles, listings, inquiries/messages, and notifications backed by Cosmos DB.
 
-The hosted account entry exposes `/login`, `/signup`, `/forgot-password`, and `/reset-password`. The current Static Web Apps managed Microsoft Entra provider owns the credential pages. Before a public farmer launch that requires email/password signup and self-service password reset, switch those routes to an Entra External ID customer sign-up/sign-in user flow using `docs/customer-authentication.md`. Do not add app-managed password storage to this frontend or Function App.
+The hosted account entry exposes `/login`, `/signup`, `/forgot-password`, and `/reset-password`. Production sends those routes to the Entra External ID customer sign-up/sign-in user flow configured in `docs/customer-authentication.md`. Do not add app-managed password storage to this frontend or Function App.
 
 Scheduled public-data refresh jobs live in the Function App:
 
@@ -45,4 +45,4 @@ The Function App deploy workflow in `.github/workflows/azure-functions.yml` depl
 
 ## Current Architecture Boundary
 
-Listings, profiles with GPS coordinates, inquiry messages, in-app notifications, and optional Azure Communication Services OTP endpoints now have backend endpoints. Production work still needed before public launch: Entra External ID customer user-flow configuration for app-specific sign-up/password reset, SMS sender approval and edge rate limiting if phone OTP is required, Blob Storage upload/SAS flow, moderation and abuse controls, order/payment lifecycle, real weather provider, backups, alerting, and load/security testing.
+Listings, profiles with GPS coordinates, inquiry messages, in-app notifications, and optional Azure Communication Services OTP endpoints now have backend endpoints. Production hardening includes Cosmos-backed write/OTP rate limits, Application Insights, Azure Monitor launch alerts, and continuous-backup migration. Production work still needed before broad public launch: verify External ID password reset with a real customer account, finish SMS sender approval before enabling phone OTP, add Blob Storage upload/SAS flow, moderation workflows, order/payment lifecycle, real weather provider, a restore drill, and load/security testing.

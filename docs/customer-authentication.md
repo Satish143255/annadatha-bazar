@@ -74,4 +74,4 @@ Phone OTP in this repository is a separate phone verification path, not a replac
 - `ACS_CONNECTION_STRING`
 - `ACS_SMS_FROM`
 
-Before public OTP traffic, add edge throttling, SMS abuse monitoring, user consent copy, and a tested resend/attempt limit policy.
+The backend now rate limits OTP requests by network and phone number and OTP verification by network, in addition to challenge attempt limits. Before public OTP traffic, add edge throttling, SMS abuse monitoring, user consent copy, and a tested sender delivery path.

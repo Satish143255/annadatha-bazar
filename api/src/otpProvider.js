@@ -1,5 +1,6 @@
 import { createHmac, randomInt, timingSafeEqual } from "node:crypto";
 import { SmsClient } from "@azure/communication-sms";
+import { assertRateLimit } from "./rateLimit.js";
 import { store } from "./store.js";
 
 const OTP_TTL_SECONDS = 5 * 60;
@@ -41,6 +42,13 @@ const assertAzureSms = () => {
 export const requestOtp = async (rawPhone) => {
   assertAzureSms();
   const phone = normalizedPhone(rawPhone);
+  await assertRateLimit({
+    name: "otp-request-phone",
+    identity: phone,
+    limit: 3,
+    windowSeconds: 10 * 60,
+    message: "Wait before requesting another code for this phone number.",
+  });
   const code = String(randomInt(100000, 1000000));
   const issuedAt = new Date();
   const challenge = {
