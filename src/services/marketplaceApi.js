@@ -12,7 +12,8 @@ const request = async (path, options = {}) => {
   });
   if (response.status === 401) return null;
   if (!response.ok) throw new Error(`Marketplace API returned ${response.status}`);
-  return response.json();
+  const body = await response.text();
+  return body ? JSON.parse(body) : null;
 };
 
 export const DEMO_MODE = import.meta.env.VITE_ENABLE_DEMO_DATA !== "false";
