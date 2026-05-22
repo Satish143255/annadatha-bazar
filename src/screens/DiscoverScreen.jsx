@@ -1,7 +1,7 @@
 ﻿import React from 'react';
-import { AGRI_DATA } from '../data.js';
+import { CROPS } from '../referenceData.js';
 import { Icon } from '../icons/Icon.jsx';
-import { TopBar, Sheet, useT, formatINR } from '../components/index.jsx';
+import { Empty, ImgPh, WeatherIcon, useT, formatINR } from '../components/index.jsx';
 
 // ===== Discover: D1 Prices, D2 Weather, D3 Nearby =====
 
@@ -13,15 +13,15 @@ const PRICE_SERIES_COLORS = [
   "#7A3A14", "#5E7A3A", "#8A4A6F", "#3A6F6A",
 ];
 
-const PricesScreen = ({ user, lang }) => {
+const PricesScreen = ({ user, prices, state, lang }) => {
   const t = useT(lang);
   const [expanded, setExpanded] = useStateD(null);
   const [q, setQ] = useStateD("");
-  const [district, setDistrict] = useStateD(user.district);
+  const [district] = useStateD(user.district);
   const [view, setView] = useStateD("cards");
 
   const userCropMatch = (commodity) => user.crops.some(c => commodity.toLowerCase().includes(c));
-  const all = AGRI_DATA.MANDI_PRICES;
+  const all = prices;
   const sorted = [...all].sort((a, b) => {
     const am = userCropMatch(a.commodity) ? 0 : 1;
     const bm = userCropMatch(b.commodity) ? 0 : 1;
@@ -30,7 +30,7 @@ const PricesScreen = ({ user, lang }) => {
   const filtered = q ? sorted.filter(p => p.commodity.toLowerCase().includes(q.toLowerCase())) : sorted;
 
   // Graph view: which series are visible
-  const initialSel = filtered.slice(0, 5).map(p => p.commodity);
+  const initialSel = filtered.filter(p => p.history?.length > 1).slice(0, 5).map(p => p.commodity);
   const [selected, setSelected] = useStateD(initialSel);
   const toggleSeries = (c) => {
     setSelected(sel => sel.includes(c) ? sel.filter(x => x !== c) : [...sel, c]);
@@ -51,12 +51,23 @@ const PricesScreen = ({ user, lang }) => {
         </button>
       </div>
 
+      {state === "loading" && (
+        <div style={{ padding: "0 16px 12px", fontSize: 12, color: "var(--ink-3)" }}>
+          Loading live AGMARKNET mandi prices from data.gov.in.
+        </div>
+      )}
+      {state === "error" && (
+        <div style={{ padding: "0 16px 12px", fontSize: 12, color: "var(--terra)" }}>
+          Live mandi prices are unavailable right now. The app will not substitute demo rates.
+        </div>
+      )}
+
       {/* Search */}
       <div style={{ padding: "0 16px 10px", position: "relative" }}>
         <input
           className="input"
           style={{ paddingLeft: 44, height: 44 }}
-          placeholder="Search cropâ€¦"
+          placeholder="Search crop..."
           value={q}
           onChange={e => setQ(e.target.value)}
         />
@@ -105,7 +116,7 @@ const PricesScreen = ({ user, lang }) => {
             </div>
             {filtered.map((p, i) => {
               const matched = userCropMatch(p.commodity);
-              const emoji = AGRI_DATA.CROPS.find(c => p.commodity.toLowerCase().includes(c.id))?.emoji || "ðŸŒ¾";
+              const emoji = CROPS.find(c => p.commodity.toLowerCase().includes(c.id))?.emoji || "Crop";
               return (
                 <div
                   key={p.commodity}
@@ -142,9 +153,8 @@ const PricesScreen = ({ user, lang }) => {
                     {p.max.toLocaleString("en-IN")}
                   </div>
                   <div style={{ textAlign: "right" }}>
-                    <span className={`price-pill ${p.trend > 0 ? "up" : "down"}`} style={{ padding: "2px 6px", fontSize: 10 }}>
-                      <Icon name={p.trend > 0 ? "trendUp" : "trendDown"} size={9} />
-                      {p.trend > 0 ? "+" : ""}{p.trend}%
+                    <span className="price-pill up" style={{ padding: "2px 6px", fontSize: 10 }}>
+                      {p.date || "Latest"}
                     </span>
                   </div>
                 </div>
@@ -152,7 +162,7 @@ const PricesScreen = ({ user, lang }) => {
             })}
           </div>
           <div style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 10, textAlign: "center" }}>
-            All prices in â‚¹/Quintal Â· Tap row for details
+            All prices in Rs/quintal - tap a row for details
           </div>
         </div>
       )}
@@ -165,12 +175,18 @@ const PricesScreen = ({ user, lang }) => {
               <div style={{ fontSize: 13, fontWeight: 600 }}>7-day price trend</div>
               <div style={{ fontSize: 10, color: "var(--ink-3)" }}>% change from May 14</div>
             </div>
-            <MultiPriceChart
-              series={filtered.filter(p => selected.includes(p.commodity))}
-              colorOf={seriesColor}
-            />
+            {filtered.some(p => p.history?.length > 1) ? (
+              <MultiPriceChart
+                series={filtered.filter(p => selected.includes(p.commodity) && p.history?.length > 1)}
+                colorOf={seriesColor}
+              />
+            ) : (
+              <div style={{ height: 180, display: "grid", placeItems: "center", background: "var(--surface-2)", borderRadius: 10, fontSize: 12, color: "var(--ink-3)", textAlign: "center", padding: 20 }}>
+                The official daily feed provides current mandi prices. Historical series require a stored backend history.
+              </div>
+            )}
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 14 }}>
-              {filtered.map(p => {
+              {filtered.filter(p => p.history?.length > 1).map(p => {
                 const on = selected.includes(p.commodity);
                 const color = seriesColor(p.commodity);
                 return (
@@ -209,7 +225,7 @@ const PricesScreen = ({ user, lang }) => {
             <h3 style={{ fontSize: 14 }}>Current modal price</h3>
           </div>
           <div style={{ display: "grid", gap: 8 }}>
-            {filtered.filter(p => selected.includes(p.commodity)).map(p => {
+            {filtered.filter(p => selected.includes(p.commodity) && p.history?.length > 1).map(p => {
               const color = seriesColor(p.commodity);
               const pctFromStart = ((p.history[p.history.length - 1] - p.history[0]) / p.history[0]) * 100;
               return (
@@ -242,7 +258,7 @@ const PricesScreen = ({ user, lang }) => {
       {/* ===== CARDS VIEW (original) ===== */}
       {view === "cards" && (
       <div style={{ padding: "0 16px 24px" }}>
-        {filtered.map((p, i) => {
+        {filtered.map((p) => {
           const isOpen = expanded === p.commodity;
           const matched = userCropMatch(p.commodity);
           return (
@@ -262,24 +278,21 @@ const PricesScreen = ({ user, lang }) => {
                   display: "grid", placeItems: "center",
                   fontSize: 22,
                 }}>
-                  {AGRI_DATA.CROPS.find(c => p.commodity.toLowerCase().includes(c.id))?.emoji || "ðŸŒ¾"}
+                  {CROPS.find(c => p.commodity.toLowerCase().includes(c.id))?.emoji || "Crop"}
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 14, fontWeight: 600, display: "flex", gap: 6, alignItems: "center" }}>
                     {p.commodity}
                     {matched && <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 4, background: "var(--primary)", color: "white" }}>Your crop</span>}
                   </div>
-                  <div style={{ fontSize: 11, color: "var(--ink-3)" }}>{p.market} Â· {p.variety}</div>
+                  <div style={{ fontSize: 11, color: "var(--ink-3)" }}>{p.market} - {p.variety}</div>
                 </div>
                 <div style={{ textAlign: "right" }}>
                   <div style={{ fontFamily: "var(--font-display)", fontSize: 22, color: "var(--primary)", lineHeight: 1, letterSpacing: "-0.01em" }}>
                     {formatINR(p.modal)}
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 4, justifyContent: "flex-end", marginTop: 4 }}>
-                    <span className={`price-pill ${p.trend > 0 ? "up" : "down"}`}>
-                      <Icon name={p.trend > 0 ? "trendUp" : "trendDown"} size={10} />
-                      {p.trend > 0 ? "+" : ""}{p.trend}%
-                    </span>
+                    <span className="price-pill up">{p.date || "Latest"}</span>
                   </div>
                 </div>
               </div>
@@ -289,7 +302,13 @@ const PricesScreen = ({ user, lang }) => {
                   {/* Chart */}
                   <div style={{ padding: "14px 0 8px" }}>
                     <div style={{ fontSize: 11, color: "var(--ink-3)", marginBottom: 6 }}>7-day price trend</div>
-                    <PriceChart history={p.history} />
+                    {p.history?.length > 1 ? (
+                      <PriceChart history={p.history} />
+                    ) : (
+                      <div style={{ background: "var(--surface-2)", borderRadius: 10, padding: 12, fontSize: 12, color: "var(--ink-3)" }}>
+                        Current official snapshot only. Historical price tracking is not available yet.
+                      </div>
+                    )}
                   </div>
 
                   {/* Min/Max/Modal table */}
@@ -325,7 +344,7 @@ const PricesScreen = ({ user, lang }) => {
       )}
 
       <div style={{ padding: "0 16px 28px", fontSize: 11, color: "var(--ink-3)", textAlign: "center" }}>
-        <Icon name="refresh" size={12} /> Updated 6 hrs ago Â· Source: Agmarknet
+        <Icon name="refresh" size={12} /> Source: AGMARKNET via data.gov.in
       </div>
     </div>
   );
@@ -442,9 +461,13 @@ const PriceChart = ({ history }) => {
 };
 
 // ---------- D2: Weather ----------
-const WeatherScreen = ({ user, lang }) => {
+const WeatherScreen = ({ weather, lang }) => {
   const t = useT(lang);
-  const w = AGRI_DATA.WEATHER;
+  const w = weather;
+
+  if (!w) {
+    return <Empty icon="sun" title="Weather data unavailable" body="Production weather requires a live weather provider and farmer location." />;
+  }
 
   return (
     <div className="scroll">
@@ -468,10 +491,10 @@ const WeatherScreen = ({ user, lang }) => {
             <WeatherIcon name={w.current.icon} size={140} />
           </div>
           <div style={{ fontFamily: "var(--font-display)", fontSize: 72, lineHeight: 0.9, letterSpacing: "-0.03em" }}>
-            {w.current.temp}Â°
+            {w.current.temp} C
           </div>
           <div style={{ fontSize: 18, marginTop: 4 }}>{w.current.condition}</div>
-          <div style={{ fontSize: 12, opacity: 0.7, marginTop: 2 }}>Feels like {w.current.feelsLike}Â°</div>
+          <div style={{ fontSize: 12, opacity: 0.7, marginTop: 2 }}>Feels like {w.current.feelsLike} C</div>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginTop: 24 }}>
             {[
@@ -505,7 +528,7 @@ const WeatherScreen = ({ user, lang }) => {
             <div style={{ margin: "8px 0" }}>
               <WeatherIcon name={h.icon} size={26} />
             </div>
-            <div style={{ fontSize: 16, fontWeight: 600 }}>{h.temp}Â°</div>
+            <div style={{ fontSize: 16, fontWeight: 600 }}>{h.temp} C</div>
             <div style={{ fontSize: 10, opacity: 0.7, marginTop: 2 }}>
               <Icon name="drop" size={8} /> {h.rain}%
             </div>
@@ -530,7 +553,7 @@ const WeatherScreen = ({ user, lang }) => {
               </div>
               <WeatherIcon name={d.icon} size={22} />
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span style={{ fontSize: 11, color: "var(--ink-3)" }}>{d.low}Â°</span>
+                <span style={{ fontSize: 11, color: "var(--ink-3)" }}>{d.low} C</span>
                 <div style={{ flex: 1, height: 4, background: "var(--surface-2)", borderRadius: 999, position: "relative" }}>
                   <div style={{
                     position: "absolute",
@@ -541,7 +564,7 @@ const WeatherScreen = ({ user, lang }) => {
                     borderRadius: 999,
                   }} />
                 </div>
-                <span style={{ fontSize: 13, fontWeight: 500 }}>{d.high}Â°</span>
+                <span style={{ fontSize: 13, fontWeight: 500 }}>{d.high} C</span>
               </div>
               <div style={{ textAlign: "right", fontSize: 11, color: d.rain >= 50 ? "var(--info)" : "var(--ink-3)" }}>
                 <Icon name="drop" size={10} /> {d.rain}%
@@ -576,18 +599,44 @@ const WeatherScreen = ({ user, lang }) => {
 };
 
 // ---------- D3: Nearby Services ----------
-const NearbyScreen = ({ listings, onOpenListing, initialCategory = "all", lang }) => {
+const NearbyScreen = ({ user, listings, onOpenListing, initialCategory = "all", lang }) => {
   const t = useT(lang);
   const [radius, setRadius] = useStateD(20);
   const [cat, setCat] = useStateD(initialCategory);
   const [view, setView] = useStateD("list");
   const [activePin, setActivePin] = useStateD(null);
+  const profilePoint = pointOf(user);
+  const [mapCenter, setMapCenter] = useStateD(profilePoint);
+  const [locationState, setLocationState] = useStateD(profilePoint ? "profile" : "idle");
 
-  React.useEffect(() => { setCat(initialCategory); }, [initialCategory]);
+  React.useEffect(() => { setCat(initialCategory); }, [initialCategory, setCat]);
+
+  const useCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationState("unsupported");
+      return;
+    }
+
+    setLocationState("loading");
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        setMapCenter({ latitude: coords.latitude, longitude: coords.longitude });
+        setLocationState("device");
+      },
+      () => setLocationState(profilePoint ? "profile" : "denied"),
+      { enableHighAccuracy: false, maximumAge: 300000, timeout: 8000 }
+    );
+  };
+
+  const enrichedListings = listings.map((listing) => {
+    const listingPoint = pointOf(listing);
+    const liveDistance = mapCenter && listingPoint ? kmBetween(mapCenter, listingPoint) : null;
+    return { ...listing, distance: liveDistance == null ? listing.distance : Number(liveDistance.toFixed(1)) };
+  });
 
   const serviceCats = ["service", "equipment", "input", "livestock", "crop", "land"];
-  const services = listings.filter(l => {
-    if (l.distance > radius) return false;
+  const services = enrichedListings.filter(l => {
+    if (Number.isFinite(l.distance) && l.distance > radius) return false;
     if (cat === "veterinary") return l.subcategory === "veterinary";
     return serviceCats.includes(l.category);
   });
@@ -612,7 +661,27 @@ const NearbyScreen = ({ listings, onOpenListing, initialCategory = "all", lang }
       {/* Map view */}
       {view === "map" && (
         <div style={{ padding: "0 16px 12px" }}>
-          <FauxMap pins={filtered} activePin={activePin} setActivePin={setActivePin} onOpenListing={onOpenListing} />
+          <HeatMap
+            pins={filtered}
+            center={mapCenter}
+            radius={radius}
+            activePin={activePin}
+            setActivePin={setActivePin}
+            onOpenListing={onOpenListing}
+          />
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8, fontSize: 11, color: "var(--ink-3)" }}>
+            <button className="chip soft" onClick={useCurrentLocation} style={{ height: 30 }}>
+              <Icon name="pin" size={13} />
+              {locationState === "loading" ? "Locating..." : "Use my location"}
+            </button>
+            <span style={{ flex: 1 }}>
+              {locationState === "device" && "Using this device location."}
+              {locationState === "profile" && "Using the saved profile location."}
+              {locationState === "idle" && "Enable location to map listings by GPS."}
+              {locationState === "denied" && "Location permission is off. Map uses available listing distances."}
+              {locationState === "unsupported" && "Browser location is unavailable."}
+            </span>
+          </div>
         </div>
       )}
 
@@ -674,7 +743,7 @@ const NearbyScreen = ({ listings, onOpenListing, initialCategory = "all", lang }
                 padding: "3px 8px", borderRadius: 999,
                 fontSize: 11, fontWeight: 600
               }}>
-                {l.distance}km
+                {Number.isFinite(l.distance) ? `${l.distance}km` : "Nearby"}
               </div>
             </div>
           </div>
@@ -684,16 +753,63 @@ const NearbyScreen = ({ listings, onOpenListing, initialCategory = "all", lang }
   );
 };
 
-// Faux map
-const FauxMap = ({ pins, activePin, setActivePin, onOpenListing }) => {
-  const catColors = { service: "#B05E2E", equipment: "#1F5A3A", input: "#2E5C8A", crop: "#C8902C", land: "#7A8B5C", livestock: "#8A4A6F", other: "#6B7763" };
-  const positions = pins.slice(0, 12).map((p, i) => {
-    const angle = (i / pins.length) * Math.PI * 2;
-    const dist = (p.distance / 50) * 38 + 8;
-    const x = 50 + Math.cos(angle + i * 0.5) * dist;
-    const y = 50 + Math.sin(angle + i * 0.5) * dist;
-    return { ...p, x, y };
-  });
+const pointOf = (item) => {
+  const latitude = Number(item?.latitude);
+  const longitude = Number(item?.longitude);
+  return Number.isFinite(latitude) && Number.isFinite(longitude) ? { latitude, longitude } : null;
+};
+
+const kmBetween = (a, b) => {
+  const radians = (value) => value * Math.PI / 180;
+  const latDelta = radians(b.latitude - a.latitude);
+  const lngDelta = radians(b.longitude - a.longitude);
+  const latA = radians(a.latitude);
+  const latB = radians(b.latitude);
+  const h = Math.sin(latDelta / 2) ** 2
+    + Math.cos(latA) * Math.cos(latB) * Math.sin(lngDelta / 2) ** 2;
+  return 6371 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+};
+
+const categoryMarker = (listing) => {
+  if (listing.subcategory === "veterinary") return { icon: "vet", color: "#B05E2E", label: "Veterinary" };
+  const categories = {
+    equipment: { icon: "tractor", color: "#1F5A3A", label: "Equipment" },
+    input: { icon: "seed", color: "#2E5C8A", label: "Inputs" },
+    crop: { icon: "wheat", color: "#C8902C", label: "Crops" },
+    land: { icon: "field", color: "#7A8B5C", label: "Land" },
+    livestock: { icon: "leaf", color: "#8A4A6F", label: "Livestock" },
+    service: { icon: "tool", color: "#3A6F6A", label: "Service" },
+  };
+  return categories[listing.category] || { icon: "pin", color: "#6B7763", label: "Listing" };
+};
+
+const positionFor = (pin, index, total, center, radius) => {
+  const point = pointOf(pin);
+  if (center && point) {
+    const latitudeKm = (point.latitude - center.latitude) * 110.574;
+    const longitudeKm = (point.longitude - center.longitude) * 111.320 * Math.cos(center.latitude * Math.PI / 180);
+    const scale = Math.max(radius, 5) * 1.18;
+    return {
+      ...pin,
+      source: "gps",
+      x: Math.min(94, Math.max(6, 50 + (longitudeKm / scale) * 44)),
+      y: Math.min(94, Math.max(6, 50 - (latitudeKm / scale) * 44)),
+    };
+  }
+
+  const angle = ((index + 1) / Math.max(total, 1)) * Math.PI * 2;
+  const km = Number.isFinite(pin.distance) ? pin.distance : radius * 0.55;
+  const fallbackDistance = Math.min(38, (km / Math.max(radius, 10)) * 34 + 7);
+  return {
+    ...pin,
+    source: "distance",
+    x: 50 + Math.cos(angle + index * 0.45) * fallbackDistance,
+    y: 50 + Math.sin(angle + index * 0.45) * fallbackDistance,
+  };
+};
+
+const HeatMap = ({ pins, center, radius, activePin, setActivePin, onOpenListing }) => {
+  const positions = pins.slice(0, 24).map((p, i, subset) => positionFor(p, i, subset.length, center, radius));
   const active = positions.find(p => p.id === activePin);
 
   return (
@@ -741,19 +857,51 @@ const FauxMap = ({ pins, activePin, setActivePin, onOpenListing }) => {
         }} />
       </div>
 
-      {/* Pins */}
+      {/* Heat layer */}
+      {positions.map((p) => {
+        const marker = categoryMarker(p);
+        return (
+          <div
+            key={`${p.id}-heat`}
+            style={{
+              position: "absolute", left: `${p.x}%`, top: `${p.y}%`,
+              width: 72, height: 72, borderRadius: 999,
+              transform: "translate(-50%, -50%)",
+              background: `radial-gradient(circle, ${marker.color}55 0%, ${marker.color}22 42%, transparent 72%)`,
+              filter: "blur(1px)",
+            }}
+          />
+        );
+      })}
+
+      {/* Category icon markers */}
       {positions.map((p) => (
+        (() => {
+          const marker = categoryMarker(p);
+          return (
         <button
           key={p.id}
           onClick={() => setActivePin(p.id)}
+          aria-label={`${marker.label}: ${p.title}`}
           style={{
             position: "absolute", left: `${p.x}%`, top: `${p.y}%`,
-            transform: "translate(-50%, -100%)",
+            transform: "translate(-50%, -50%)",
             zIndex: activePin === p.id ? 5 : 1,
+            width: activePin === p.id ? 34 : 29,
+            height: activePin === p.id ? 34 : 29,
+            borderRadius: 999,
+            background: marker.color,
+            color: "white",
+            border: "2px solid white",
+            display: "grid",
+            placeItems: "center",
+            boxShadow: "0 3px 10px rgba(27,36,24,0.24)",
           }}
         >
-          <Icon name="pin" size={activePin === p.id ? 30 : 24} color={catColors[p.category]} fill={catColors[p.category]} />
+          <Icon name={marker.icon} size={activePin === p.id ? 18 : 15} stroke={2} />
         </button>
+          );
+        })()
       ))}
 
       {/* Mini card popup */}
@@ -767,7 +915,7 @@ const FauxMap = ({ pins, activePin, setActivePin, onOpenListing }) => {
           <ImgPh category={active.category} label={active.photos[0]?.split(" ")[0]} style={{ width: 48, height: 48, borderRadius: 8, fontSize: 9 }} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 13, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{active.title}</div>
-            <div style={{ fontSize: 11, color: "var(--ink-3)" }}>{active.distance}km Â· {formatINR(active.price)}/{active.priceUnit}</div>
+            <div style={{ fontSize: 11, color: "var(--ink-3)" }}>{Number.isFinite(active.distance) ? `${active.distance}km - ` : ""}{formatINR(active.price)}/{active.priceUnit}</div>
           </div>
           <Icon name="chevron" size={16} color="var(--ink-3)" />
         </div>

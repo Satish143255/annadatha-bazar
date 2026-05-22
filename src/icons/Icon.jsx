@@ -1,5 +1,5 @@
 ﻿import React from 'react';
-// ===== Icons â€” minimal Lucide-style SVG set =====
+// ===== Icons: minimal Lucide-style SVG set =====
 const Icon = ({ name, size = 20, color = "currentColor", stroke = 2, fill = "none" }) => {
   const props = {
     width: size, height: size, viewBox: "0 0 24 24",
@@ -50,6 +50,7 @@ const Icon = ({ name, size = 20, color = "currentColor", stroke = 2, fill = "non
     leaf: <><path d="M11 20A7 7 0 0 1 4 13c0-5 5-9 14-9-1 6-3 14-7 16z" /><path d="M11 20s-2-5 0-12" /></>,
     tractor: <><circle cx="7" cy="17" r="3" /><circle cx="17" cy="18" r="2" /><path d="M3 12h4V8h6l3 6h3v4" /></>,
     seed: <><path d="M12 2c4 4 4 12 0 16-4-4-4-12 0-16z" /><path d="M12 22v-6" /></>,
+    vet: <><path d="M12 4v16M4 12h16" /><path d="M7 5c-2 0-3 1.4-3 3.1 0 3.3 4 5.1 8 8.9 4-3.8 8-5.6 8-8.9C20 6.4 19 5 17 5c-1.5 0-2.8.8-5 3-2.2-2.2-3.5-3-5-3z" /></>,
     wheat: <><path d="M12 22V8" /><path d="M12 8c0-4 2-6 5-6 0 3-2 5-5 6z" /><path d="M12 8c0-4-2-6-5-6 0 3 2 5 5 6z" /><path d="M12 14c0-2 2-4 5-4 0 2-2 4-5 4z" /><path d="M12 14c0-2-2-4-5-4 0 2 2 4 5 4z" /></>,
     field: <><path d="M3 17l9-9 9 9" /><path d="M3 17v4h18v-4" /><path d="M9 13v8M15 13v8" /></>,
     tool: <><path d="M14.7 6.3a4 4 0 1 0 5 5L21 13l-1-1-2 2-3-3 2-2-1-1-1.3 1.3z" /><path d="M14.7 6.3L3 18l3 3 11.7-11.7" /></>,

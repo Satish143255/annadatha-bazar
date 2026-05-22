@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="AnnadathaBazar">
+  <rect width="512" height="512" rx="112" fill="#1f5a3a"/>
+  <path d="M385 123c-110 4-195 62-225 164-13 45-12 84-10 102 20 3 63 5 112-13 94-35 148-119 151-229-35 15-71 37-108 68-43 37-75 78-97 116 15-55 51-107 103-151 25-22 50-40 74-57Z" fill="#f4eedf"/>
+  <path d="M140 388c43-79 111-146 205-202" fill="none" stroke="#c8902c" stroke-linecap="round" stroke-width="28"/>
+</svg>

@@ -1,9 +1,8 @@
 ﻿import React from 'react';
-import { AGRI_DATA } from '../data.js';
 import { Icon } from '../icons/Icon.jsx';
-import { TopBar, Sheet, useT, formatINR, AnimatedNumber } from '../components/index.jsx';
+import { Avatar, Button, Empty, ImgPh, formatINR, AnimatedNumber } from '../components/index.jsx';
 
-// ===== Seller Dashboard â€” listings + services + orders =====
+// ===== Seller Dashboard: listings, services, and orders =====
 
 const { useState: useStateD, useMemo: useMemoD } = React;
 
@@ -19,7 +18,7 @@ const stageIdx = (id) => ORDER_STAGES.findIndex(s => s.id === id);
 const stageInfo = (id) => ORDER_STAGES.find(s => s.id === id) || ORDER_STAGES[0];
 
 // ---------- D1: Dashboard ----------
-const DashboardScreen = ({ myListings, orders, onBack, onOpenListing, onPostListing, lang }) => {
+const DashboardScreen = ({ myListings, orders, onBack, onOpenListing, onPostListing }) => {
   const [tab, setTab] = useStateD("overview"); // overview | listings | services | orders
   const [statusFilter, setStatusFilter] = useStateD("active");
   const [orderFilter, setOrderFilter] = useStateD("open"); // open | completed | all
@@ -29,7 +28,7 @@ const DashboardScreen = ({ myListings, orders, onBack, onOpenListing, onPostList
   const listings = myListings.filter(l => l.kind === "listing");
   const services = myListings.filter(l => l.kind === "service");
 
-  // money this month â€” sum of completed/delivered order totals
+  // Money this month sums completed and delivered order totals.
   const monthEarnings = orders
     .filter(o => ["delivered", "completed"].includes(o.stage))
     .reduce((s, o) => s + (o.payment === "Paid in full" ? o.total : (o.advance || 0)), 0);
@@ -84,9 +83,9 @@ const DashboardScreen = ({ myListings, orders, onBack, onOpenListing, onPostList
         <div style={{ display: "flex", gap: 4, overflowX: "auto", scrollbarWidth: "none" }}>
           {[
             { id: "overview", label: "Overview" },
-            { id: "listings", label: `Listings Â· ${listings.length}` },
-            { id: "services", label: `Services Â· ${services.length}` },
-            { id: "orders",   label: `Orders Â· ${orders.length}` },
+            { id: "listings", label: `Listings - ${listings.length}` },
+            { id: "services", label: `Services - ${services.length}` },
+            { id: "orders",   label: `Orders - ${orders.length}` },
           ].map(s => (
             <button
               key={s.id}
@@ -190,7 +189,7 @@ const OverviewTab = ({ stats, listings, services, orders, onJumpTab, onOpenListi
       <div className="dash-section">
         <div className="dash-section-head">
           <h4>Sales pipeline</h4>
-          <button onClick={() => onJumpTab("orders")} className="link">See all orders â†’</button>
+          <button onClick={() => onJumpTab("orders")} className="link">See all orders</button>
         </div>
         <div className="pipeline">
           {pipelineCounts.map(p => (
@@ -245,7 +244,7 @@ const OverviewTab = ({ stats, listings, services, orders, onJumpTab, onOpenListi
       <div className="dash-section">
         <div className="dash-section-head">
           <h4>Recent orders</h4>
-          <button onClick={() => onJumpTab("orders")} className="link">View all â†’</button>
+          <button onClick={() => onJumpTab("orders")} className="link">View all</button>
         </div>
         <div style={{ display: "grid", gap: 8 }}>
           {recentOrders.map(o => <OrderRow key={o.id} order={o} onOpen={onOpenOrder} />)}
@@ -474,7 +473,7 @@ const OrderDetailSheet = ({ order, onClose }) => {
             {formatINR(order.total)}
           </div>
           <div style={{ fontSize: 13, color: "var(--ink-2)", marginTop: 2 }}>
-            {order.qty} Â· {formatINR(order.unitPrice)}/unit
+            {order.qty} - {formatINR(order.unitPrice)}/unit
           </div>
         </div>
 
@@ -539,7 +538,7 @@ const OrderDetailSheet = ({ order, onClose }) => {
             <div style={{ padding: "0 16px 12px" }}>
               <div className="pay-bar"><div style={{ width: `${order.paymentPct}%` }} /></div>
               <div style={{ fontSize: 10.5, color: "var(--ink-3)", marginTop: 4 }}>
-                {order.paymentPct}% received Â· {formatINR(order.advance || 0)} of {formatINR(order.total)}
+                {order.paymentPct}% received - {formatINR(order.advance || 0)} of {formatINR(order.total)}
               </div>
             </div>
           )}

@@ -1,0 +1,7 @@
+node_modules
+node_modules/**
+local.settings.json
+local.settings.*.json
+local.settings.sample.json
+.env*
+*.log

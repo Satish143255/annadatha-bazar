@@ -1,11 +1,12 @@
 ﻿import React from 'react';
-import { AGRI_DATA } from '../data.js';
 import { Icon } from '../icons/Icon.jsx';
-import { TopBar, ListingCard, WeatherIcon, Sheet, useT, formatINR } from '../components/index.jsx';
+import { ListingCard, WeatherIcon, useT, formatINR } from '../components/index.jsx';
 
 // ===== H1 Home Feed =====
 
-const HomeScreen = ({ user, listings, onOpenListing, onNavTab, onOpenNotifs, unreadNotifs, onPostListing, lang }) => {
+const { useState } = React;
+
+const HomeScreen = ({ user, listings, prices, pricesState, weather, updates, updatesState, onOpenListing, onNavTab, onOpenNotifs, unreadNotifs, onPostListing, lang }) => {
   const t = useT(lang);
   const hour = new Date().getHours();
   const greet = hour < 12 ? t("greeting.morning") : hour < 17 ? t("greeting.day") : t("greeting.evening");
@@ -19,25 +20,26 @@ const HomeScreen = ({ user, listings, onOpenListing, onNavTab, onOpenNotifs, unr
   const vetNearby       = listings.filter(l => l.subcategory === "veterinary").sort(byDistance);
   const otherSvcNearby  = listings.filter(l => l.category === "service" && l.subcategory !== "veterinary").sort(byDistance);
 
-  // matching user's crops â€” shown as small "For You" strip
+  // Matching crops appear as a small "For You" strip.
   const matching = listings.filter(l =>
     user.crops.some(c => l.title.toLowerCase().includes(c)) ||
     user.crops.includes(l.category)
   ).slice(0, 4);
 
-  const userPrices = AGRI_DATA.MANDI_PRICES.filter(p =>
+  const availablePrices = prices;
+  const userPrices = availablePrices.filter(p =>
     user.crops.some(c => p.commodity.toLowerCase().includes(c))
   );
-  const displayPrices = (userPrices.length ? userPrices : AGRI_DATA.MANDI_PRICES).slice(0, 6);
+  const displayPrices = (userPrices.length ? userPrices : availablePrices).slice(0, 6);
 
-  const w = AGRI_DATA.WEATHER.current;
+  const w = weather?.current;
 
   return (
     <div className="scroll">
       {/* Brand top bar */}
       <div className="topbar brand">
         <div className="brand-name" style={{ flex: 1 }}>
-          Annadata<span className="leaf">Â·</span>Bazar
+          Annadata<span className="leaf">.</span>Bazar
         </div>
         <button className="icon-btn" onClick={onOpenNotifs} style={{ position: "relative" }}>
           <Icon name="bell" size={22} />
@@ -66,25 +68,38 @@ const HomeScreen = ({ user, listings, onOpenListing, onNavTab, onOpenNotifs, unr
       {/* Weather strip */}
       <div style={{ padding: "0 16px 12px" }}>
         <div className="weather-strip" onClick={() => onNavTab("discover", "weather")}>
+          {!w && (
+            <>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 600 }}>Weather data unavailable</div>
+                <div style={{ fontSize: 11, opacity: 0.8, marginTop: 2 }}>Connect a live provider for production advisories.</div>
+              </div>
+              <Icon name="chevron" size={18} style={{ opacity: 0.5 }} />
+            </>
+          )}
+          {w && (
+          <>
           <div style={{ display: "grid", placeItems: "center", width: 44, height: 44, borderRadius: 999, background: "rgba(255,255,255,0.4)" }}>
             <WeatherIcon name={w.icon} size={26} />
           </div>
           <div style={{ flex: 1 }}>
             <div style={{ fontFamily: "var(--font-display)", fontSize: 26, lineHeight: 1, letterSpacing: "-0.01em" }}>
-              {w.temp}Â°<span style={{ fontSize: 13, fontFamily: "var(--font-sans)", marginLeft: 6, opacity: 0.7 }}>{w.condition}</span>
+              {w.temp} C<span style={{ fontSize: 13, fontFamily: "var(--font-sans)", marginLeft: 6, opacity: 0.7 }}>{w.condition}</span>
             </div>
             <div style={{ fontSize: 11, opacity: 0.8, marginTop: 2 }}>
-              <Icon name="drop" size={10} /> {w.rainProb}% rain Â· <Icon name="wind" size={10} /> {w.wind} km/h
+              <Icon name="drop" size={10} /> {w.rainProb}% rain - <Icon name="wind" size={10} /> {w.wind} km/h
             </div>
           </div>
           <Icon name="chevron" size={18} style={{ opacity: 0.5 }} />
+          </>
+          )}
         </div>
       </div>
 
       {/* Mandi prices strip */}
       <div className="section-head">
         <h3>{t("home.prices")}</h3>
-        <button className="more" onClick={() => onNavTab("discover", "prices")}>See all â†’</button>
+        <button className="more" onClick={() => onNavTab("discover", "prices")}>See all</button>
       </div>
       <div className="hscroll">
         {displayPrices.map(p => (
@@ -97,17 +112,26 @@ const HomeScreen = ({ user, listings, onOpenListing, onNavTab, onOpenNotifs, unr
               {formatINR(p.modal)}<span style={{ fontSize: 11, color: "var(--ink-3)", fontFamily: "var(--font-sans)", marginLeft: 2 }}>/qtl</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8 }}>
-              <span className={`price-pill ${p.trend > 0 ? "up" : "down"}`}>
-                <Icon name={p.trend > 0 ? "trendUp" : "trendDown"} size={10} />
-                {p.trend > 0 ? "+" : ""}{p.trend}%
-              </span>
+              <span className="price-pill up">{p.date || "Latest"}</span>
               <span style={{ fontSize: 10, color: "var(--ink-3)" }}>{p.district}</span>
             </div>
           </div>
         ))}
+        {displayPrices.length === 0 && (
+          <div className="news-card">
+            <div className="news-card-title">
+              {pricesState === "error" ? "Live mandi prices unavailable" : "Live mandi prices loading"}
+            </div>
+            <div className="news-card-body">
+              {pricesState === "error"
+                ? "The app will not substitute demo rates while data.gov.in is unreachable."
+                : "Prices come from AGMARKNET through data.gov.in."}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Post CTAs â€” split: Listing vs. Service */}
+      {/* Split listing and service posting paths. */}
       <div style={{ padding: "8px 16px 16px" }}>
         <div style={{
           display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10,
@@ -118,7 +142,7 @@ const HomeScreen = ({ user, listings, onOpenListing, onNavTab, onOpenNotifs, unr
             </div>
             <div className="post-cta-body">
               <div className="post-cta-title">Post a Listing</div>
-              <div className="post-cta-sub">Crops Â· Seeds Â· Pesticides</div>
+              <div className="post-cta-sub">Crops - Seeds - Pesticides</div>
             </div>
           </button>
           <button onClick={() => onPostListing("service")} className="post-cta secondary">
@@ -127,14 +151,14 @@ const HomeScreen = ({ user, listings, onOpenListing, onNavTab, onOpenNotifs, unr
             </div>
             <div className="post-cta-body">
               <div className="post-cta-title">Post a Service</div>
-              <div className="post-cta-sub">Rentals Â· Vet Â· Spraying</div>
+              <div className="post-cta-sub">Rentals - Vet - Spraying</div>
             </div>
           </button>
         </div>
       </div>
 
       {/* Trending News & Schemes */}
-      <NewsSchemesSection items={AGRI_DATA.NEWS_SCHEMES} />
+      <NewsSchemesSection items={updates} state={updatesState} />
 
       {/* Matching user's crops */}
       {matching.length > 0 && (
@@ -158,7 +182,7 @@ const HomeScreen = ({ user, listings, onOpenListing, onNavTab, onOpenNotifs, unr
 
       <NearbySection
         title="Crops nearby"
-        emoji="ðŸŒ¾"
+        icon="wheat"
         items={cropsNearby}
         radius={50}
         onOpenListing={onOpenListing}
@@ -167,7 +191,7 @@ const HomeScreen = ({ user, listings, onOpenListing, onNavTab, onOpenNotifs, unr
       />
       <NearbySection
         title="Livestock nearby"
-        emoji="ðŸ‚"
+        icon="leaf"
         items={livestockNearby}
         radius={50}
         onOpenListing={onOpenListing}
@@ -176,7 +200,7 @@ const HomeScreen = ({ user, listings, onOpenListing, onNavTab, onOpenNotifs, unr
       />
       <NearbySection
         title="Land & inputs nearby"
-        emoji="ðŸŒ±"
+        icon="seed"
         items={inputLandNearby}
         radius={50}
         onOpenListing={onOpenListing}
@@ -189,7 +213,7 @@ const HomeScreen = ({ user, listings, onOpenListing, onNavTab, onOpenNotifs, unr
 
       <NearbySection
         title="Equipment rentals nearby"
-        emoji="ðŸšœ"
+        icon="tractor"
         items={equipmentNearby}
         radius={50}
         onOpenListing={onOpenListing}
@@ -198,7 +222,7 @@ const HomeScreen = ({ user, listings, onOpenListing, onNavTab, onOpenNotifs, unr
       />
       <NearbySection
         title="Veterinary nearby"
-        emoji="ðŸ©º"
+        icon="vet"
         items={vetNearby}
         radius={50}
         onOpenListing={onOpenListing}
@@ -207,7 +231,7 @@ const HomeScreen = ({ user, listings, onOpenListing, onNavTab, onOpenNotifs, unr
       />
       <NearbySection
         title="Other services nearby"
-        emoji="ðŸ› ï¸"
+        icon="tool"
         items={otherSvcNearby}
         radius={50}
         onOpenListing={onOpenListing}
@@ -237,7 +261,7 @@ const GroupHeader = ({ title, subtitle }) => (
 );
 
 // ---------- Reusable nearby section ----------
-const NearbySection = ({ title, emoji, items, radius, onOpenListing, onSeeAll, onOpenMap }) => {
+const NearbySection = ({ title, icon, items, radius, onOpenListing, onSeeAll, onOpenMap }) => {
   const filtered = items.filter(l => l.distance <= radius);
   const display = filtered.slice(0, 6);
   const closest = filtered[0];
@@ -248,12 +272,14 @@ const NearbySection = ({ title, emoji, items, radius, onOpenListing, onSeeAll, o
         display: "flex", alignItems: "center", gap: 8,
         padding: "0 16px 8px",
       }}>
-        <span style={{ fontSize: 18, lineHeight: 1 }}>{emoji}</span>
+        <span style={{ display: "grid", placeItems: "center", width: 24, height: 24, color: "var(--primary)" }}>
+          <Icon name={icon} size={18} />
+        </span>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 15, fontWeight: 600, lineHeight: 1.1 }}>{title}</div>
           <div style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 2 }}>
             {filtered.length > 0
-              ? `${filtered.length} within ${radius}km${closest ? ` Â· closest ${closest.distance}km` : ""}`
+              ? `${filtered.length} within ${radius}km${closest ? ` - closest ${closest.distance}km` : ""}`
               : `None within ${radius}km`}
           </div>
         </div>
@@ -279,7 +305,7 @@ const NearbySection = ({ title, emoji, items, radius, onOpenListing, onSeeAll, o
                 padding: "6px 4px", cursor: "pointer",
               }}
             >
-              See all â†’
+              See all
             </button>
           </>
         )}
@@ -353,7 +379,7 @@ const NearbySection = ({ title, emoji, items, radius, onOpenListing, onSeeAll, o
 };
 
 // ---------- Trending News & Schemes ----------
-const NewsSchemesSection = ({ items }) => {
+const NewsSchemesSection = ({ items, state }) => {
   const [filter, setFilter] = useState("all"); // all | scheme | news
   const [openItem, setOpenItem] = useState(null);
   const shown = items.filter(x => filter === "all" || x.kind === filter);
@@ -369,6 +395,18 @@ const NewsSchemesSection = ({ items }) => {
         </div>
       </div>
       <div className="hscroll">
+        {state === "loading" && (
+          <div className="news-card">
+            <div className="news-card-title">Loading official agriculture updates</div>
+            <div className="news-card-body">Fetching live government sources.</div>
+          </div>
+        )}
+        {state === "error" && items.length === 0 && (
+          <div className="news-card">
+            <div className="news-card-title">Official updates unavailable</div>
+            <div className="news-card-body">The live source could not be reached. Retry after connectivity is restored.</div>
+          </div>
+        )}
         {shown.map(item => (
           <div
             key={item.id}
@@ -423,11 +461,14 @@ const NewsSchemesSection = ({ items }) => {
               )}
             </div>
             <div style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 14 }}>
-              Source: {openItem.source} Â· {openItem.date}
+              Source: {openItem.source} - {openItem.date}
             </div>
             <button
               className="news-cta"
-              onClick={() => setOpenItem(null)}
+              onClick={() => {
+                if (openItem.link) window.open(openItem.link, "_blank", "noopener,noreferrer");
+                setOpenItem(null);
+              }}
               style={{ background: openItem.accent }}
             >
               {openItem.kind === "scheme" ? "View details" : "Read more"}
