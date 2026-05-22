@@ -1,23 +1,44 @@
 {
+  "auth": {
+    "identityProviders": {
+      "customOpenIdConnectProviders": {
+        "entraExternalId": {
+          "registration": {
+            "clientIdSettingName": "ENTRA_EXTERNAL_ID_CLIENT_ID",
+            "clientCredential": {
+              "clientSecretSettingName": "ENTRA_EXTERNAL_ID_CLIENT_SECRET"
+            },
+            "openIdConnectConfiguration": {
+              "wellKnownOpenIdConfiguration": "https://annadathabazarcustomers.ciamlogin.com/024f08ea-3967-40a2-a443-2147fcf8d78b/v2.0/.well-known/openid-configuration"
+            }
+          },
+          "login": {
+            "nameClaimType": "name",
+            "scopes": ["openid", "profile", "email"]
+          }
+        }
+      }
+    }
+  },
   "routes": [
     {
       "route": "/login",
-      "redirect": "/.auth/login/aad",
+      "redirect": "/.auth/login/entraExternalId",
       "statusCode": 302
     },
     {
       "route": "/signup",
-      "redirect": "/.auth/login/aad",
+      "redirect": "/.auth/login/entraExternalId",
       "statusCode": 302
     },
     {
       "route": "/forgot-password",
-      "redirect": "/.auth/login/aad",
+      "redirect": "/.auth/login/entraExternalId",
       "statusCode": 302
     },
     {
       "route": "/reset-password",
-      "redirect": "/.auth/login/aad",
+      "redirect": "/.auth/login/entraExternalId",
       "statusCode": 302
     },
     {
