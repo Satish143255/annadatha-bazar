@@ -23,22 +23,22 @@
   "routes": [
     {
       "route": "/login",
-      "redirect": "/.auth/login/entraExternalId",
+      "redirect": "/.auth/login/entraExternalId?post_login_redirect_uri=https://jolly-sand-0207a2700.7.azurestaticapps.net/",
       "statusCode": 302
     },
     {
       "route": "/signup",
-      "redirect": "/.auth/login/entraExternalId",
+      "redirect": "/.auth/login/entraExternalId?post_login_redirect_uri=https://jolly-sand-0207a2700.7.azurestaticapps.net/",
       "statusCode": 302
     },
     {
       "route": "/forgot-password",
-      "redirect": "/.auth/login/entraExternalId",
+      "redirect": "/.auth/login/entraExternalId?post_login_redirect_uri=https://jolly-sand-0207a2700.7.azurestaticapps.net/",
       "statusCode": 302
     },
     {
       "route": "/reset-password",
-      "redirect": "/.auth/login/entraExternalId",
+      "redirect": "/.auth/login/entraExternalId?post_login_redirect_uri=https://jolly-sand-0207a2700.7.azurestaticapps.net/",
       "statusCode": 302
     },
     {
