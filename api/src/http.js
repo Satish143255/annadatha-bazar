@@ -1,12 +1,15 @@
 export const ok = (jsonBody, status = 200) => ({ status, jsonBody });
 
-export const fail = (error, fallback = "Request failed.") => ({
-  status: error.status || 500,
-  jsonBody: {
-    error: error.publicMessage || fallback,
-    detail: process.env.NODE_ENV === "production" ? undefined : error.message,
-  },
-});
+export const fail = (error, fallback = "Request failed.") => {
+  if (!error.status || error.status >= 500) console.error(error);
+  return {
+    status: error.status || 500,
+    jsonBody: {
+      error: error.publicMessage || fallback,
+      detail: process.env.NODE_ENV === "development" ? error.message : undefined,
+    },
+  };
+};
 
 export const json = async (request) => {
   try {

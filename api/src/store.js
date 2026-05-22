@@ -12,6 +12,7 @@ const names = {
   orders: "orders",
   notifications: "notifications",
   otpChallenges: "otp-challenges",
+  rateLimits: "rate-limits",
   publicData: "public-data",
 };
 
@@ -42,4 +43,9 @@ const patch = async (name, id, partitionKey, operations) => {
   return resource;
 };
 
-export const store = { query, upsert, read, patch };
+const create = async (name, doc) => {
+  const { resource } = await requireContainer(name).items.create(doc);
+  return resource;
+};
+
+export const store = { query, upsert, read, patch, create };
