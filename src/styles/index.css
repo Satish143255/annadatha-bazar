@@ -101,67 +101,35 @@ body {
 button { font-family: inherit; cursor: pointer; border: 0; background: none; padding: 0; color: inherit; }
 input, textarea, select { font-family: inherit; color: inherit; }
 
-/* ============== Phone frame stage ============== */
+/* ============== App stage ============== */
 #stage {
   min-height: 100vh;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  gap: 32px;
+  align-items: stretch;
+  justify-content: stretch;
 }
 
 .phone-frame {
-  width: var(--phone-w);
-  height: var(--phone-h);
-  background: #0B0F0A;
-  border-radius: 52px;
-  padding: 12px;
-  box-shadow:
-    0 0 0 1px rgba(255,255,255,0.05) inset,
-    0 0 0 8px #232A20,
-    0 0 0 9px #3D4836,
-    0 50px 100px -30px rgba(11, 15, 10, 0.55),
-    0 30px 60px -20px rgba(11, 15, 10, 0.4);
+  width: 100%;
+  min-height: 100vh;
+  background: var(--bg);
   position: relative;
-  flex-shrink: 0;
 }
 
 .phone-screen {
   width: 100%;
-  height: 100%;
+  min-height: 100vh;
   background: var(--bg);
-  border-radius: 40px;
   overflow: hidden;
   position: relative;
   display: flex;
   flex-direction: column;
 }
 
-.phone-notch {
-  position: absolute;
-  top: 18px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 32%;
-  height: 28px;
-  background: #0B0F0A;
-  border-radius: 999px;
-  z-index: 60;
-}
-
 @media (max-width: 768px) {
-  #stage { padding: 0; }
   .phone-frame {
     width: 100vw;
-    height: 100vh;
-    padding: 0;
-    border-radius: 0;
-    box-shadow: none;
-    background: var(--bg);
   }
-  .phone-screen { border-radius: 0; }
-  .phone-notch { display: none; }
 }
 
 /* ============== Status bar ============== */

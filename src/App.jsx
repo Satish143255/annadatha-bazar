@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { AGRI_DATA } from './data.js';
 import { Icon } from './icons/Icon.jsx';
-import { T, StatusBar, Toast } from './components/index.jsx';
+import { T, Toast } from './components/index.jsx';
 import { TweaksPanel, TweakSection, TweakRadio, TweakColor, TweakSelect } from './tweaks/TweaksPanel.jsx';
 import { HostedAccountScreen, SignupScreen, OtpScreen, ProfileSetupScreen } from './screens/AuthScreens.jsx';
 import { HomeScreen } from './screens/HomeScreen.jsx';
@@ -398,9 +398,7 @@ function App() {
 const Stage = ({ children, screenAttrs }) => (
   <div id="stage">
     <div className="phone-frame">
-      <div className="phone-notch" />
       <div className="phone-screen" {...screenAttrs}>
-        <StatusBar />
         {children}
       </div>
     </div>
