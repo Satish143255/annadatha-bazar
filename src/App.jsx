@@ -108,10 +108,17 @@ function App() {
           setSession({ stage: "hosted-auth", phone: "" });
           return;
         }
-        const data = await loadMarketplace();
+        const signedInUser = { name: identity.userDetails || "Farmer", crops: [], village: "", district: "", state: "" };
+        setUser(signedInUser);
+        let data;
+        try {
+          data = await loadMarketplace();
+        } catch {
+          setSession({ stage: "profile-setup", phone: "" });
+          return;
+        }
         if (!current) return;
         if (!data.profile) {
-          setUser({ name: identity.userDetails || "Farmer", crops: [], village: "", district: "", state: "" });
           setSession({ stage: "profile-setup", phone: "" });
           return;
         }
@@ -183,7 +190,20 @@ function App() {
 
   // Navigation helpers
   const openListing  = (l) => { const listing = typeof l === "string" ? [...listings, ...myListings].find(x => x.id === l) : l; if (listing) setModal({ kind: "detail", listing }); };
-  const openPost     = (prefill) => { if (typeof prefill === "string") prefill = { mode: prefill }; setModal({ kind: "post", prefill }); };
+  const openPost     = (prefill) => {
+    if (typeof prefill === "string") prefill = { mode: prefill };
+    setModal({
+      kind: "post",
+      prefill: {
+        village: user?.village,
+        district: user?.district,
+        state: user?.state,
+        latitude: user?.latitude,
+        longitude: user?.longitude,
+        ...prefill,
+      },
+    });
+  };
   const openNotifs   = () => setModal({ kind: "notifications" });
   const openSettings = () => setModal({ kind: "settings" });
   const openInquiries  = (which = "received", inquiryId = null) => setModal({ kind: "inquiries", which, inquiryId });

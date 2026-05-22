@@ -31,6 +31,8 @@ const HomeScreen = ({ user, listings, prices, pricesState, weather, updates, upd
     user.crops.some(c => p.commodity.toLowerCase().includes(c))
   );
   const displayPrices = (userPrices.length ? userPrices : availablePrices).slice(0, 6);
+  const locationLabel = [user.village, user.district].filter(Boolean).join(", ")
+    || (user.latitude != null && user.longitude != null ? "GPS location saved" : "Add your location");
 
   const w = weather?.current;
 
@@ -61,7 +63,7 @@ const HomeScreen = ({ user, listings, prices, pricesState, weather, updates, upd
         <div style={{ fontSize: 14, color: "var(--ink-3)" }}>{greet}, {user.name.split(" ")[0]}</div>
         <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, color: "var(--ink-2)", marginTop: 2 }}>
           <Icon name="pin" size={12} />
-          <span>{user.village}, {user.district}</span>
+          <span>{locationLabel}</span>
         </div>
       </div>
 

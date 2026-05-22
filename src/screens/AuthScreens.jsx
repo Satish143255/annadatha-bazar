@@ -310,15 +310,30 @@ const ProfileSetupScreen = ({ onFinish, lang }) => {
   const t = useT(lang);
   const [name, setName] = useStateA("");
   const [village, setVillage] = useStateA("");
-  const [state, setState] = useStateA("Telangana");
-  const [district, setDistrict] = useStateA("Warangal");
+  const [state, setState] = useStateA("");
+  const [district, setDistrict] = useStateA("");
   const [crops, setCrops] = useStateA([]);
   const [gpsing, setGpsing] = useStateA(false);
   const [coordinates, setCoordinates] = useStateA(null);
   const [locationError, setLocationError] = useStateA("");
+  const [saving, setSaving] = useStateA(false);
+  const [submitError, setSubmitError] = useStateA("");
 
   const districts = STATES_DISTRICTS[state] || [];
   const toggleCrop = (id) => setCrops(c => c.includes(id) ? c.filter(x => x !== id) : [...c, id]);
+  const gpsLabel = coordinates
+    ? `${coordinates.latitude.toFixed(6)}, ${coordinates.longitude.toFixed(6)}`
+    : "";
+  const finish = async (data) => {
+    setSaving(true);
+    setSubmitError("");
+    try {
+      await onFinish(data);
+    } catch {
+      setSubmitError("Profile could not be saved. Check your connection and try again.");
+      setSaving(false);
+    }
+  };
 
   const useGPS = () => {
     setGpsing(true);
@@ -398,20 +413,26 @@ const ProfileSetupScreen = ({ onFinish, lang }) => {
             </button>
           </div>
           {gpsing && <div style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 6 }}>Detecting your location...</div>}
-          {coordinates && <div style={{ fontSize: 11, color: "var(--primary)", marginTop: 6 }}>Location captured for nearby maps.</div>}
+          {coordinates && (
+            <div style={{ fontSize: 11, color: "var(--primary)", marginTop: 6 }}>
+              GPS captured: {gpsLabel}. Enter your village and select district for display.
+            </div>
+          )}
           {locationError && <div style={{ fontSize: 11, color: "var(--terra)", marginTop: 6 }}>{locationError}</div>}
         </div>
 
         <div className="field" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
           <div>
             <label className="field-label">{t("auth.profile.state")}</label>
-            <select className="input" value={state} onChange={e => { setState(e.target.value); setDistrict(STATES_DISTRICTS[e.target.value][0]); }}>
+            <select className="input" value={state} onChange={e => { setState(e.target.value); setDistrict(STATES_DISTRICTS[e.target.value]?.[0] || ""); }}>
+              <option value="">Select state</option>
               {Object.keys(STATES_DISTRICTS).map(s => <option key={s}>{s}</option>)}
             </select>
           </div>
           <div>
             <label className="field-label">{t("auth.profile.district")}</label>
             <select className="input" value={district} onChange={e => setDistrict(e.target.value)}>
+              <option value="">Select district</option>
               {districts.map(d => <option key={d}>{d}</option>)}
             </select>
           </div>
@@ -437,12 +458,13 @@ const ProfileSetupScreen = ({ onFinish, lang }) => {
       </div>
 
       <div style={{ padding: "16px 20px 0", display: "flex", flexDirection: "column", gap: 10 }}>
-        <Button full disabled={!name || name.length < 2} onClick={() => onFinish({ name, village, district, state, crops, ...coordinates })}>
-          {t("auth.profile.finish")}
+        <Button full disabled={saving || !name || name.length < 2 || !village || !state || !district} onClick={() => finish({ name, village, district, state, crops, ...coordinates })}>
+          {saving ? "Saving..." : t("auth.profile.finish")}
         </Button>
-        <button onClick={() => onFinish({ name: name || "You", village: "Hanamkonda", district: "Warangal", state: "Telangana", crops: ["rice"] })} style={{ padding: 12, fontSize: 13, color: "var(--ink-3)" }}>
+        <button disabled={saving} onClick={() => finish({ name: name || "Farmer", village, district, state, crops, ...coordinates })} style={{ padding: 12, fontSize: 13, color: "var(--ink-3)" }}>
           {t("auth.profile.skip")}
         </button>
+        {submitError && <div style={{ fontSize: 12, color: "var(--danger)", textAlign: "center" }}>{submitError}</div>}
       </div>
     </div>
   );

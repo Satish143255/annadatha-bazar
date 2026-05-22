@@ -439,9 +439,9 @@ const PostListingScreen = ({ onBack, onPost, lang, prefill }) => {
   const [quantity, setQuantity] = useStateB(prefill?.quantity || "");
   const [photos, setPhotos] = useStateB(prefill?.photos || []);
   const fileInputRef = useRefB(null);
-  const [village, setVillage] = useStateB(prefill?.village || "Hanamkonda");
-  const [district] = useStateB(prefill?.district || "Warangal");
-  const [stateVal] = useStateB(prefill?.state || "Telangana");
+  const [village, setVillage] = useStateB(prefill?.village || "");
+  const [district] = useStateB(prefill?.district || "");
+  const [stateVal] = useStateB(prefill?.state || "");
   const [coordinates, setCoordinates] = useStateB(
     prefill?.latitude != null && prefill?.longitude != null
       ? { latitude: prefill.latitude, longitude: prefill.longitude }
