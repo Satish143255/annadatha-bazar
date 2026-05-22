@@ -1,9 +1,9 @@
 ﻿import React from 'react';
 import { Icon } from '../icons/Icon.jsx';
 
-// ===== AnnadathaBazar â€” Shared Components =====
+// ===== AnnadathaBazar Shared Components =====
 
-const { useState, useEffect, useRef, useMemo } = React;
+const { useState, useEffect, useRef } = React;
 
 // ---------- i18n ----------
 const T = {
@@ -16,10 +16,10 @@ const T = {
     "home.weather": "Weather", "home.prices": "Mandi Prices", "home.actions.post": "Post Listing",
     "home.actions.browse": "Browse", "home.actions.nearby": "Nearby", "home.actions.prices": "Prices",
     "home.near": "Near You", "home.matching": "Matching Your Crops", "home.recent": "All Recent",
-    "browse.title": "Browse", "browse.search": "Search crops, services, equipmentâ€¦",
+    "browse.title": "Browse", "browse.search": "Search crops, services, equipment...",
     "browse.cat.all": "All", "browse.results": "listings",
-    "sort.nearest": "Nearest", "sort.newest": "Newest", "sort.priceAsc": "Price â†‘", "sort.priceDesc": "Price â†“",
-    "post.title": "Post a Listing", "post.submit": "Post Listing", "post.draft": "Saving draftâ€¦",
+    "sort.nearest": "Nearest", "sort.newest": "Newest", "sort.priceAsc": "Price up", "sort.priceDesc": "Price down",
+    "post.title": "Post a Listing", "post.submit": "Post Listing", "post.draft": "Saving draft...",
     "listing.message": "Message Seller", "listing.whatsapp": "WhatsApp", "listing.show": "Show Contact",
     "listing.similar": "Similar Listings", "listing.posted": "Posted",
     "prices.title": "Mandi Prices",
@@ -48,60 +48,22 @@ const T = {
     "auth.profile.finish": "Continue",
     "auth.profile.skip": "Fill later",
   },
-  hi: {
-    "app.name": "à¤…à¤¨à¥à¤¨à¤¦à¤¾à¤¤à¤¾ à¤¬à¤¾à¤œà¤¼à¤¾à¤°",
-    "greeting.morning": "à¤¸à¥à¤ªà¥à¤°à¤­à¤¾à¤¤",
-    "greeting.day": "à¤¨à¤®à¤¸à¥à¤¤à¥‡",
-    "greeting.evening": "à¤¶à¥à¤­ à¤¸à¤‚à¤§à¥à¤¯à¤¾",
-    "tab.home": "à¤¹à¥‹à¤®", "tab.browse": "à¤–à¥‹à¤œà¥‡à¤‚", "tab.discover": "à¤œà¤¾à¤¨à¤•à¤¾à¤°à¥€", "tab.profile": "à¤ªà¥à¤°à¥‹à¤«à¤¼à¤¾à¤‡à¤²",
-    "home.weather": "à¤®à¥Œà¤¸à¤®", "home.prices": "à¤®à¤‚à¤¡à¥€ à¤­à¤¾à¤µ", "home.actions.post": "à¤²à¤¿à¤¸à¥à¤Ÿà¤¿à¤‚à¤— à¤¡à¤¾à¤²à¥‡à¤‚",
-    "home.actions.browse": "à¤–à¥‹à¤œà¥‡à¤‚", "home.actions.nearby": "à¤†à¤¸-à¤ªà¤¾à¤¸", "home.actions.prices": "à¤­à¤¾à¤µ",
-    "home.near": "à¤†à¤ªà¤•à¥‡ à¤ªà¤¾à¤¸", "home.matching": "à¤†à¤ªà¤•à¥€ à¤«à¤¼à¤¸à¤²à¥‡à¤‚", "home.recent": "à¤¨à¤ˆ à¤²à¤¿à¤¸à¥à¤Ÿà¤¿à¤‚à¤—",
-    "browse.title": "à¤–à¥‹à¤œà¥‡à¤‚", "browse.search": "à¤«à¤¼à¤¸à¤², à¤¸à¥‡à¤µà¤¾, à¤‰à¤ªà¤•à¤°à¤£ à¤–à¥‹à¤œà¥‡à¤‚â€¦",
-    "browse.cat.all": "à¤¸à¤­à¥€", "browse.results": "à¤²à¤¿à¤¸à¥à¤Ÿà¤¿à¤‚à¤—",
-    "sort.nearest": "à¤¨à¤œà¤¼à¤¦à¥€à¤•à¥€", "sort.newest": "à¤¨à¤ˆ", "sort.priceAsc": "à¤­à¤¾à¤µ â†‘", "sort.priceDesc": "à¤­à¤¾à¤µ â†“",
-    "post.title": "à¤¨à¤ˆ à¤²à¤¿à¤¸à¥à¤Ÿà¤¿à¤‚à¤—", "post.submit": "à¤ªà¥‹à¤¸à¥à¤Ÿ à¤•à¤°à¥‡à¤‚", "post.draft": "à¤¡à¥à¤°à¤¾à¤«à¥à¤Ÿ à¤¸à¤¹à¥‡à¤œà¤¾â€¦",
-    "listing.message": "à¤¸à¤‚à¤¦à¥‡à¤¶ à¤­à¥‡à¤œà¥‡à¤‚", "listing.whatsapp": "à¤µà¥à¤¹à¤¾à¤Ÿà¥à¤¸à¤à¤ª", "listing.show": "à¤¨à¤‚à¤¬à¤° à¤¦à¥‡à¤–à¥‡à¤‚",
-    "listing.similar": "à¤à¤¸à¥€ à¤¹à¥€ à¤²à¤¿à¤¸à¥à¤Ÿà¤¿à¤‚à¤—", "listing.posted": "à¤ªà¥‹à¤¸à¥à¤Ÿ à¤•à¤¿à¤¯à¤¾",
-    "prices.title": "à¤®à¤‚à¤¡à¥€ à¤­à¤¾à¤µ",
-    "weather.title": "à¤®à¥Œà¤¸à¤®",
-    "nearby.title": "à¤†à¤¸-à¤ªà¤¾à¤¸ à¤¸à¥‡à¤µà¤¾à¤à¤",
-    "profile.title": "à¤ªà¥à¤°à¥‹à¤«à¤¼à¤¾à¤‡à¤²", "profile.edit": "à¤¬à¤¦à¤²à¥‡à¤‚", "profile.share": "à¤¶à¥‡à¤¯à¤° à¤•à¤°à¥‡à¤‚",
-    "profile.logout": "à¤²à¥‰à¤— à¤†à¤‰à¤Ÿ",
-    "myListings.title": "à¤®à¥‡à¤°à¥€ à¤²à¤¿à¤¸à¥à¤Ÿà¤¿à¤‚à¤—", "inquiries.title": "à¤ªà¥‚à¤›à¤¤à¤¾à¤›",
-    "notifs.title": "à¤¸à¥‚à¤šà¤¨à¤¾à¤à¤", "notifs.markAll": "à¤¸à¤­à¥€ à¤ªà¤¢à¤¼à¥‡", "notifs.empty": "à¤¸à¤¬ à¤¦à¥‡à¤– à¤²à¤¿à¤¯à¤¾!",
-    "settings.title": "à¤¸à¥‡à¤Ÿà¤¿à¤‚à¤—à¥à¤¸", "help.title": "à¤®à¤¦à¤¦",
-    "common.back": "à¤µà¤¾à¤ªà¤¸", "common.next": "à¤†à¤—à¥‡", "common.cancel": "à¤°à¤¦à¥à¤¦",
-    "common.save": "à¤¸à¤¹à¥‡à¤œà¥‡à¤‚", "common.send": "à¤­à¥‡à¤œà¥‡à¤‚", "common.km": "à¤•à¤¿à¤®à¥€", "common.away": "à¤¦à¥‚à¤°",
-    "auth.signup": "à¤¶à¥à¤°à¥‚ à¤•à¤°à¥‡à¤‚", "auth.phone": "à¤®à¥‹à¤¬à¤¾à¤‡à¤² à¤¨à¤‚à¤¬à¤°",
-    "auth.terms": "à¤®à¥ˆà¤‚ à¤¨à¤¿à¤¯à¤®à¥‹à¤‚ à¤¸à¥‡ à¤¸à¤¹à¤®à¤¤ à¤¹à¥‚à¤",
-    "auth.sendOtp": "OTP à¤­à¥‡à¤œà¥‡à¤‚",
-    "auth.otp.title": "à¤¨à¤‚à¤¬à¤° à¤¸à¤¤à¥à¤¯à¤¾à¤ªà¤¿à¤¤ à¤•à¤°à¥‡à¤‚",
-    "auth.otp.sub": "6-à¤…à¤‚à¤•à¥€à¤¯ à¤•à¥‹à¤¡ à¤­à¥‡à¤œà¤¾ à¤—à¤¯à¤¾",
-    "auth.otp.resend": "à¤¨à¤¯à¤¾ à¤•à¥‹à¤¡", "auth.otp.voice": "à¤•à¥‰à¤² à¤ªà¤° à¤•à¥‹à¤¡ à¤ªà¤¾à¤à¤",
-    "auth.profile.title": "à¤…à¤ªà¤¨à¥‡ à¤¬à¤¾à¤°à¥‡ à¤®à¥‡à¤‚ à¤¬à¤¤à¤¾à¤à¤",
-    "auth.profile.name": "à¤†à¤ªà¤•à¤¾ à¤¨à¤¾à¤®",
-    "auth.profile.village": "à¤—à¤¾à¤à¤µ / à¤¶à¤¹à¤°",
-    "auth.profile.district": "à¤œà¤¼à¤¿à¤²à¤¾",
-    "auth.profile.state": "à¤°à¤¾à¤œà¥à¤¯",
-    "auth.profile.crops": "à¤†à¤ª à¤•à¥à¤¯à¤¾ à¤‰à¤—à¤¾à¤¤à¥‡ à¤¹à¥ˆà¤‚",
-    "auth.profile.cropSub": "à¤…à¤ªà¤¨à¥€ à¤«à¤¼à¤¸à¤²à¥‡à¤‚ à¤šà¥à¤¨à¥‡à¤‚à¥¤",
-    "auth.profile.finish": "à¤œà¤¾à¤°à¥€ à¤°à¤–à¥‡à¤‚",
-    "auth.profile.skip": "à¤¬à¤¾à¤¦ à¤®à¥‡à¤‚ à¤•à¤°à¥‡à¤‚",
-  },
+  // Hindi strings in the prototype were encoding-damaged. Fall back to English
+  // until translations are re-imported from a UTF-8 localization source.
+  hi: {},
 };
 
 const useT = (lang = "en") => (key) => (T[lang] && T[lang][key]) || T.en[key] || key;
 
 // ---------- format helpers ----------
 const formatINR = (n) => {
-  if (n == null) return "â€”";
+  if (n == null) return "-";
   const s = Math.round(n).toString();
-  if (s.length <= 3) return "â‚¹" + s;
+  if (s.length <= 3) return "Rs " + s;
   const last3 = s.slice(-3);
   const rest = s.slice(0, -3);
   const withCommas = rest.replace(/\B(?=(\d{2})+(?!\d))/g, ",");
-  return "â‚¹" + withCommas + "," + last3;
+  return "Rs " + withCommas + "," + last3;
 };
 
 const formatDistance = (km) => km === 0 ? "Your village" : `${km} km away`;
@@ -143,7 +105,7 @@ const TopBar = ({ title, onBack, right, brand, withBorder }) => (
     )}
     {brand ? (
       <div className="brand-name" style={{ flex: 1 }}>
-        Annadata<span className="leaf">Â·</span>Bazar
+        Annadata<span className="leaf">.</span>Bazar
       </div>
     ) : (
       <div className="title">{title}</div>
@@ -187,7 +149,7 @@ const ListingCard = ({ listing, onClick, variant = "grid" }) => {
           <div className="title">{listing.title}</div>
           <div className="meta">
             <Icon name="pin" size={11} />
-            <span>{listing.village} Â· {formatDistance(listing.distance)}</span>
+            <span>{listing.village} - {formatDistance(listing.distance)}</span>
           </div>
           <div style={{ marginTop: "auto", display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
             <div className="price">{formatINR(listing.price)}<small>/{listing.priceUnit}</small></div>
@@ -205,7 +167,7 @@ const ListingCard = ({ listing, onClick, variant = "grid" }) => {
         <div className="price">{formatINR(listing.price)}<small>/{listing.priceUnit}</small></div>
         <div className="meta">
           <Icon name="pin" size={11} />
-          <span>{listing.village} Â· {formatDistance(listing.distance)}</span>
+          <span>{listing.village} - {formatDistance(listing.distance)}</span>
         </div>
       </div>
     </div>

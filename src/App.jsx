@@ -1,22 +1,43 @@
 ﻿import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { AGRI_DATA } from './data.js';
 import { Icon } from './icons/Icon.jsx';
-import { T, StatusBar, TopBar, Toast, useT } from './components/index.jsx';
+import { T, StatusBar, Toast } from './components/index.jsx';
 import { TweaksPanel, TweakSection, TweakRadio, TweakColor, TweakSelect } from './tweaks/TweaksPanel.jsx';
-import { SignupScreen, OtpScreen, ProfileSetupScreen } from './screens/AuthScreens.jsx';
+import { HostedAccountScreen, SignupScreen, OtpScreen, ProfileSetupScreen } from './screens/AuthScreens.jsx';
 import { HomeScreen } from './screens/HomeScreen.jsx';
 import { BrowseScreen, ListingDetailScreen, PostListingScreen } from './screens/BrowseScreen.jsx';
 import { PricesScreen, WeatherScreen, NearbyScreen } from './screens/DiscoverScreen.jsx';
 import { ProfileScreen, MyListingsScreen, InquiriesScreen } from './screens/ProfileScreen.jsx';
 import { DashboardScreen } from './screens/DashboardScreen.jsx';
 import { NotificationsScreen, SettingsScreen, HelpScreen } from './screens/UtilityScreens.jsx';
-// â”€â”€ localStorage helpers â”€â”€
+import { fetchMarketPrices, fetchOfficialUpdates, OFFICIAL_SCHEMES } from './services/agricultureData.js';
+import { createListing, DEMO_MODE, fetchIdentity, loadMarketplace, saveProfile } from './services/marketplaceApi.js';
+// localStorage helpers
 const LS = {
   get: (k, def) => { try { const v = localStorage.getItem("agri_" + k); return v == null ? def : JSON.parse(v); } catch { return def; } },
   set: (k, v)   => { try { localStorage.setItem("agri_" + k, JSON.stringify(v)); } catch {} },
 };
 
 const TAB_ORDER = ["home", "browse", "discover", "profile"];
+
+const cleanDemoText = (value) => value
+  .replaceAll("â€”", "-")
+  .replaceAll("â€“", "-")
+  .replaceAll("Â·", "-")
+  .replaceAll("â‚¹", "Rs ")
+  .replaceAll("â†’", ">")
+  .replaceAll("â€¦", "...");
+
+const cleanDemoFixture = (value) => {
+  if (typeof value === "string") return cleanDemoText(value);
+  if (Array.isArray(value)) return value.map(cleanDemoFixture);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, cleanDemoFixture(item)]));
+  }
+  return value;
+};
+
+const DEMO_DATA = DEMO_MODE ? cleanDemoFixture(AGRI_DATA) : null;
 
 function App() {
   // ===== Tweaks =====
@@ -63,15 +84,75 @@ function App() {
   }), [dark, theme, density]);
 
   // ===== App state =====
-  const [session, setSession]         = useState({ stage: "app", phone: "" });
-  const [user, setUser]               = useState(AGRI_DATA.USERS.find(u => u.isMe));
-  const [listings]                    = useState(AGRI_DATA.LISTINGS);
-  const [myListings, setMyListings]   = useState(AGRI_DATA.MY_LISTINGS);
-  const [orders, setOrders]           = useState(AGRI_DATA.ORDERS);
-  const [inquiries, setInquiries]     = useState(AGRI_DATA.INQUIRIES);
-  const [notifications, setNotifications] = useState(AGRI_DATA.NOTIFICATIONS);
+  const [session, setSession]         = useState({ stage: DEMO_MODE ? "app" : "loading", phone: "" });
+  const [user, setUser]               = useState(DEMO_MODE ? DEMO_DATA.USERS.find(u => u.isMe) : null);
+  const [listings, setListings]       = useState(DEMO_MODE ? DEMO_DATA.LISTINGS : []);
+  const [myListings, setMyListings]   = useState(DEMO_MODE ? DEMO_DATA.MY_LISTINGS : []);
+  const [orders, setOrders]           = useState(DEMO_MODE ? DEMO_DATA.ORDERS : []);
+  const [inquiries, setInquiries]     = useState(DEMO_MODE ? DEMO_DATA.INQUIRIES : []);
+  const [notifications, setNotifications] = useState(DEMO_MODE ? DEMO_DATA.NOTIFICATIONS : []);
+  const [marketPrices, setMarketPrices] = useState([]);
+  const [marketPricesState, setMarketPricesState] = useState("loading");
+  const [officialUpdates, setOfficialUpdates] = useState([]);
+  const [officialUpdatesState, setOfficialUpdatesState] = useState("loading");
 
   const unreadNotifs = notifications.filter(n => n.unread).length;
+
+  useEffect(() => {
+    if (DEMO_MODE) return;
+    let current = true;
+    fetchIdentity()
+      .then(async (identity) => {
+        if (!current) return;
+        if (!identity) {
+          setSession({ stage: "hosted-auth", phone: "" });
+          return;
+        }
+        const data = await loadMarketplace();
+        if (!current) return;
+        if (!data.profile) {
+          setUser({ name: identity.userDetails || "Farmer", crops: [], village: "", district: "", state: "" });
+          setSession({ stage: "profile-setup", phone: "" });
+          return;
+        }
+        setUser(data.profile);
+        setListings(data.listings);
+        setMyListings(data.myListings);
+        setOrders(data.orders);
+        setInquiries(data.inquiries);
+        setNotifications(data.notifications);
+        setSession({ stage: "app", phone: "" });
+      })
+      .catch(() => setSession({ stage: "hosted-auth", phone: "" }));
+    return () => { current = false; };
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    fetchMarketPrices({ district: user?.district, signal: controller.signal })
+      .then((prices) => {
+        setMarketPrices(prices);
+        setMarketPricesState(prices.length ? "ready" : "empty");
+      })
+      .catch((error) => {
+        if (error.name !== "AbortError") setMarketPricesState("error");
+      });
+
+    fetchOfficialUpdates({ signal: controller.signal })
+      .then((updates) => {
+        setOfficialUpdates(updates);
+        setOfficialUpdatesState("ready");
+      })
+      .catch((error) => {
+        if (error.name !== "AbortError") {
+          setOfficialUpdates(error.officialSchemes || OFFICIAL_SCHEMES);
+          setOfficialUpdatesState("error");
+        }
+      });
+
+    return () => controller.abort();
+  }, [user?.district]);
 
   // ===== Navigation =====
   const [tab, setTabRaw]  = useState("home");
@@ -100,12 +181,11 @@ function App() {
     setTimeout(() => setToasts(ts => ts.filter(t => t.id !== id)), 2600);
   };
 
-  // â”€â”€ Navigation helpers â”€â”€
+  // Navigation helpers
   const openListing  = (l) => { const listing = typeof l === "string" ? [...listings, ...myListings].find(x => x.id === l) : l; if (listing) setModal({ kind: "detail", listing }); };
   const openPost     = (prefill) => { if (typeof prefill === "string") prefill = { mode: prefill }; setModal({ kind: "post", prefill }); };
   const openNotifs   = () => setModal({ kind: "notifications" });
   const openSettings = () => setModal({ kind: "settings" });
-  const openHelp     = () => setModal({ kind: "help" });
   const openInquiries  = (which = "received", inquiryId = null) => setModal({ kind: "inquiries", which, inquiryId });
   const openMyListings = () => setModal({ kind: "my-listings" });
   const openDashboard  = () => setModal({ kind: "dashboard" });
@@ -118,7 +198,7 @@ function App() {
       const newInq = {
         id: "i_new_" + Date.now(),
         listingId: listing.id, listingTitle: listing.title,
-        toUser: listing.userId, fromName: AGRI_DATA.USERS.find(u => u.id === listing.userId)?.name || "Seller",
+        toUser: listing.userId, fromName: DEMO_DATA?.USERS.find(u => u.id === listing.userId)?.name || "Seller",
         fromVillage: `${listing.village}, ${listing.district}`,
         type: "sent", unread: 0,
         lastMessage: "Hi, I am interested in your listing.",
@@ -157,7 +237,15 @@ function App() {
     }
   };
 
-  const handlePost = (data) => {
+  const handlePost = async (data) => {
+    if (!DEMO_MODE) {
+      const created = await createListing({ kind: data.kind || "listing", ...data });
+      if (created) setMyListings((items) => [created, ...items]);
+      setModal(null);
+      setTab("profile");
+      showToast("Listing posted!", "check");
+      return;
+    }
     const newListing = {
       id: "m_new_" + Date.now(), userId: "me", ...data,
       photos: data.photos?.length ? data.photos : ["photo placeholder"],
@@ -171,13 +259,21 @@ function App() {
     setTimeout(() => showToast("Listing posted!", "check"), 200);
   };
 
-  const handleLogout = () => { setModal(null); setSession({ stage: "signup", phone: "" }); };
+  const handleLogout = () => {
+    setModal(null);
+    if (!DEMO_MODE) {
+      window.location.assign("/logout");
+      return;
+    }
+    setSession({ stage: "signup", phone: "" });
+  };
 
   const resetDemo = () => {
-    setMyListings(AGRI_DATA.MY_LISTINGS);
-    setOrders(AGRI_DATA.ORDERS);
-    setInquiries(AGRI_DATA.INQUIRIES);
-    setNotifications(AGRI_DATA.NOTIFICATIONS);
+    if (!DEMO_MODE) return;
+    setMyListings(DEMO_DATA.MY_LISTINGS);
+    setOrders(DEMO_DATA.ORDERS);
+    setInquiries(DEMO_DATA.INQUIRIES);
+    setNotifications(DEMO_DATA.NOTIFICATIONS);
     setModal(null);
     showToast("Demo reset", "refresh");
   };
@@ -186,6 +282,8 @@ function App() {
   if (session.stage !== "app") {
     return (
       <Stage screenAttrs={screenAttrs}>
+        {session.stage === "loading" && <LoadingScreen />}
+        {session.stage === "hosted-auth" && <HostedAccountScreen />}
         {session.stage === "signup" && (
           <SignupScreen onNext={(phone) => setSession({ stage: "otp", phone })} onSkip={() => setSession({ stage: "app" })} lang={lang} setLang={(l) => setTweak("lang", l)} />
         )}
@@ -193,7 +291,7 @@ function App() {
           <OtpScreen phone={session.phone} onVerify={(phone, isNew) => setSession({ stage: isNew ? "profile-setup" : "app", phone })} onBack={() => setSession({ stage: "signup", phone: "" })} lang={lang} />
         )}
         {session.stage === "profile-setup" && (
-          <ProfileSetupScreen onFinish={(data) => { setUser({ ...user, ...data, joined: "May 2026" }); setSession({ stage: "app" }); showToast("Welcome to AnnadathaBazar!", "check"); }} lang={lang} />
+          <ProfileSetupScreen onFinish={async (data) => { const profile = DEMO_MODE ? { ...user, ...data, joined: "May 2026" } : await saveProfile(data); setUser(profile); setSession({ stage: "app" }); showToast("Welcome to AnnadathaBazar!", "check"); }} lang={lang} />
         )}
         {tweaksOpen && <TweaksUI tweaks={tweaks} setTweak={setTweak} onClose={() => setTweaksOpen(false)} />}
       </Stage>
@@ -203,9 +301,9 @@ function App() {
   // ===== Main app =====
   const renderTab = () => {
     switch (tab) {
-      case "home":    return <HomeScreen    user={user} listings={listings} onOpenListing={openListing} onNavTab={handleNavTab} onOpenNotifs={openNotifs} unreadNotifs={unreadNotifs} onPostListing={(mode) => openPost(mode || "listing")} lang={lang} />;
+      case "home":    return <HomeScreen    user={user} listings={listings} prices={marketPrices} pricesState={marketPricesState} weather={DEMO_MODE ? DEMO_DATA.WEATHER : null} updates={officialUpdates} updatesState={officialUpdatesState} onOpenListing={openListing} onNavTab={handleNavTab} onOpenNotifs={openNotifs} unreadNotifs={unreadNotifs} onPostListing={(mode) => openPost(mode || "listing")} lang={lang} />;
       case "browse":  return <BrowseScreen  listings={listings} onOpenListing={openListing} onPostListing={() => openPost()} initialCategory={browseInitialCat} lang={lang} />;
-      case "discover":return <DiscoverWrapper screen={discoverScreen} setScreen={setDiscoverScreen} user={user} listings={listings} onOpenListing={openListing} nearbyInitialCat={nearbyInitialCat} lang={lang} />;
+      case "discover":return <DiscoverWrapper screen={discoverScreen} setScreen={setDiscoverScreen} user={user} listings={listings} marketPrices={marketPrices} marketPricesState={marketPricesState} weather={DEMO_MODE ? DEMO_DATA.WEATHER : null} onOpenListing={openListing} nearbyInitialCat={nearbyInitialCat} lang={lang} />;
       case "profile": return <ProfileScreen  user={user} myListings={myListings} inquiries={inquiries} orders={orders} onOpenSettings={openSettings} onOpenListings={openMyListings} onOpenDashboard={openDashboard} onOpenInquiries={openInquiries} onLogout={handleLogout} lang={lang} />;
       default: return null;
     }
@@ -217,7 +315,7 @@ function App() {
   return (
     <Stage screenAttrs={screenAttrs}>
       <div className="app-body" data-screen-label={screenLabel}>
-        {/* Tab content â€” re-mounts on key change to trigger animation */}
+        {/* Tab content re-mounts on key change to trigger animation. */}
         <div key={tabKey} className={tabEnterClass} style={{ position:"absolute", inset:0, display:"flex", flexDirection:"column" }}>
           {renderTab()}
         </div>
@@ -316,8 +414,17 @@ const ModalScreen = ({ children }) => (
   </div>
 );
 
+const LoadingScreen = () => (
+  <div style={{ height:"100%", display:"grid", placeItems:"center", padding:24, textAlign:"center" }}>
+    <div>
+      <div style={{ fontFamily:"var(--font-display)", fontSize:30 }}>AnnadathaBazar</div>
+      <div style={{ color:"var(--ink-3)", fontSize:13, marginTop:8 }}>Loading your production account.</div>
+    </div>
+  </div>
+);
+
 // ===== Discover wrapper =====
-const DiscoverWrapper = ({ screen, setScreen, user, listings, onOpenListing, nearbyInitialCat = "all", lang }) => (
+const DiscoverWrapper = ({ screen, setScreen, user, listings, marketPrices, marketPricesState, weather, onOpenListing, nearbyInitialCat = "all", lang }) => (
   <div style={{ display:"flex", flexDirection:"column", height:"100%" }}>
     <div style={{ padding:"8px 16px 0", background:"var(--bg)", borderBottom:"1px solid var(--border)" }}>
       <div className="segmented" style={{ background:"var(--surface-2)" }}>
@@ -327,9 +434,9 @@ const DiscoverWrapper = ({ screen, setScreen, user, listings, onOpenListing, nea
       </div>
     </div>
     <div style={{ flex:1, overflow:"hidden", display:"flex", flexDirection:"column" }}>
-      {screen==="prices"  && <PricesScreen  user={user} lang={lang} />}
-      {screen==="weather" && <WeatherScreen user={user} lang={lang} />}
-      {screen==="nearby"  && <NearbyScreen  listings={listings} onOpenListing={onOpenListing} initialCategory={nearbyInitialCat} lang={lang} />}
+      {screen==="prices"  && <PricesScreen  user={user} prices={marketPrices} state={marketPricesState} lang={lang} />}
+      {screen==="weather" && <WeatherScreen weather={weather} lang={lang} />}
+      {screen==="nearby"  && <NearbyScreen  user={user} listings={listings} onOpenListing={onOpenListing} initialCategory={nearbyInitialCat} lang={lang} />}
     </div>
   </div>
 );
@@ -342,7 +449,7 @@ const TweaksUI = ({ tweaks, setTweak, onClose }) => (
       <TweakColor label="Accent" value={tweaks.theme} onChange={(v) => setTweak("theme", v)} options={[{ value:"default", color:"#1F5A3A" }, { value:"terra", color:"#B05E2E" }, { value:"indigo", color:"#2E4A7F" }]} />
     </TweakSection>
     <TweakSection title="Language">
-      <TweakSelect label="UI language" value={tweaks.lang} onChange={(v) => setTweak("lang", v)} options={[{ value:"en", label:"English" }, { value:"hi", label:"à¤¹à¤¿à¤¨à¥à¤¦à¥€ (Hindi)" }]} />
+      <TweakSelect label="UI language" value={tweaks.lang} onChange={(v) => setTweak("lang", v)} options={[{ value:"en", label:"English" }, { value:"hi", label:"Hindi (translation pending)" }]} />
     </TweakSection>
     <TweakSection title="Layout">
       <TweakRadio label="Density" value={tweaks.density} onChange={(v) => setTweak("density", v)} options={[{ value:"comfortable", label:"Comfort" }, { value:"compact", label:"Compact" }]} />

@@ -1,11 +1,102 @@
 ﻿import React from 'react';
-import { AGRI_DATA } from '../data.js';
+import { CROPS, LANGUAGES, STATES_DISTRICTS } from '../referenceData.js';
 import { Icon } from '../icons/Icon.jsx';
-import { Button, useT } from '../components/index.jsx';
+import { Button, Sheet, TopBar, useT } from '../components/index.jsx';
 
 // ===== Auth Screens: A1 Signup, A2 OTP, A3 Profile =====
 
 const { useState: useStateA, useEffect: useEffectA, useRef: useRefA } = React;
+
+const hostedAuthCopy = {
+  login: {
+    title: "Welcome back",
+    body: "Sign in to manage listings, messages, notifications, and your farmer profile.",
+    primary: "Sign in",
+    primaryHref: "/login",
+    secondary: "Create account",
+    secondaryHref: "/signup",
+  },
+  signup: {
+    title: "Create your account",
+    body: "Set up a secure account before you post crops, services, or equipment.",
+    primary: "Create account",
+    primaryHref: "/signup",
+    secondary: "I already have an account",
+    secondaryHref: "/login",
+  },
+  recovery: {
+    title: "Recover your account",
+    body: "Continue to the secure account page to reset a forgotten password.",
+    primary: "Reset password",
+    primaryHref: "/forgot-password",
+    secondary: "Back to sign in",
+    secondaryHref: "/login",
+  },
+};
+
+const hostedAuthIntent = () => {
+  if (window.location.pathname === "/signup") return "signup";
+  if (["/forgot-password", "/reset-password"].includes(window.location.pathname)) return "recovery";
+  return "login";
+};
+
+const AuthLogo = () => (
+  <div className="auth-logo" style={{
+    width: 88,
+    height: 88,
+    margin: "0 auto 22px",
+    background: "linear-gradient(135deg, var(--primary) 0%, #2d8055 100%)",
+    borderRadius: 24,
+    display: "grid",
+    placeItems: "center",
+    boxShadow: "0 12px 24px -8px rgba(31,90,58,0.4)",
+  }}>
+    <Icon name="leaf" size={44} color="#FFFFFF" stroke={1.8} />
+  </div>
+);
+
+const HostedAccountScreen = () => {
+  const copy = hostedAuthCopy[hostedAuthIntent()];
+
+  return (
+    <div className="scroll screen-enter" style={{ minHeight: "100%", display: "grid", placeItems: "center", padding: "20px 20px 34px" }}>
+      <div style={{ width: "100%", maxWidth: 320, textAlign: "center" }}>
+        <AuthLogo />
+        <div style={{ fontFamily: "var(--font-display)", fontSize: 36, lineHeight: 1.05, marginBottom: 8 }}>
+          Annadata<span style={{ color: "var(--primary)" }}>.</span>Bazar
+        </div>
+        <div style={{ fontSize: 23, fontWeight: 600, marginTop: 22 }}>{copy.title}</div>
+        <div style={{ color: "var(--ink-3)", lineHeight: 1.5, fontSize: 14, margin: "10px auto 24px", maxWidth: 292 }}>
+          {copy.body}
+        </div>
+        <div style={{ display: "grid", gap: 10 }}>
+          <a className="btn full" href={copy.primaryHref} style={{ textDecoration: "none" }}>{copy.primary}</a>
+          <a
+            href={copy.secondaryHref}
+            style={{
+              minHeight: 48,
+              border: "1px solid var(--border-strong)",
+              borderRadius: 12,
+              color: "var(--ink)",
+              display: "grid",
+              placeItems: "center",
+              textDecoration: "none",
+              fontWeight: 600,
+              background: "var(--surface)",
+            }}
+          >
+            {copy.secondary}
+          </a>
+        </div>
+        {copy.primaryHref !== "/forgot-password" && (
+          <a href="/forgot-password" style={{ display: "inline-block", color: "var(--primary)", fontSize: 13, fontWeight: 600, marginTop: 20 }}>
+            Forgot password?
+          </a>
+        )}
+      </div>
+    </div>
+  );
+};
 
 // ---------- A1: Signup ----------
 const SignupScreen = ({ onNext, onSkip, lang, setLang }) => {
@@ -14,7 +105,7 @@ const SignupScreen = ({ onNext, onSkip, lang, setLang }) => {
   const [agreed, setAgreed] = useStateA(false);
   const [langOpen, setLangOpen] = useStateA(false);
   const valid = phone.length === 10 && /^[6-9]/.test(phone) && agreed;
-  const langName = AGRI_DATA.LANGUAGES.find(l => l.code === lang)?.native || "English";
+  const langName = LANGUAGES.find(l => l.code === lang)?.native || "English";
 
   return (
     <div className="scroll screen-enter" style={{ padding: "0 0 24px" }}>
@@ -26,19 +117,12 @@ const SignupScreen = ({ onNext, onSkip, lang, setLang }) => {
       </div>
 
       <div style={{ padding: "32px 24px 0", textAlign: "center" }}>
-        <div className="auth-logo" style={{
-          width: 88, height: 88, margin: "0 auto 24px",
-          background: "linear-gradient(135deg, var(--primary) 0%, #2d8055 100%)",
-          borderRadius: 24, display: "grid", placeItems: "center",
-          boxShadow: "0 12px 24px -8px rgba(31,90,58,0.4)"
-        }}>
-          <Icon name="leaf" size={44} color="#FFFFFF" stroke={1.8} />
-        </div>
+        <AuthLogo />
         <div style={{ fontFamily: "var(--font-display)", fontSize: 38, lineHeight: 1.05, letterSpacing: "-0.01em", marginBottom: 8 }}>
-          Annadata<span style={{ color: "var(--primary)" }}>Â·</span>Bazar
+          Annadata<span style={{ color: "var(--primary)" }}>.</span>Bazar
         </div>
         <div style={{ fontSize: 15, color: "var(--ink-3)", textWrap: "balance", maxWidth: 280, margin: "0 auto" }}>
-          {lang === "hi" ? "à¤…à¤ªà¤¨à¥€ à¤«à¤¼à¤¸à¤², à¤¸à¥‡à¤µà¤¾ à¤¯à¤¾ à¤‰à¤ªà¤•à¤°à¤£ à¤•à¥‡ à¤²à¤¿à¤ à¤¸à¥€à¤§à¥‡ à¤œà¥‹à¤¡à¤¼à¥‡à¤‚" : "Find buyers, services, and equipment. Connect direct, no middlemen."}
+          Find buyers, services, and equipment. Connect direct, no middlemen.
         </div>
       </div>
 
@@ -95,7 +179,7 @@ const SignupScreen = ({ onNext, onSkip, lang, setLang }) => {
 
       <Sheet open={langOpen} onClose={() => setLangOpen(false)} title="Choose Language">
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-          {AGRI_DATA.LANGUAGES.map(l => (
+          {LANGUAGES.map(l => (
             <button
               key={l.code}
               className={`chip${lang === l.code ? " active" : ""}`}
@@ -150,7 +234,7 @@ const OtpScreen = ({ phone, onVerify, onBack, lang }) => {
 
   const verify = () => {
     if (code === "123456") {
-      onVerify(phone, false); // existing user â†’ straight to home; change to true to force profile setup
+      onVerify(phone, false); // Existing users go straight home; use true to force profile setup.
     } else {
       setError("Wrong code. Try 123456 for demo.");
     }
@@ -230,35 +314,33 @@ const ProfileSetupScreen = ({ onFinish, lang }) => {
   const [district, setDistrict] = useStateA("Warangal");
   const [crops, setCrops] = useStateA([]);
   const [gpsing, setGpsing] = useStateA(false);
+  const [coordinates, setCoordinates] = useStateA(null);
+  const [locationError, setLocationError] = useStateA("");
 
-  const districts = AGRI_DATA.STATES_DISTRICTS[state] || [];
+  const districts = STATES_DISTRICTS[state] || [];
   const toggleCrop = (id) => setCrops(c => c.includes(id) ? c.filter(x => x !== id) : [...c, id]);
 
   const useGPS = () => {
     setGpsing(true);
+    setLocationError("");
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        () => {
-          setVillage("Hanamkonda");
-          setState("Telangana");
-          setDistrict("Warangal");
+        ({ coords }) => {
+          setCoordinates({
+            latitude: Number(coords.latitude.toFixed(6)),
+            longitude: Number(coords.longitude.toFixed(6)),
+          });
           setGpsing(false);
         },
         () => {
-          setVillage("Hanamkonda");
-          setState("Telangana");
-          setDistrict("Warangal");
+          setLocationError("Location permission is needed to place nearby listings on the map.");
           setGpsing(false);
         },
         { timeout: 6000 }
       );
     } else {
-      setTimeout(() => {
-        setVillage("Hanamkonda");
-        setState("Telangana");
-        setDistrict("Warangal");
-        setGpsing(false);
-      }, 1100);
+      setLocationError("This device does not provide browser location.");
+      setGpsing(false);
     }
   };
 
@@ -315,14 +397,16 @@ const ProfileSetupScreen = ({ onFinish, lang }) => {
               }
             </button>
           </div>
-          {gpsing && <div style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 6 }}>Detecting your locationâ€¦</div>}
+          {gpsing && <div style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 6 }}>Detecting your location...</div>}
+          {coordinates && <div style={{ fontSize: 11, color: "var(--primary)", marginTop: 6 }}>Location captured for nearby maps.</div>}
+          {locationError && <div style={{ fontSize: 11, color: "var(--terra)", marginTop: 6 }}>{locationError}</div>}
         </div>
 
         <div className="field" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
           <div>
             <label className="field-label">{t("auth.profile.state")}</label>
-            <select className="input" value={state} onChange={e => { setState(e.target.value); setDistrict(AGRI_DATA.STATES_DISTRICTS[e.target.value][0]); }}>
-              {Object.keys(AGRI_DATA.STATES_DISTRICTS).map(s => <option key={s}>{s}</option>)}
+            <select className="input" value={state} onChange={e => { setState(e.target.value); setDistrict(STATES_DISTRICTS[e.target.value][0]); }}>
+              {Object.keys(STATES_DISTRICTS).map(s => <option key={s}>{s}</option>)}
             </select>
           </div>
           <div>
@@ -337,7 +421,7 @@ const ProfileSetupScreen = ({ onFinish, lang }) => {
           <label className="field-label">{t("auth.profile.crops")}</label>
           <div style={{ fontSize: 12, color: "var(--ink-3)", marginBottom: 10 }}>{t("auth.profile.cropSub")}</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            {AGRI_DATA.CROPS.map(c => (
+            {CROPS.map(c => (
               <button
                 key={c.id}
                 onClick={() => toggleCrop(c.id)}
@@ -353,7 +437,7 @@ const ProfileSetupScreen = ({ onFinish, lang }) => {
       </div>
 
       <div style={{ padding: "16px 20px 0", display: "flex", flexDirection: "column", gap: 10 }}>
-        <Button full disabled={!name || name.length < 2} onClick={() => onFinish({ name, village, district, state, crops })}>
+        <Button full disabled={!name || name.length < 2} onClick={() => onFinish({ name, village, district, state, crops, ...coordinates })}>
           {t("auth.profile.finish")}
         </Button>
         <button onClick={() => onFinish({ name: name || "You", village: "Hanamkonda", district: "Warangal", state: "Telangana", crops: ["rice"] })} style={{ padding: 12, fontSize: 13, color: "var(--ink-3)" }}>
@@ -364,5 +448,5 @@ const ProfileSetupScreen = ({ onFinish, lang }) => {
   );
 };
 
-export { SignupScreen, OtpScreen, ProfileSetupScreen };
+export { HostedAccountScreen, SignupScreen, OtpScreen, ProfileSetupScreen };
 

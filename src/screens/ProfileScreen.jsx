@@ -1,7 +1,7 @@
 ﻿import React from 'react';
-import { AGRI_DATA } from '../data.js';
+import { CROPS } from '../referenceData.js';
 import { Icon } from '../icons/Icon.jsx';
-import { TopBar, Button, Avatar, Sheet, useT, formatINR, AnimatedNumber } from '../components/index.jsx';
+import { Button, Avatar, Empty, ImgPh, Sheet, useT, formatINR, AnimatedNumber } from '../components/index.jsx';
 
 // ===== Profile: P1, P2 Listings, P3 Inquiries (with chat) =====
 
@@ -68,7 +68,7 @@ const ProfileScreen = ({ user, myListings, inquiries, orders = [], onOpenSetting
         </button>
       </div>
 
-      {/* Stats â€” Listings / Services / Orders */}
+      {/* Stats for listings, services, and orders. */}
       <div style={{ padding: "0 16px 16px", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
         <button onClick={onOpenDashboard} className="card tight" style={{ textAlign: "center", padding: "14px 8px" }}>
           <AnimatedNumber value={activeListings} style={{ fontFamily: "var(--font-display)", fontSize: 28, color: "var(--primary)", lineHeight: 1, display: "block" }} />
@@ -95,7 +95,7 @@ const ProfileScreen = ({ user, myListings, inquiries, orders = [], onOpenSetting
       <div className="section-head"><h3 style={{ fontSize: 14 }}>My Crops</h3></div>
       <div style={{ padding: "0 16px 16px", display: "flex", flexWrap: "wrap", gap: 8 }}>
         {user.crops.map(cId => {
-          const c = AGRI_DATA.CROPS.find(x => x.id === cId);
+          const c = CROPS.find(x => x.id === cId);
           if (!c) return null;
           return (
             <div key={cId} className="chip" style={{ height: 38, paddingRight: 8 }}>
@@ -148,7 +148,7 @@ const ProfileScreen = ({ user, myListings, inquiries, orders = [], onOpenSetting
                 )}
               </div>
               <div style={{ fontSize: 11, fontWeight: 500 }}>{v.label}</div>
-              {!v.verified && <div style={{ fontSize: 9, color: "var(--primary)", marginTop: 2 }}>Verify â†’</div>}
+              {!v.verified && <div style={{ fontSize: 9, color: "var(--primary)", marginTop: 2 }}>Verify</div>}
             </div>
           ))}
         </div>
@@ -361,7 +361,7 @@ const InquiriesScreen = ({ inquiries: initialInquiries, onBack, lang, onOpenList
   };
 
   if (current) {
-    return <ChatThread inquiry={current} onBack={() => setOpen(null)} onSend={sendMessage} onOpenListing={onOpenListing} lang={lang} />;
+    return <ChatThread inquiry={current} onBack={() => setOpen(null)} onSend={sendMessage} onOpenListing={onOpenListing} />;
   }
 
   return (
@@ -439,7 +439,7 @@ const InquiriesScreen = ({ inquiries: initialInquiries, onBack, lang, onOpenList
 };
 
 // ---------- Chat Thread ----------
-const ChatThread = ({ inquiry, onBack, onSend, onOpenListing, lang }) => {
+const ChatThread = ({ inquiry, onBack, onSend, onOpenListing }) => {
   const [text, setText] = useStateP("");
   const [contactShown, setContactShown] = useStateP(false);
   const scrollRef = useRefP(null);
@@ -454,7 +454,7 @@ const ChatThread = ({ inquiry, onBack, onSend, onOpenListing, lang }) => {
     setText("");
   };
 
-  const otherPhone = AGRI_DATA.USERS.find(u => u.id === (inquiry.fromUser || inquiry.toUser))?.phone || "9876543210";
+  const otherPhone = inquiry.otherPhone || "";
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
@@ -581,7 +581,7 @@ const ChatThread = ({ inquiry, onBack, onSend, onOpenListing, lang }) => {
           value={text}
           onChange={e => setText(e.target.value)}
           onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
-          placeholder="Type a messageâ€¦"
+          placeholder="Type a message..."
           rows={1}
           style={{
             flex: 1, resize: "none",

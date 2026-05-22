@@ -1,7 +1,7 @@
 ﻿import React from 'react';
-import { AGRI_DATA } from '../data.js';
+import { LANGUAGES } from '../referenceData.js';
 import { Icon } from '../icons/Icon.jsx';
-import { TopBar, Sheet, useT } from '../components/index.jsx';
+import { Button, Empty, Sheet, useT } from '../components/index.jsx';
 
 // ===== Utility: U1 Notifications, U2 Settings, U3 Help =====
 
@@ -105,7 +105,7 @@ const SettingsScreen = ({ onBack, user, lang, setLang, theme, setTheme, dark, se
   const t = useT(lang);
   const [langOpen, setLangOpen] = useStateU(false);
   const [logoutConfirm, setLogoutConfirm] = useStateU(false);
-  const langName = AGRI_DATA.LANGUAGES.find(l => l.code === lang)?.native || "English";
+  const langName = LANGUAGES.find(l => l.code === lang)?.native || "English";
 
   const ToggleRow = ({ label, icon, value, onChange, hint }) => (
     <div className="list-row">
@@ -245,13 +245,13 @@ const SettingsScreen = ({ onBack, user, lang, setLang, theme, setTheme, dark, se
         </div>
 
         <div style={{ textAlign: "center", padding: 20, fontSize: 11, color: "var(--ink-4)" }}>
-          AnnadathaBazar Â· v1.0.2 Â· Made for Indian farmers
+          AnnadathaBazar - v1.0.2 - Made for Indian farmers
         </div>
       </div>
 
       <Sheet open={langOpen} onClose={() => setLangOpen(false)} title="Choose Language">
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-          {AGRI_DATA.LANGUAGES.map(l => (
+          {LANGUAGES.map(l => (
             <button
               key={l.code}
               className={`chip${lang === l.code ? " active" : ""}`}
@@ -294,12 +294,12 @@ const HelpScreen = ({ onBack, lang }) => {
   const faqs = [
     { q: "How do I post a listing?", a: "Tap the green + button on Home or Browse. Pick a category, add a title, set a price, and upload up to 6 photos. Submit and your listing is live for 30 days." },
     { q: "How do I contact a seller?", a: "On any listing detail, tap Message Seller to chat in-app, or WhatsApp to open chat in WhatsApp directly. The seller's phone is hidden until you tap Show Contact." },
-    { q: "My listing expired, how do I relist?", a: "Go to Profile â†’ My Listings â†’ Expired tab â†’ tap Relist. The form will be pre-filled and you can edit details before posting again." },
-    { q: "How do I delete a listing?", a: "Profile â†’ My Listings â†’ tap the trash icon on any listing. Once deleted it cannot be restored." },
-    { q: "Is this app free?", a: "Yes. AnnadathaBazar is free to use. We don't take a cut of any transaction â€” that happens directly between you and the buyer or seller." },
-    { q: "How do I change my language?", a: "Settings â†’ Language. We support 12 Indian languages including Hindi, Telugu, Kannada, Tamil and Marathi." },
-    { q: "How do I report fake listings?", a: "Open the listing â†’ tap the three-dot menu â†’ Report. We review reports within 24 hours and remove fake listings." },
-    { q: "How do I delete my account?", a: "Settings â†’ Danger Zone â†’ Delete Account. This permanently removes your profile and listings." },
+    { q: "My listing expired, how do I relist?", a: "Go to Profile, My Listings, Expired, then tap Relist. The form will be pre-filled and you can edit details before posting again." },
+    { q: "How do I delete a listing?", a: "Open Profile and My Listings, then tap the trash icon on a listing. Once deleted it cannot be restored." },
+    { q: "Is this app free?", a: "Yes. AnnadathaBazar is free to use. We do not take a cut of any transaction; that happens directly between you and the buyer or seller." },
+    { q: "How do I change my language?", a: "Open Settings and Language. We support 12 Indian languages including Hindi, Telugu, Kannada, Tamil and Marathi." },
+    { q: "How do I report fake listings?", a: "Open the listing, tap the three-dot menu, then Report. We review reports within 24 hours and remove fake listings." },
+    { q: "How do I delete my account?", a: "Open Settings, Danger Zone, and Delete Account. This permanently removes your profile and listings." },
   ];
 
   if (submitted) {
@@ -383,7 +383,7 @@ const HelpScreen = ({ onBack, lang }) => {
         ) : (
           <>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-              <button onClick={() => setReportOpen(false)} style={{ fontSize: 13, color: "var(--primary)" }}>â† Back</button>
+              <button onClick={() => setReportOpen(false)} style={{ fontSize: 13, color: "var(--primary)" }}>Back</button>
             </div>
 
             <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>Report a problem</div>
@@ -422,7 +422,7 @@ const HelpScreen = ({ onBack, lang }) => {
               <textarea
                 className="input"
                 rows={4}
-                placeholder="Tell us what happenedâ€¦"
+                placeholder="Tell us what happened..."
                 value={reportText}
                 onChange={e => setReportText(e.target.value)}
               />

@@ -1,0 +1,17 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "node",
+    "COSMOS_CONNECTION_STRING": "",
+    "COSMOS_DATABASE_ID": "annadatha",
+    "DATA_GOV_IN_API_KEY": "",
+    "OTP_PROVIDER": "disabled",
+    "OTP_HASH_SECRET": "",
+    "ACS_CONNECTION_STRING": "",
+    "ACS_SMS_FROM": "",
+    "NOTIFICATION_DELIVERY_MODE": "in-app",
+    "MARKET_PRICE_REFRESH_SCHEDULE": "0 0 */6 * * *",
+    "AGRICULTURE_UPDATES_REFRESH_SCHEDULE": "0 0 6 * * *"
+  }
+}

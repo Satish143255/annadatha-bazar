@@ -1,7 +1,8 @@
 ﻿import React from 'react';
 import { AGRI_DATA } from '../data.js';
+import { CATEGORIES, LISTING_CATEGORIES, SERVICE_TYPES } from '../referenceData.js';
 import { Icon } from '../icons/Icon.jsx';
-import { TopBar, ListingCard, Button, Avatar, Sheet, useT, formatINR, formatDistance } from '../components/index.jsx';
+import { ListingCard, Button, Avatar, Empty, ImgPh, Sheet, useT, formatINR, formatDistance } from '../components/index.jsx';
 
 // ===== Browse: B1 List, B2 Detail, B3 Post =====
 
@@ -93,7 +94,7 @@ const BrowseScreen = ({ listings, onOpenListing, onPostListing, initialCategory 
       {/* Category chips */}
       <div className="hscroll" style={{ padding: "0 16px 12px" }}>
         <button className={`chip${cat === "all" ? " active" : ""}`} onClick={() => setCat("all")}>All</button>
-        {AGRI_DATA.CATEGORIES.map(c => (
+        {CATEGORIES.map(c => (
           <button key={c.id} className={`chip${cat === c.id ? " active" : ""}`} onClick={() => setCat(c.id)}>
             {c.label}
           </button>
@@ -173,7 +174,7 @@ const BrowseScreen = ({ listings, onOpenListing, onPostListing, initialCategory 
           </div>
         </div>
         <div className="field">
-          <label className="field-label">Price range (â‚¹)</label>
+          <label className="field-label">Price range (Rs)</label>
           <div style={{ display: "flex", gap: 8 }}>
             <input className="input" type="number" placeholder="Min" value={priceMin} onChange={e => setPriceMin(e.target.value)} />
             <input className="input" type="number" placeholder="Max" value={priceMax} onChange={e => setPriceMax(e.target.value)} />
@@ -195,7 +196,7 @@ const BrowseScreen = ({ listings, onOpenListing, onPostListing, initialCategory 
           }}>
             <Icon name="mic" size={42} stroke={1.8} />
           </div>
-          <div style={{ fontSize: 17, fontWeight: 600, marginBottom: 6 }}>Listeningâ€¦</div>
+          <div style={{ fontSize: 17, fontWeight: 600, marginBottom: 6 }}>Listening...</div>
           <div style={{ fontSize: 13, color: "var(--ink-3)" }}>Try saying "rice in Warangal"</div>
         </div>
         <Button full variant="secondary" onClick={stopVoice}>Cancel</Button>
@@ -209,17 +210,29 @@ const ListingDetailScreen = ({ listing, listings, onBack, onMessage, onUserTap, 
   const t = useT(lang);
   const [photoIdx, setPhotoIdx] = useStateB(0);
   const [contactRevealed, setContactRevealed] = useStateB(false);
-  const seller = AGRI_DATA.USERS.find(u => u.id === listing.userId);
+  const seller = (AGRI_DATA.USERS || []).find(u => u.id === listing.userId) || {
+    id: listing.sellerId,
+    name: listing.sellerName || "Seller",
+    phone: listing.phone || "",
+    village: listing.village,
+    district: listing.district,
+    listings: listing.sellerListingCount || 1,
+    joined: listing.sellerJoined || "Verified member",
+  };
   const similar = listings.filter(l => l.id !== listing.id && (l.category === listing.category)).slice(0, 4);
 
   const openWhatsapp = () => {
-    const msg = encodeURIComponent(`Hi! I'm interested in your listing: "${listing.title}" â€” ${formatINR(listing.price)}/${listing.priceUnit}`);
+    const msg = encodeURIComponent(`Hi! I'm interested in your listing: "${listing.title}" - ${formatINR(listing.price)}/${listing.priceUnit}`);
+    if (!seller.phone) {
+      onToast("Seller phone is private. Send an inquiry first.");
+      return;
+    }
     window.open(`https://wa.me/91${seller.phone.replace(/\D/g, "")}?text=${msg}`, "_blank");
-    onToast("Opening WhatsAppâ€¦");
+    onToast("Opening WhatsApp...");
   };
 
   const handleShare = async () => {
-    const text = `${listing.title} â€” ${formatINR(listing.price)}/${listing.priceUnit} in ${listing.village}`;
+    const text = `${listing.title} - ${formatINR(listing.price)}/${listing.priceUnit} in ${listing.village}`;
     if (navigator.share) {
       try { await navigator.share({ title: listing.title, text, url: window.location.href }); } catch {}
     } else {
@@ -258,7 +271,7 @@ const ListingDetailScreen = ({ listing, listings, onBack, onMessage, onUserTap, 
           )}
           <div style={{ position: "absolute", top: 12, left: 12 }}>
             <span className="chip green" style={{ height: 26, fontSize: 11, textTransform: "capitalize" }}>
-              {AGRI_DATA.CATEGORIES.find(c => c.id === listing.category)?.label || listing.category}
+              {CATEGORIES.find(c => c.id === listing.category)?.label || listing.category}
             </span>
           </div>
         </div>
@@ -354,7 +367,7 @@ const ListingDetailScreen = ({ listing, listings, onBack, onMessage, onUserTap, 
         {!contactRevealed ? (
           <div style={{ padding: "0 16px 16px" }}>
             <button
-              onClick={() => { setContactRevealed(true); onToast("Contact revealed Â· logged for safety"); }}
+              onClick={() => { setContactRevealed(true); onToast("Contact revealed - logged for safety"); }}
               style={{
                 width: "100%", padding: "14px",
                 background: "var(--surface)", border: "1px dashed var(--border-strong)",
@@ -363,7 +376,7 @@ const ListingDetailScreen = ({ listing, listings, onBack, onMessage, onUserTap, 
               }}
             >
               <Icon name="phone" size={16} />
-              {t("listing.show")} â€” 98â—â—â—â—â—â—{seller.phone.slice(-2)}
+              {t("listing.show")} - 98******{seller.phone.slice(-2)}
             </button>
           </div>
         ) : (
@@ -412,8 +425,8 @@ const PostListingScreen = ({ onBack, onPost, lang, prefill }) => {
 
   // Pick the right category set based on mode
   const categoryOptions = mode === "service"
-    ? AGRI_DATA.SERVICE_TYPES
-    : AGRI_DATA.LISTING_CATEGORIES;
+    ? SERVICE_TYPES
+    : LISTING_CATEGORIES;
 
   const [category, setCategory] = useStateB(prefill?.category || "");
   const [title, setTitle] = useStateB(prefill?.title || "");
@@ -427,8 +440,15 @@ const PostListingScreen = ({ onBack, onPost, lang, prefill }) => {
   const [photos, setPhotos] = useStateB(prefill?.photos || []);
   const fileInputRef = useRefB(null);
   const [village, setVillage] = useStateB(prefill?.village || "Hanamkonda");
-  const [district, setDistrict] = useStateB(prefill?.district || "Warangal");
-  const [stateVal, setStateVal] = useStateB(prefill?.state || "Telangana");
+  const [district] = useStateB(prefill?.district || "Warangal");
+  const [stateVal] = useStateB(prefill?.state || "Telangana");
+  const [coordinates, setCoordinates] = useStateB(
+    prefill?.latitude != null && prefill?.longitude != null
+      ? { latitude: prefill.latitude, longitude: prefill.longitude }
+      : null
+  );
+  const [locating, setLocating] = useStateB(false);
+  const [locationError, setLocationError] = useStateB("");
   const [whatsappEnabled, setWhatsappEnabled] = useStateB(true);
   const [submitting, setSubmitting] = useStateB(false);
   const [submitted, setSubmitted] = useStateB(false);
@@ -439,26 +459,49 @@ const PostListingScreen = ({ onBack, onPost, lang, prefill }) => {
   }, [title, desc]);
 
   const placeholderByCat = mode === "service" ? {
-    rental:     "eg. Mahindra 575 Tractor on Hire â€” â‚¹650/hr",
-    harvesting: "eg. Combine Harvester â€” â‚¹2,200/acre",
-    spraying:   "eg. Drone Spraying â€” â‚¹400/acre",
-    veterinary: "eg. Mobile Vet â€” AI & Vaccination",
+    rental:     "eg. Mahindra 575 Tractor on Hire - Rs 650/hr",
+    harvesting: "eg. Combine Harvester - Rs 2,200/acre",
+    spraying:   "eg. Drone Spraying - Rs 400/acre",
+    veterinary: "eg. Mobile Vet - AI and Vaccination",
     transport:  "eg. Mini Truck for Mandi Pickup",
     labour:     "eg. 5 Daily Wage Workers Available",
-    soil:       "eg. Soil Testing â€” â‚¹250 per sample",
+    soil:       "eg. Soil Testing - Rs 250 per sample",
     other:      "eg. Custom service you offer",
   } : {
     crop:       "eg. 50 Quintal Rice for Sale",
-    seeds:      "eg. Hybrid Tomato Seeds â€” 1000 packets",
-    fertilizer: "eg. Organic Vermicompost â€” 50 kg bags",
-    pesticide:  "eg. Neem-based Pesticide â€” 5L cans",
-    livestock:  "eg. Murrah Buffalo â€” 12L/day",
-    land:       "eg. 3 Acres Irrigated Land â€” Lease",
+    seeds:      "eg. Hybrid Tomato Seeds - 1000 packets",
+    fertilizer: "eg. Organic Vermicompost - 50 kg bags",
+    pesticide:  "eg. Neem-based Pesticide - 5L cans",
+    livestock:  "eg. Murrah Buffalo - 12L/day",
+    land:       "eg. 3 Acres Irrigated Land - Lease",
     equipment:  "eg. Sonalika Rotavator (good condition)",
     other:      "eg. ",
   };
 
   const canSubmit = category && title.length >= 6;
+  const captureLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationError("Browser location is not available on this device.");
+      return;
+    }
+
+    setLocating(true);
+    setLocationError("");
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        setCoordinates({
+          latitude: Number(coords.latitude.toFixed(6)),
+          longitude: Number(coords.longitude.toFixed(6)),
+        });
+        setLocating(false);
+      },
+      () => {
+        setLocationError("Allow location to place this listing on the nearby map.");
+        setLocating(false);
+      },
+      { enableHighAccuracy: false, maximumAge: 300000, timeout: 8000 }
+    );
+  };
   const submit = () => {
     if (!canSubmit) return;
     setSubmitting(true);
@@ -480,10 +523,12 @@ const PostListingScreen = ({ onBack, onPost, lang, prefill }) => {
       setSubmitted(true);
       setTimeout(() => {
         onPost({
+          kind: mode,
           category: outCat, subcategory: outSub,
           title, description: desc, price: +price || null,
           priceUnit, negotiable, quantity, photos,
-          village, district, state: stateVal, whatsappEnabled
+          village, district, state: stateVal, whatsappEnabled,
+          ...coordinates,
         });
       }, 800);
     }, 800);
@@ -522,7 +567,7 @@ const PostListingScreen = ({ onBack, onPost, lang, prefill }) => {
       </div>
 
       <div className="scroll" style={{ padding: "16px 16px 24px" }}>
-        {/* Mode chip â€” orients the user */}
+        {/* Mode chip orients the user. */}
         <div style={{ marginBottom: 14 }}>
           <span className="post-mode-chip">
             <Icon name={mode === "service" ? "tool" : "wheat"} size={12} />
@@ -601,7 +646,7 @@ const PostListingScreen = ({ onBack, onPost, lang, prefill }) => {
           <label className="field-label">Description</label>
           <textarea
             className="input"
-            placeholder="Variety, quality, storage details, where buyers should visitâ€¦"
+            placeholder="Variety, quality, storage details, where buyers should visit..."
             value={desc}
             onChange={e => setDesc(e.target.value)}
             rows={3}
@@ -613,7 +658,7 @@ const PostListingScreen = ({ onBack, onPost, lang, prefill }) => {
           <label className="field-label">Price</label>
           <div style={{ display: "flex", gap: 8 }}>
             <div className="input-row" style={{ flex: 2 }}>
-              <div className="prefix">â‚¹</div>
+              <div className="prefix">Rs</div>
               <input className="input" type="number" placeholder="0" value={price} onChange={e => setPrice(e.target.value)} />
             </div>
             <select className="input" style={{ flex: 1, height: 52 }} value={priceUnit} onChange={e => setPriceUnit(e.target.value)}>
@@ -713,7 +758,16 @@ const PostListingScreen = ({ onBack, onPost, lang, prefill }) => {
               <span className="row-label">State</span>
               <span className="row-meta">{stateVal}</span>
             </div>
+            <div className="list-row">
+              <span className="row-label">Map point</span>
+              <button onClick={captureLocation} className="chip soft" disabled={locating} style={{ height: 30 }}>
+                <Icon name="pin" size={13} />
+                {locating ? "Locating..." : coordinates ? "Update" : "Use GPS"}
+              </button>
+            </div>
           </div>
+          {coordinates && <div style={{ fontSize: 11, color: "var(--primary)", marginTop: 6 }}>GPS point captured for nearby heat maps.</div>}
+          {locationError && <div style={{ fontSize: 11, color: "var(--terra)", marginTop: 6 }}>{locationError}</div>}
         </div>
 
         {/* Contact */}
@@ -722,7 +776,7 @@ const PostListingScreen = ({ onBack, onPost, lang, prefill }) => {
           <div className="form-group">
             <div className="list-row">
               <Icon name="phone" size={18} color="var(--ink-3)" />
-              <span className="row-label">+91 98â—â—â—â—â—â—00</span>
+              <span className="row-label">+91 98******00</span>
               <span style={{ fontSize: 11, color: "var(--ink-3)" }}>Default</span>
             </div>
             <div className="list-row">
@@ -749,7 +803,7 @@ const PostListingScreen = ({ onBack, onPost, lang, prefill }) => {
 
       <div className="bottom-action">
         <Button full disabled={!canSubmit || submitting} onClick={submit}>
-          {submitting ? "Postingâ€¦" : t("post.submit")}
+          {submitting ? "Posting..." : t("post.submit")}
         </Button>
       </div>
     </div>
