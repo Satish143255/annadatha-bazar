@@ -17,6 +17,8 @@ const ProfileScreen = ({ user, myListings, inquiries, orders = [], onOpenSetting
   const openOrders = orders.filter(o => !["completed", "cancelled"].includes(o.stage)).length;
   const [editing, setEditing] = useStateP(false);
   const [name, setName] = useStateP(user.name);
+  const locationLabel = [user.village, user.district, user.state].filter(Boolean).join(", ")
+    || (user.latitude != null && user.longitude != null ? "GPS location saved" : "Location not added");
 
   return (
     <div className="scroll">
@@ -43,7 +45,7 @@ const ProfileScreen = ({ user, myListings, inquiries, orders = [], onOpenSetting
           <div style={{ fontSize: 22, fontWeight: 600, marginTop: 12 }}>{name}</div>
         )}
         <div style={{ fontSize: 13, color: "var(--ink-3)", marginTop: 4 }}>
-          <Icon name="pin" size={12} /> {user.village}, {user.district}, {user.state}
+          <Icon name="pin" size={12} /> {locationLabel}
         </div>
         <div style={{ fontSize: 11, color: "var(--ink-4)", marginTop: 4 }}>
           Member since {user.joined}
