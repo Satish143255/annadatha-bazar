@@ -11,7 +11,7 @@ import { ProfileScreen, MyListingsScreen, InquiriesScreen } from './screens/Prof
 import { DashboardScreen } from './screens/DashboardScreen.jsx';
 import { NotificationsScreen, SettingsScreen, HelpScreen } from './screens/UtilityScreens.jsx';
 import { fetchMarketPrices, fetchOfficialUpdates, OFFICIAL_SCHEMES } from './services/agricultureData.js';
-import { createListing, DEMO_MODE, fetchIdentity, loadMarketplace, saveProfile, apiLogin, apiSignup } from './services/marketplaceApi.js';
+import { createListing, DEMO_MODE, fetchIdentity, loadMarketplace, saveProfile, apiLogin, apiSignup, fetchLiveWeather } from './services/marketplaceApi.js';
 // localStorage helpers
 const LS = {
   get: (k, def) => { try { const v = localStorage.getItem("agri_" + k); return v == null ? def : JSON.parse(v); } catch { return def; } },
@@ -100,6 +100,7 @@ function App() {
   const [officialUpdatesState, setOfficialUpdatesState] = useState("loading");
 
   const unreadNotifs = notifications.filter(n => n.unread).length;
+  const [weather, setWeather] = useState(null);
 
   // Background identity fetch during Splash
   useEffect(() => {
@@ -135,6 +136,40 @@ function App() {
       delete window.agriSetLang;
     };
   }, []);
+
+  const userLat = user?.latitude;
+  const userLon = user?.longitude;
+  const userVillage = user?.village;
+  const userDistrict = user?.district;
+
+  useEffect(() => {
+    let current = true;
+    const locationName = [userVillage, userDistrict].filter(Boolean).join(", ");
+    
+    fetchLiveWeather({
+      latitude: userLat,
+      longitude: userLon,
+      location: locationName
+    })
+      .then((data) => {
+        if (!current) return;
+        if (data) {
+          setWeather(data);
+        } else if (DEMO_MODE) {
+          setWeather(DEMO_DATA.WEATHER);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to load live weather:", err);
+        if (current && DEMO_MODE) {
+          setWeather(DEMO_DATA.WEATHER);
+        }
+      });
+
+    return () => {
+      current = false;
+    };
+  }, [userLat, userLon, userVillage, userDistrict]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -488,9 +523,9 @@ function App() {
   // ===== Main app =====
   const renderTab = () => {
     switch (tab) {
-      case "home":    return <HomeScreen    user={user} listings={listings} prices={marketPrices} pricesState={marketPricesState} weather={DEMO_MODE ? DEMO_DATA.WEATHER : null} updates={officialUpdates} updatesState={officialUpdatesState} onOpenListing={openListing} onNavTab={handleNavTab} onOpenNotifs={openNotifs} unreadNotifs={unreadNotifs} onPostListing={(mode) => openPost(mode || "listing")} lang={lang} />;
+      case "home":    return <HomeScreen    user={user} listings={listings} prices={marketPrices} pricesState={marketPricesState} weather={weather} updates={officialUpdates} updatesState={officialUpdatesState} onOpenListing={openListing} onNavTab={handleNavTab} onOpenNotifs={openNotifs} unreadNotifs={unreadNotifs} onPostListing={(mode) => openPost(mode || "listing")} lang={lang} />;
       case "browse":  return <BrowseScreen  listings={listings} onOpenListing={openListing} onPostListing={() => openPost()} initialCategory={browseInitialCat} lang={lang} />;
-      case "discover":return <DiscoverWrapper screen={discoverScreen} setScreen={setDiscoverScreen} user={user} listings={listings} marketPrices={marketPrices} marketPricesState={marketPricesState} weather={DEMO_MODE ? DEMO_DATA.WEATHER : null} onOpenListing={openListing} nearbyInitialCat={nearbyInitialCat} lang={lang} />;
+      case "discover":return <DiscoverWrapper screen={discoverScreen} setScreen={setDiscoverScreen} user={user} listings={listings} marketPrices={marketPrices} marketPricesState={marketPricesState} weather={weather} onOpenListing={openListing} nearbyInitialCat={nearbyInitialCat} lang={lang} />;
       case "profile": return <ProfileScreen  user={user} myListings={myListings} inquiries={inquiries} orders={orders} onOpenSettings={openSettings} onOpenListings={openMyListings} onOpenDashboard={openDashboard} onOpenInquiries={openInquiries} onLogout={handleLogout} lang={lang} />;
       default: return null;
     }

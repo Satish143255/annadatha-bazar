@@ -128,3 +128,11 @@ export const createListing = (listing) => request("/listings", {
   method: "POST",
   body: JSON.stringify(listing),
 });
+
+export const fetchLiveWeather = ({ latitude, longitude, location }) => {
+  const params = new URLSearchParams();
+  if (latitude != null) params.append("latitude", latitude);
+  if (longitude != null) params.append("longitude", longitude);
+  if (location) params.append("location", location);
+  return request(`/weather?${params.toString()}`);
+};

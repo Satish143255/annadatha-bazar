@@ -6,3 +6,4 @@ import "./functions/marketPrices.js";
 import "./functions/notifications.js";
 import "./functions/otp.js";
 import "./functions/refreshPublicData.js";
+import "./functions/weather.js";
