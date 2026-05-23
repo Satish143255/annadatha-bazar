@@ -1,9 +1,8 @@
-﻿import React from 'react';
+import React from 'react';
 import { CROPS, LANGUAGES, STATES_DISTRICTS } from '../referenceData.js';
 import { Icon } from '../icons/Icon.jsx';
 import { Button, Sheet, TopBar, useT } from '../components/index.jsx';
-
-// ===== Auth Screens: A1 Signup, A2 OTP, A3 Profile =====
+import { apiForgotPasswordRequest, apiForgotPasswordVerify, apiForgotPasswordReset, DEMO_MODE } from '../services/marketplaceApi.js';
 
 const { useState: useStateA, useEffect: useEffectA, useRef: useRefA } = React;
 
@@ -98,81 +97,341 @@ const HostedAccountScreen = () => {
   );
 };
 
-// ---------- A1: Signup ----------
-const SignupScreen = ({ onNext, onSkip, lang, setLang }) => {
+// ---------- Splash Screen ----------
+const SplashScreen = ({ onGetStarted, lang }) => {
   const t = useT(lang);
-  const [phone, setPhone] = useStateA("");
-  const [agreed, setAgreed] = useStateA(false);
-  const [langOpen, setLangOpen] = useStateA(false);
-  const valid = phone.length === 10 && /^[6-9]/.test(phone) && agreed;
-  const langName = LANGUAGES.find(l => l.code === lang)?.native || "English";
+  const [progress, setProgress] = useStateA(0);
+  const [loadingComplete, setLoadingComplete] = useStateA(false);
+
+  useEffectA(() => {
+    const timer = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(timer);
+          setLoadingComplete(true);
+          return 100;
+        }
+        return prev + 5;
+      });
+    }, 40);
+    return () => clearInterval(timer);
+  }, []);
 
   return (
-    <div className="scroll screen-enter" style={{ padding: "0 0 24px" }}>
-      <div style={{ padding: "8px 16px 0", display: "flex", justifyContent: "flex-end" }}>
-        <button className="chip" onClick={() => setLangOpen(true)}>
+    <div className="scroll screen-enter" style={{
+      height: "100%",
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "space-between",
+      alignItems: "center",
+      padding: "50px 24px 60px",
+      background: "linear-gradient(180deg, var(--bg) 0%, var(--surface-2) 100%)",
+      position: "relative",
+    }}>
+      {/* Background glowing gradients */}
+      <div style={{
+        position: "absolute",
+        top: "-10%",
+        left: "-10%",
+        width: "60%",
+        aspectRatio: 1,
+        borderRadius: "999px",
+        background: "radial-gradient(circle, rgba(21, 66, 18, 0.08) 0%, transparent 70%)",
+        filter: "blur(40px)",
+        pointerEvents: "none"
+      }} />
+      <div style={{
+        position: "absolute",
+        bottom: "10%",
+        right: "-10%",
+        width: "60%",
+        aspectRatio: 1,
+        borderRadius: "999px",
+        background: "radial-gradient(circle, rgba(116, 91, 0, 0.06) 0%, transparent 70%)",
+        filter: "blur(40px)",
+        pointerEvents: "none"
+      }} />
+
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", width: "100%" }}>
+        <div className="modal-enter" style={{
+          width: 100,
+          height: 100,
+          background: "linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%)",
+          borderRadius: 24,
+          display: "grid",
+          placeItems: "center",
+          boxShadow: "var(--shadow-lg)",
+          marginBottom: 24,
+        }}>
+          <Icon name="leaf" size={50} color="#FFFFFF" stroke={1.8} />
+        </div>
+        
+        <h1 style={{
+          fontFamily: "var(--font-sans)",
+          fontSize: 32,
+          fontWeight: 800,
+          color: "var(--ink)",
+          margin: "0 0 8px 0",
+          letterSpacing: "-0.02em",
+          textAlign: "center"
+        }}>
+          Annadata<span style={{ color: "var(--primary)" }}>.</span>Bazar
+        </h1>
+        <p style={{
+          fontSize: 14,
+          color: "var(--ink-2)",
+          margin: 0,
+          textAlign: "center",
+          fontWeight: 500,
+          maxWidth: 260,
+          lineHeight: 1.5,
+          textWrap: "balance"
+        }}>
+          Indian Farmer's Direct Marketplace. Buy, Sell, and Connect.
+        </p>
+      </div>
+
+      <div style={{ width: "100%", maxWidth: 320, display: "flex", flexDirection: "column", alignItems: "center" }}>
+        {!loadingComplete ? (
+          <div style={{ width: "100%", textAlign: "center" }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--ink-3)", marginBottom: 10, letterSpacing: "0.05em", textTransform: "uppercase" }}>
+              Initializing... {progress}%
+            </div>
+            <div style={{
+              width: "100%",
+              height: 6,
+              background: "var(--surface-3)",
+              borderRadius: 999,
+              overflow: "hidden"
+            }}>
+              <div style={{
+                width: `${progress}%`,
+                height: "100%",
+                background: "linear-gradient(90deg, var(--primary) 0%, var(--primary-2) 100%)",
+                borderRadius: 999,
+                transition: "width 80ms ease-out"
+              }} />
+            </div>
+          </div>
+        ) : (
+          <div className="modal-enter" style={{ width: "100%" }}>
+            <Button full onClick={onGetStarted} style={{
+              height: 52,
+              borderRadius: 16,
+              boxShadow: "0 8px 20px -4px rgba(21, 66, 18, 0.25)",
+              fontSize: 16,
+              letterSpacing: "0.01em"
+            }}>
+              Get Started <Icon name="arrow-right" size={16} style={{ marginLeft: 4 }} />
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ---------- Signup & Login Screen ----------
+const SignupLoginScreen = ({ onLogin, onSignup, onForgotPasswordClick, onSkip, lang, error, setError }) => {
+  const t = useT(lang);
+  const [tab, setTab] = useStateA("login"); // "login" | "signup"
+  const [email, setEmail] = useStateA("");
+  const [password, setPassword] = useStateA("");
+  const [confirmPassword, setConfirmPassword] = useStateA("");
+  const [name, setName] = useStateA("");
+  const [agreed, setAgreed] = useStateA(false);
+  const [loading, setLoading] = useStateA(false);
+  const [langOpen, setLangOpen] = useStateA(false);
+
+  const handleTabChange = (newTab) => {
+    setTab(newTab);
+    setError && setError(null);
+  };
+
+  const isEmailValid = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+
+  const isFormValid = tab === "login"
+    ? (isEmailValid(email) && password.length >= 6)
+    : (name.trim().length >= 2 && isEmailValid(email) && password.length >= 6 && password === confirmPassword && agreed);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!isFormValid || loading) return;
+    setLoading(true);
+    setError && setError(null);
+    try {
+      if (tab === "login") {
+        await onLogin(email, password);
+      } else {
+        await onSignup(name, email, password);
+      }
+    } catch (err) {
+      setError && setError(err.message || "Authentication failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="scroll screen-enter" style={{ padding: "0 0 30px" }}>
+      <div style={{ padding: "12px 16px 0", display: "flex", justifyContent: "flex-end" }}>
+        <button className="chip" type="button" onClick={() => setLangOpen(true)}>
           <Icon name="globe" size={14} />
-          {langName}
+          {LANGUAGES.find(l => l.code === lang)?.native || "English"}
         </button>
       </div>
 
-      <div style={{ padding: "32px 24px 0", textAlign: "center" }}>
-        <AuthLogo />
-        <div style={{ fontFamily: "var(--font-display)", fontSize: 38, lineHeight: 1.05, letterSpacing: "-0.01em", marginBottom: 8 }}>
+      <div style={{ textAlign: "center", margin: "20px 0 28px" }}>
+        <div style={{
+          width: 72,
+          height: 72,
+          background: "linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%)",
+          borderRadius: 20,
+          display: "grid",
+          placeItems: "center",
+          margin: "0 auto 16px",
+          boxShadow: "var(--shadow)"
+        }}>
+          <Icon name="leaf" size={36} color="#FFFFFF" stroke={1.8} />
+        </div>
+        <div style={{ fontFamily: "var(--font-sans)", fontSize: 28, fontWeight: 800, color: "var(--ink)" }}>
           Annadata<span style={{ color: "var(--primary)" }}>.</span>Bazar
         </div>
-        <div style={{ fontSize: 15, color: "var(--ink-3)", textWrap: "balance", maxWidth: 280, margin: "0 auto" }}>
-          Find buyers, services, and equipment. Connect direct, no middlemen.
+        <div style={{ fontSize: 13, color: "var(--ink-3)", marginTop: 6 }}>
+          Direct Marketplace. No Middlemen.
         </div>
       </div>
 
-      <div style={{ padding: "44px 20px 20px" }}>
-        <div className="field">
-          <label className="field-label">{t("auth.phone")}<span className="req"> *</span></label>
-          <div className="input-row">
-            <div className="prefix">+91</div>
+      <div style={{ padding: "0 24px" }}>
+        <div className="segmented" style={{ marginBottom: 24, padding: 4 }}>
+          <button
+            type="button"
+            className={tab === "login" ? "active" : ""}
+            onClick={() => handleTabChange("login")}
+            style={{ height: 40, fontSize: 14, borderRadius: 8 }}
+          >
+            Sign In
+          </button>
+          <button
+            type="button"
+            className={tab === "signup" ? "active" : ""}
+            onClick={() => handleTabChange("signup")}
+            style={{ height: 40, fontSize: 14, borderRadius: 8 }}
+          >
+            Register
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          {error && (
+            <div style={{
+              background: "rgba(186, 26, 26, 0.08)",
+              border: "1px solid var(--danger)",
+              color: "var(--danger)",
+              borderRadius: 12,
+              padding: "12px 14px",
+              fontSize: 13,
+              marginBottom: 20,
+              lineHeight: 1.4
+            }}>
+              {error}
+            </div>
+          )}
+
+          {tab === "signup" && (
+            <div className="field">
+              <label className="field-label">Full Name<span className="req"> *</span></label>
+              <input
+                className="input"
+                type="text"
+                placeholder="eg. Ramesh Yadav"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+            </div>
+          )}
+
+          <div className="field">
+            <label className="field-label">Email Address<span className="req"> *</span></label>
             <input
               className="input"
-              type="tel"
-              maxLength={10}
-              inputMode="numeric"
-              placeholder="98765 43210"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-              style={{ letterSpacing: "0.04em", fontSize: 18 }}
+              type="email"
+              placeholder="eg. ramesh@gmail.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="email"
             />
           </div>
-          <div style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 6 }}>
-            We'll send a 6-digit code to verify
+
+          <div className="field">
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+              <label className="field-label">Password<span className="req"> *</span></label>
+              {tab === "login" && (
+                <button
+                  type="button"
+                  onClick={onForgotPasswordClick}
+                  style={{ color: "var(--primary)", fontSize: 13, fontWeight: 600, padding: "2px 6px" }}
+                >
+                  Forgot Password?
+                </button>
+              )}
+            </div>
+            <input
+              className="input"
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              autoComplete="current-password"
+            />
           </div>
-        </div>
 
-        <label style={{ display: "flex", alignItems: "flex-start", gap: 10, marginTop: 24, cursor: "pointer" }}>
-          <div
-            onClick={() => setAgreed(!agreed)}
-            style={{
-              width: 22, height: 22, borderRadius: 6,
-              border: `2px solid ${agreed ? "var(--primary)" : "var(--border-strong)"}`,
-              background: agreed ? "var(--primary)" : "transparent",
-              flexShrink: 0, display: "grid", placeItems: "center", marginTop: 2,
-            }}
-          >
-            {agreed && <Icon name="check" size={14} color="#fff" stroke={3} />}
+          {tab === "signup" && (
+            <div className="field">
+              <label className="field-label">Confirm Password<span className="req"> *</span></label>
+              <input
+                className="input"
+                type="password"
+                placeholder="••••••••"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+              />
+            </div>
+          )}
+
+          {tab === "signup" && (
+            <label style={{ display: "flex", alignItems: "flex-start", gap: 10, marginTop: 20, marginBottom: 24, cursor: "pointer" }}>
+              <div
+                onClick={() => setAgreed(!agreed)}
+                style={{
+                  width: 20, height: 20, borderRadius: 6,
+                  border: `2px solid ${agreed ? "var(--primary)" : "var(--border-strong)"}`,
+                  background: agreed ? "var(--primary)" : "transparent",
+                  flexShrink: 0, display: "grid", placeItems: "center", marginTop: 2,
+                }}
+              >
+                {agreed && <Icon name="check" size={13} color="#fff" stroke={3} />}
+              </div>
+              <span style={{ fontSize: 13, color: "var(--ink-2)", lineHeight: 1.4 }}>
+                I agree to the <a style={{ color: "var(--primary)", textDecoration: "underline" }}>Terms</a> and <a style={{ color: "var(--primary)", textDecoration: "underline" }}>Privacy Policy</a>
+              </span>
+            </label>
+          )}
+
+          <div style={{ marginTop: 28 }}>
+            <Button full disabled={!isFormValid || loading} type="submit">
+              {loading ? "Authenticating..." : tab === "login" ? "Sign In" : "Create Account"}
+            </Button>
           </div>
-          <span style={{ fontSize: 13, color: "var(--ink-2)", lineHeight: 1.5 }}>
-            I agree to the <a style={{ color: "var(--primary)", textDecoration: "underline" }}>Terms</a> and <a style={{ color: "var(--primary)", textDecoration: "underline" }}>Privacy Policy</a>
-          </span>
-        </label>
+        </form>
 
-        <div style={{ marginTop: 28 }}>
-          <Button full disabled={!valid} onClick={() => onNext(phone)}>
-            {t("auth.sendOtp")}
-          </Button>
-        </div>
-
-        <div style={{ textAlign: "center", marginTop: 16 }}>
+        <div style={{ textAlign: "center", marginTop: 24 }}>
           <button onClick={onSkip} style={{ fontSize: 13, color: "var(--ink-3)", padding: 8 }}>
-            Skip to demo (no signup)
+            Skip to demo (Guest Mode)
           </button>
         </div>
       </div>
@@ -184,7 +443,7 @@ const SignupScreen = ({ onNext, onSkip, lang, setLang }) => {
               key={l.code}
               className={`chip${lang === l.code ? " active" : ""}`}
               style={{ height: 48, padding: "0 12px", justifyContent: "flex-start", borderRadius: 12, fontSize: 14 }}
-              onClick={() => { setLang(l.code); setLangOpen(false); }}
+              onClick={() => { window.agriSetLang ? window.agriSetLang(l.code) : null; setLangOpen(false); }}
             >
               <span style={{ fontWeight: 600 }}>{l.native}</span>
               <span style={{ marginLeft: "auto", fontSize: 11, opacity: 0.7 }}>{l.name}</span>
@@ -196,116 +455,231 @@ const SignupScreen = ({ onNext, onSkip, lang, setLang }) => {
   );
 };
 
-// ---------- A2: OTP ----------
-const OtpScreen = ({ phone, onVerify, onBack, lang }) => {
-  const t = useT(lang);
-  const [digits, setDigits] = useStateA(["", "", "", "", "", ""]);
-  const [resend, setResend] = useStateA(30);
+// ---------- Forgot Password Screen ----------
+const ForgotPasswordScreen = ({ onBack, onSuccess, showToast, lang }) => {
+  const [step, setStep] = useStateA(1); // 1: Email, 2: OTP, 3: New Password
+  const [email, setEmail] = useStateA("");
+  const [otp, setOtp] = useStateA("");
+  const [newPassword, setNewPassword] = useStateA("");
+  const [confirmPassword, setConfirmPassword] = useStateA("");
+  const [loading, setLoading] = useStateA(false);
   const [error, setError] = useStateA(null);
-  const refs = useRefA([]);
+  const [resetToken, setResetToken] = useStateA("");
 
-  useEffectA(() => {
-    if (resend > 0) {
-      const id = setTimeout(() => setResend(r => r - 1), 1000);
-      return () => clearTimeout(id);
-    }
-  }, [resend]);
-
-  useEffectA(() => {
-    refs.current[0]?.focus();
-    // Auto-fill demo OTP after 2s
-    const id = setTimeout(() => {
-      setDigits(["1", "2", "3", "4", "5", "6"]);
-    }, 1500);
-    return () => clearTimeout(id);
-  }, []);
-
-  const setAt = (i, v) => {
-    if (v && !/^\d$/.test(v)) return;
-    const next = [...digits];
-    next[i] = v;
-    setDigits(next);
+  const handleSendOtp = async (e) => {
+    e.preventDefault();
+    if (!email || loading) return;
+    setLoading(true);
     setError(null);
-    if (v && i < 5) refs.current[i + 1]?.focus();
+    try {
+      if (DEMO_MODE) {
+        showToast("Demo OTP sent to " + email, "check");
+        setTimeout(() => {
+          showToast("Demo OTP is 123456", "info");
+        }, 800);
+      } else {
+        const response = await apiForgotPasswordRequest(email);
+        // Supports both pure API recovery or returning inline code in logs
+        showToast("OTP sent to your email.", "check");
+        if (response?.otp) {
+          setTimeout(() => {
+            showToast(`Demo OTP is ${response.otp}`, "info");
+          }, 800);
+        }
+      }
+      setStep(2);
+    } catch (err) {
+      setError(err.message || "Failed to initiate recovery. Ensure your email is registered.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const code = digits.join("");
-  const complete = code.length === 6;
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    if (otp.length !== 6 || loading) return;
+    setLoading(true);
+    setError(null);
+    try {
+      if (DEMO_MODE) {
+        if (otp === "123456") {
+          setResetToken("mock-reset-token-123456");
+          setStep(3);
+        } else {
+          setError("Wrong OTP code. Enter 123456 for demo.");
+        }
+      } else {
+        const res = await apiForgotPasswordVerify(email, otp);
+        if (res?.resetToken) {
+          setResetToken(res.resetToken);
+          setStep(3);
+        } else {
+          setError("Verification failed.");
+        }
+      }
+    } catch (err) {
+      setError(err.message || "Invalid or expired OTP code.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const verify = () => {
-    if (code === "123456") {
-      onVerify(phone, false); // Existing users go straight home; use true to force profile setup.
-    } else {
-      setError("Wrong code. Try 123456 for demo.");
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    if (newPassword.length < 6 || newPassword !== confirmPassword || loading) return;
+    setLoading(true);
+    setError(null);
+    try {
+      if (DEMO_MODE) {
+        showToast("Password reset successful!", "check");
+        onSuccess();
+      } else {
+        await apiForgotPasswordReset(resetToken, newPassword);
+        showToast("Password reset successful!", "check");
+        onSuccess();
+      }
+    } catch (err) {
+      setError(err.message || "Password reset failed. Please request OTP again.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="scroll screen-enter" style={{ padding: "0 0 24px" }}>
-      <TopBar onBack={onBack} title="" />
-      <div style={{ padding: "16px 24px 0" }}>
-        <div style={{ fontSize: 28, fontWeight: 600, marginBottom: 8, letterSpacing: "-0.01em" }}>
-          {t("auth.otp.title")}
+    <div className="scroll screen-enter" style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      <TopBar onBack={onBack} title="Reset Password" />
+      
+      <div style={{ padding: "20px 24px", flex: 1 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 28 }}>
+          <div style={{ flex: 1, height: 4, background: "var(--primary)", borderRadius: 2 }} />
+          <div style={{ flex: 1, height: 4, background: step >= 2 ? "var(--primary)" : "var(--border)", borderRadius: 2 }} />
+          <div style={{ flex: 1, height: 4, background: step >= 3 ? "var(--primary)" : "var(--border)", borderRadius: 2 }} />
         </div>
-        <div style={{ fontSize: 15, color: "var(--ink-3)" }}>
-          {t("auth.otp.sub")} <span style={{ color: "var(--ink)", fontWeight: 500 }}>+91 {phone}</span>
-          <button onClick={onBack} style={{ color: "var(--primary)", fontWeight: 500, marginLeft: 8 }}>Change</button>
-        </div>
-      </div>
 
-      <div style={{ padding: "32px 16px 0" }}>
-        <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
-          {digits.map((d, i) => (
-            <input
-              key={i}
-              ref={el => refs.current[i] = el}
-              value={d}
-              onChange={e => setAt(i, e.target.value.slice(-1))}
-              onKeyDown={e => { if (e.key === "Backspace" && !digits[i] && i > 0) refs.current[i - 1]?.focus(); }}
-              inputMode="numeric"
-              maxLength={1}
-              style={{
-                width: 48, height: 56,
-                fontSize: 24, fontWeight: 600,
-                textAlign: "center",
-                border: `2px solid ${error ? "var(--terra)" : d ? "var(--primary)" : "var(--border)"}`,
-                background: "var(--surface)",
-                borderRadius: 12,
-                color: "var(--ink)",
-                outline: "none",
-              }}
-            />
-          ))}
-        </div>
         {error && (
-          <div style={{ textAlign: "center", color: "var(--terra)", fontSize: 13, marginTop: 12 }}>{error}</div>
+          <div style={{
+            background: "rgba(186, 26, 26, 0.08)",
+            border: "1px solid var(--danger)",
+            color: "var(--danger)",
+            borderRadius: 12,
+            padding: "12px 14px",
+            fontSize: 13,
+            marginBottom: 20,
+            lineHeight: 1.4
+          }}>
+            {error}
+          </div>
         )}
-        <div style={{ textAlign: "center", marginTop: 24, fontSize: 13, color: "var(--ink-3)" }}>
-          {resend > 0 ? (
-            <span>{t("auth.otp.resend")} {resend}s</span>
-          ) : (
-            <button onClick={() => setResend(30)} style={{ color: "var(--primary)", fontWeight: 600 }}>Resend OTP</button>
-          )}
-        </div>
-        <div style={{ textAlign: "center", marginTop: 8 }}>
-          <button style={{ color: "var(--ink-2)", fontSize: 13, textDecoration: "underline" }}>
-            <Icon name="phone" size={12} /> {t("auth.otp.voice")}
-          </button>
-        </div>
-      </div>
 
-      <div style={{ padding: "32px 20px 0" }}>
-        <Button full disabled={!complete} onClick={verify}>Verify & Continue</Button>
-      </div>
+        {step === 1 && (
+          <form onSubmit={handleSendOtp} className="modal-enter">
+            <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 8 }}>Find Your Account</h2>
+            <p style={{ color: "var(--ink-3)", fontSize: 14, lineHeight: 1.5, marginBottom: 24 }}>
+              Enter the email address associated with your account, and we will send a 6-digit OTP code to reset your password.
+            </p>
+            <div className="field">
+              <label className="field-label">Email Address<span className="req"> *</span></label>
+              <input
+                className="input"
+                type="email"
+                placeholder="eg. ramesh@gmail.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoFocus
+              />
+            </div>
+            <div style={{ marginTop: 32 }}>
+              <Button full disabled={!email || loading} type="submit">
+                {loading ? "Sending..." : "Send OTP Verification"}
+              </Button>
+            </div>
+          </form>
+        )}
 
-      <div style={{ padding: "24px 20px 0", textAlign: "center", fontSize: 11, color: "var(--ink-4)" }}>
-        Demo: code <span style={{ fontFamily: "var(--font-mono)", background: "var(--surface-2)", padding: "2px 6px", borderRadius: 4 }}>123456</span> works
+        {step === 2 && (
+          <form onSubmit={handleVerifyOtp} className="modal-enter">
+            <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 8 }}>Enter Verification Code</h2>
+            <p style={{ color: "var(--ink-3)", fontSize: 14, lineHeight: 1.5, marginBottom: 24 }}>
+              We've sent a 6-digit verification code to <span style={{ color: "var(--ink)", fontWeight: 600 }}>{email}</span>. Please enter it below.
+            </p>
+            <div className="field">
+              <label className="field-label">6-Digit OTP Code<span className="req"> *</span></label>
+              <input
+                className="input"
+                type="text"
+                maxLength={6}
+                inputMode="numeric"
+                placeholder="123456"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                style={{ fontSize: 24, fontWeight: 700, letterSpacing: "0.2em", textAlign: "center" }}
+                required
+                autoFocus
+              />
+            </div>
+            <div style={{ marginTop: 32 }}>
+              <Button full disabled={otp.length !== 6 || loading} type="submit">
+                {loading ? "Verifying..." : "Verify & Continue"}
+              </Button>
+            </div>
+            <div style={{ textAlign: "center", marginTop: 24 }}>
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                style={{ color: "var(--primary)", fontSize: 13, fontWeight: 600, padding: 8 }}
+              >
+                Change Email Address
+              </button>
+            </div>
+          </form>
+        )}
+
+        {step === 3 && (
+          <form onSubmit={handleResetPassword} className="modal-enter">
+            <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 8 }}>Set New Password</h2>
+            <p style={{ color: "var(--ink-3)", fontSize: 14, lineHeight: 1.5, marginBottom: 24 }}>
+              Create a secure new password for your account. It must be at least 6 characters.
+            </p>
+            
+            <div className="field">
+              <label className="field-label">New Password<span className="req"> *</span></label>
+              <input
+                className="input"
+                type="password"
+                placeholder="Minimum 6 characters"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+                autoFocus
+              />
+            </div>
+
+            <div className="field">
+              <label className="field-label">Confirm New Password<span className="req"> *</span></label>
+              <input
+                className="input"
+                type="password"
+                placeholder="Re-enter password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+              />
+            </div>
+
+            <div style={{ marginTop: 32 }}>
+              <Button full disabled={newPassword.length < 6 || newPassword !== confirmPassword || loading} type="submit">
+                {loading ? "Saving Password..." : "Update Password"}
+              </Button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );
 };
 
-// ---------- A3: Profile Setup ----------
+// ---------- Profile Setup ----------
 const ProfileSetupScreen = ({ onFinish, lang }) => {
   const t = useT(lang);
   const [name, setName] = useStateA("");
@@ -470,5 +844,4 @@ const ProfileSetupScreen = ({ onFinish, lang }) => {
   );
 };
 
-export { HostedAccountScreen, SignupScreen, OtpScreen, ProfileSetupScreen };
-
+export { HostedAccountScreen, SplashScreen, SignupLoginScreen, ForgotPasswordScreen, ProfileSetupScreen };

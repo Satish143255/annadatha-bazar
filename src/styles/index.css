@@ -3,44 +3,46 @@
    ========================================= */
 
 :root {
-  /* warm cream + forest + harvest gold */
-  --bg: #FBF7EE;
-  --surface: #FFFFFF;
-  --surface-2: #F4EEDF;
-  --surface-3: #EDE5D1;
-  --border: #E2D9C2;
-  --border-strong: #C8BCA0;
+  /* Agro-Heritage Design System (Modern Stitch styling) */
+  --bg: #fafaf4;           /* Warm Cream (Level 0 canvas) */
+  --surface: #ffffff;      /* Pure White (Level 1 cards & inputs) */
+  --surface-2: #f4f4ee;    /* Level 2 container low */
+  --surface-3: #eeeee9;    /* Level 3 container */
+  --surface-4: #e8e8e3;    /* Level 4 container high */
+  --border: #e3e3de;       /* Level 1 container highest */
+  --border-strong: #72796e; /* Outline */
 
-  --ink: #1B2418;
-  --ink-2: #3A4634;
-  --ink-3: #6B7763;
-  --ink-4: #98A28F;
+  --ink: #1a1c19;          /* On-surface (Charcoal) */
+  --ink-2: #42493e;        /* On-surface-variant (Slate green) */
+  --ink-3: #72796e;        /* Outline */
+  --ink-4: #c2c9bb;        /* Outline-variant (Light gray-green) */
 
-  --primary: #1F5A3A;      /* deep forest */
-  --primary-2: #2A6F49;
-  --primary-soft: #DCE9DE;
-  --primary-ink: #FFFFFF;
+  --primary: #154212;      /* Deep Forest Green */
+  --primary-2: #2d5a27;    /* Primary Container / Mid-green */
+  --primary-soft: #bcf0ae; /* Primary Fixed (Soft Green accent) */
+  --primary-ink: #ffffff;  /* On-primary */
 
-  --gold: #C8902C;         /* harvest gold */
-  --gold-soft: #F3E4BD;
-  --terra: #B05E2E;
-  --terra-soft: #F0D7C2;
+  --gold: #745b00;         /* Harvest Gold secondary */
+  --gold-soft: #fdcc14;    /* Harvest Gold soft accent */
+  --terra: #003c5f;        /* Earthy Terra tertiary */
+  --terra-soft: #cde5ff;   /* Earthy Terra soft accent */
 
   --whatsapp: #25D366;
-  --danger: #B0382A;
-  --info: #2E5C8A;
+  --danger: #ba1a1a;       /* error */
+  --info: #005482;         /* tertiary-container */
 
   --radius-sm: 8px;
   --radius: 12px;
-  --radius-lg: 18px;
+  --radius-lg: 16px;
   --radius-xl: 24px;
 
-  --shadow-sm: 0 1px 2px rgba(27, 36, 24, 0.05);
-  --shadow: 0 4px 14px -4px rgba(27, 36, 24, 0.10), 0 1px 2px rgba(27, 36, 24, 0.04);
-  --shadow-lg: 0 18px 40px -16px rgba(27, 36, 24, 0.25);
+  /* Diffused shadows tinted with Primary Green */
+  --shadow-sm: 0 1px 2px rgba(21, 66, 18, 0.04);
+  --shadow: 0 4px 14px -4px rgba(21, 66, 18, 0.08), 0 1px 2px rgba(21, 66, 18, 0.04);
+  --shadow-lg: 0 18px 40px -16px rgba(21, 66, 18, 0.16);
 
-  --font-sans: "Noto Sans", system-ui, -apple-system, sans-serif;
-  --font-display: "Instrument Serif", "Noto Serif", Georgia, serif;
+  --font-sans: "Plus Jakarta Sans", "Inter", system-ui, -apple-system, sans-serif;
+  --font-display: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
   --tap: 44px;
@@ -49,39 +51,39 @@
 }
 
 [data-theme="dark"] {
-  --bg: #14180F;
-  --surface: #1E241A;
-  --surface-2: #262D21;
-  --surface-3: #2F372A;
-  --border: #38422F;
-  --border-strong: #4D5942;
+  --bg: #101410;           /* Dark Olive Charcoal background */
+  --surface: #181c17;      /* Surface lowest */
+  --surface-2: #20251f;    /* Surface container low */
+  --surface-3: #282e27;    /* Surface container */
+  --border: #3e453c;       /* Surface container highest */
+  --border-strong: #7c8577; /* Outline */
 
-  --ink: #F4EEDF;
-  --ink-2: #D7CFB8;
-  --ink-3: #A39B85;
-  --ink-4: #757263;
+  --ink: #e2e3dd;          /* Warm off-white text */
+  --ink-2: #c2c9bb;        /* Muted slate text */
+  --ink-3: #8c9388;        /* Outlines */
+  --ink-4: #42493e;        /* Darker details */
 
-  --primary: #4CA56D;
-  --primary-2: #5DB57E;
-  --primary-soft: #1F3225;
-  --primary-ink: #0B1108;
+  --primary: #a1d494;      /* Inverse primary (light green) */
+  --primary-2: #2d5a27;    /* Primary Container */
+  --primary-soft: #143511; /* Dark primary accent */
+  --primary-ink: #002201;  /* Dark text on primary */
 
-  --gold: #E0B153;
-  --gold-soft: #3A2F12;
-  --terra: #D08054;
-  --terra-soft: #3A2418;
+  --gold: #f1c100;         /* Secondary gold dim */
+  --gold-soft: #4b3b00;    /* Dark gold container */
+  --terra: #94ccff;        /* Tertiary dim */
+  --terra-soft: #00314f;   /* Dark tertiary container */
 }
 
 [data-theme="terra"] {
-  --primary: #B05E2E;
-  --primary-2: #C66E3F;
-  --primary-soft: #F4DDC9;
+  --primary: #745b00;
+  --primary-2: #927500;
+  --primary-soft: #ffe08b;
 }
 
 [data-theme="indigo"] {
-  --primary: #2E4A7F;
-  --primary-2: #3A5C9A;
-  --primary-soft: #D6DFEF;
+  --primary: #003c5f;
+  --primary-2: #005482;
+  --primary-soft: #cde5ff;
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -89,10 +91,7 @@ html, body { margin: 0; padding: 0; }
 body {
   font-family: var(--font-sans);
   color: var(--ink);
-  background:
-    radial-gradient(ellipse at top, #EFE5CC 0%, transparent 50%),
-    linear-gradient(180deg, #E8DEC2 0%, #D4C6A0 100%);
-  background-attachment: fixed;
+  background: var(--bg);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   font-feature-settings: "ss01", "cv11";

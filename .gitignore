@@ -53,3 +53,7 @@ coverage/
 *.tmp
 *.temp
 .cache/
+
+# Stitch design extracts
+stitch_modern_visual_interface_design_extracted/
+

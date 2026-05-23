@@ -1,4 +1,5 @@
 import "./functions/agricultureUpdates.js";
+import "./functions/auth.js";
 import "./functions/conversations.js";
 import "./functions/marketplace.js";
 import "./functions/marketPrices.js";

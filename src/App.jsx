@@ -1,9 +1,9 @@
-﻿import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { AGRI_DATA } from './data.js';
 import { Icon } from './icons/Icon.jsx';
 import { T, Toast } from './components/index.jsx';
 import { TweaksPanel, TweakSection, TweakRadio, TweakColor, TweakSelect } from './tweaks/TweaksPanel.jsx';
-import { HostedAccountScreen, SignupScreen, OtpScreen, ProfileSetupScreen } from './screens/AuthScreens.jsx';
+import { HostedAccountScreen, SplashScreen, SignupLoginScreen, ForgotPasswordScreen, ProfileSetupScreen } from './screens/AuthScreens.jsx';
 import { HomeScreen } from './screens/HomeScreen.jsx';
 import { BrowseScreen, ListingDetailScreen, PostListingScreen } from './screens/BrowseScreen.jsx';
 import { PricesScreen, WeatherScreen, NearbyScreen } from './screens/DiscoverScreen.jsx';
@@ -11,7 +11,7 @@ import { ProfileScreen, MyListingsScreen, InquiriesScreen } from './screens/Prof
 import { DashboardScreen } from './screens/DashboardScreen.jsx';
 import { NotificationsScreen, SettingsScreen, HelpScreen } from './screens/UtilityScreens.jsx';
 import { fetchMarketPrices, fetchOfficialUpdates, OFFICIAL_SCHEMES } from './services/agricultureData.js';
-import { createListing, DEMO_MODE, fetchIdentity, loadMarketplace, saveProfile } from './services/marketplaceApi.js';
+import { createListing, DEMO_MODE, fetchIdentity, loadMarketplace, saveProfile, apiLogin, apiSignup } from './services/marketplaceApi.js';
 // localStorage helpers
 const LS = {
   get: (k, def) => { try { const v = localStorage.getItem("agri_" + k); return v == null ? def : JSON.parse(v); } catch { return def; } },
@@ -84,7 +84,11 @@ function App() {
   }), [dark, theme, density]);
 
   // ===== App state =====
-  const [session, setSession]         = useState({ stage: DEMO_MODE ? "app" : "loading", phone: "" });
+  const [session, setSession]         = useState({ stage: "splash" });
+  const [cachedIdentity, setCachedIdentity] = useState(null);
+  const [identityLoaded, setIdentityLoaded] = useState(false);
+  const [authError, setAuthError]     = useState(null);
+
   const [user, setUser]               = useState(DEMO_MODE ? DEMO_DATA.USERS.find(u => u.isMe) : null);
   const [listings, setListings]       = useState(DEMO_MODE ? DEMO_DATA.LISTINGS : []);
   const [myListings, setMyListings]   = useState(DEMO_MODE ? DEMO_DATA.MY_LISTINGS : []);
@@ -98,40 +102,46 @@ function App() {
 
   const unreadNotifs = notifications.filter(n => n.unread).length;
 
+  // Background identity fetch during Splash
   useEffect(() => {
-    if (DEMO_MODE) return;
     let current = true;
+    window.agriSetLang = (l) => setTweak("lang", l);
+
+    if (DEMO_MODE) {
+      const savedUser = LS.get("mock_user", null);
+      if (current) {
+        setCachedIdentity(savedUser);
+        setIdentityLoaded(true);
+      }
+      return () => {
+        current = false;
+        delete window.agriSetLang;
+      };
+    }
+
     fetchIdentity()
       .then(async (identity) => {
         if (!current) return;
         if (!identity) {
-          setSession({ stage: "hosted-auth", phone: "" });
+          setIdentityLoaded(true);
           return;
         }
-        const signedInUser = { name: identity.userDetails || "Farmer", crops: [], village: "", district: "", state: "" };
-        setUser(signedInUser);
-        let data;
+        let data = null;
         try {
           data = await loadMarketplace();
-        } catch {
-          setSession({ stage: "profile-setup", phone: "" });
-          return;
-        }
+        } catch (e) {}
         if (!current) return;
-        if (!data.profile) {
-          setSession({ stage: "profile-setup", phone: "" });
-          return;
-        }
-        setUser(data.profile);
-        setListings(data.listings);
-        setMyListings(data.myListings);
-        setOrders(data.orders);
-        setInquiries(data.inquiries);
-        setNotifications(data.notifications);
-        setSession({ stage: "app", phone: "" });
+        setCachedIdentity({ identity, data });
+        setIdentityLoaded(true);
       })
-      .catch(() => setSession({ stage: "hosted-auth", phone: "" }));
-    return () => { current = false; };
+      .catch(() => {
+        if (current) setIdentityLoaded(true);
+      });
+
+    return () => {
+      current = false;
+      delete window.agriSetLang;
+    };
   }, []);
 
   useEffect(() => {
@@ -279,13 +289,138 @@ function App() {
     setTimeout(() => showToast("Listing posted!", "check"), 200);
   };
 
+  const handleGetStarted = () => {
+    if (cachedIdentity) {
+      if (DEMO_MODE) {
+        setUser(cachedIdentity);
+        if (!cachedIdentity.state || !cachedIdentity.district) {
+          setSession({ stage: "profile-setup" });
+        } else {
+          setSession({ stage: "app" });
+        }
+      } else {
+        const profile = cachedIdentity.profile || cachedIdentity.identity?.profile || cachedIdentity.identity;
+        setUser(profile);
+        if (cachedIdentity.data) {
+          setListings(cachedIdentity.data.listings || []);
+          setMyListings(cachedIdentity.data.myListings || []);
+          setInquiries(cachedIdentity.data.inquiries || []);
+          setNotifications(cachedIdentity.data.notifications || []);
+        }
+        if (!profile?.state || !profile?.district) {
+          setSession({ stage: "profile-setup" });
+        } else {
+          setSession({ stage: "app" });
+        }
+      }
+    } else {
+      setSession({ stage: "login-signup" });
+    }
+  };
+
+  const handleLogin = async (email, password) => {
+    if (DEMO_MODE) {
+      const usersList = LS.get("mock_users_list", []);
+      const matched = usersList.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
+      const fallbackUser = DEMO_DATA.USERS.find(u => u.email?.toLowerCase() === email.toLowerCase());
+
+      let userProfile = null;
+      if (matched) {
+        userProfile = matched.profile;
+      } else if (fallbackUser) {
+        userProfile = fallbackUser;
+      } else {
+        throw new Error("Invalid email or password. For demo, register a new account.");
+      }
+
+      LS.set("mock_user", userProfile);
+      setUser(userProfile);
+      setCachedIdentity(userProfile);
+
+      if (!userProfile.state || !userProfile.district) {
+        setSession({ stage: "profile-setup" });
+      } else {
+        setSession({ stage: "app" });
+      }
+      showToast("Logged in successfully", "check");
+    } else {
+      const response = await apiLogin(email, password);
+      if (response && response.profile) {
+        const profile = response.profile;
+        setUser(profile);
+        try {
+          const data = await loadMarketplace();
+          if (data) {
+            setListings(data.listings || []);
+            setMyListings(data.myListings || []);
+            setInquiries(data.inquiries || []);
+            setNotifications(data.notifications || []);
+          }
+        } catch (e) {}
+
+        if (!profile.state || !profile.district) {
+          setSession({ stage: "profile-setup" });
+        } else {
+          setSession({ stage: "app" });
+        }
+        showToast("Logged in successfully", "check");
+      } else {
+        throw new Error("Invalid email or password.");
+      }
+    }
+  };
+
+  const handleSignup = async (name, email, password) => {
+    if (DEMO_MODE) {
+      const usersList = LS.get("mock_users_list", []);
+      if (usersList.some(u => u.email.toLowerCase() === email.toLowerCase())) {
+        throw new Error("An account with this email already exists.");
+      }
+
+      const userId = "u_" + Date.now();
+      const profile = {
+        id: userId,
+        userId: userId,
+        email: email.toLowerCase(),
+        name: name,
+        village: "",
+        district: "",
+        state: "",
+        crops: [],
+        joined: new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" }),
+      };
+
+      usersList.push({ email: email.toLowerCase(), password, profile });
+      LS.set("mock_users_list", usersList);
+      LS.set("mock_user", profile);
+      
+      setUser(profile);
+      setCachedIdentity(profile);
+      setSession({ stage: "profile-setup" });
+      showToast("Account created! Please set up your profile.", "check");
+    } else {
+      const response = await apiSignup(name, email, password);
+      if (response && response.profile) {
+        setUser(response.profile);
+        setSession({ stage: "profile-setup" });
+        showToast("Account created! Please set up your profile.", "check");
+      } else {
+        throw new Error("Registration failed.");
+      }
+    }
+  };
+
   const handleLogout = () => {
     setModal(null);
-    if (!DEMO_MODE) {
-      window.location.assign("/logout");
-      return;
+    if (DEMO_MODE) {
+      LS.set("mock_user", null);
+    } else {
+      localStorage.removeItem("agri_auth_token");
     }
-    setSession({ stage: "signup", phone: "" });
+    setUser(null);
+    setCachedIdentity(null);
+    setSession({ stage: "login-signup" });
+    showToast("Logged out successfully", "check");
   };
 
   const resetDemo = () => {
@@ -304,14 +439,54 @@ function App() {
       <Stage screenAttrs={screenAttrs}>
         {session.stage === "loading" && <LoadingScreen />}
         {session.stage === "hosted-auth" && <HostedAccountScreen />}
-        {session.stage === "signup" && (
-          <SignupScreen onNext={(phone) => setSession({ stage: "otp", phone })} onSkip={() => setSession({ stage: "app" })} lang={lang} setLang={(l) => setTweak("lang", l)} />
+        {session.stage === "splash" && (
+          <SplashScreen onGetStarted={handleGetStarted} lang={lang} />
         )}
-        {session.stage === "otp" && (
-          <OtpScreen phone={session.phone} onVerify={(phone, isNew) => setSession({ stage: isNew ? "profile-setup" : "app", phone })} onBack={() => setSession({ stage: "signup", phone: "" })} lang={lang} />
+        {session.stage === "login-signup" && (
+          <SignupLoginScreen
+            onLogin={handleLogin}
+            onSignup={handleSignup}
+            onForgotPasswordClick={() => setSession({ stage: "forgot-password" })}
+            onSkip={() => {
+              setUser(DEMO_MODE ? DEMO_DATA.USERS.find(u => u.isMe) : null);
+              setSession({ stage: "app" });
+              showToast("Logged in as guest", "check");
+            }}
+            lang={lang}
+            error={authError}
+            setError={setAuthError}
+          />
+        )}
+        {session.stage === "forgot-password" && (
+          <ForgotPasswordScreen
+            onBack={() => setSession({ stage: "login-signup" })}
+            onSuccess={() => setSession({ stage: "login-signup" })}
+            showToast={showToast}
+            lang={lang}
+          />
         )}
         {session.stage === "profile-setup" && (
-          <ProfileSetupScreen onFinish={async (data) => { const profile = DEMO_MODE ? { ...user, ...data, joined: "May 2026" } : await saveProfile(data); setUser(profile); setSession({ stage: "app" }); showToast("Welcome to AnnadathaBazar!", "check"); }} lang={lang} />
+          <ProfileSetupScreen
+            onFinish={async (data) => {
+              let profile;
+              if (DEMO_MODE) {
+                profile = { ...user, ...data, joined: user?.joined || "May 2026" };
+                const usersList = LS.get("mock_users_list", []);
+                const idx = usersList.findIndex(u => u.email.toLowerCase() === user?.email?.toLowerCase());
+                if (idx !== -1) {
+                  usersList[idx].profile = profile;
+                  LS.set("mock_users_list", usersList);
+                }
+                LS.set("mock_user", profile);
+              } else {
+                profile = await saveProfile(data);
+              }
+              setUser(profile);
+              setSession({ stage: "app" });
+              showToast("Welcome to AnnadathaBazar!", "check");
+            }}
+            lang={lang}
+          />
         )}
         {tweaksOpen && <TweaksUI tweaks={tweaks} setTweak={setTweak} onClose={() => setTweaksOpen(false)} />}
       </Stage>
