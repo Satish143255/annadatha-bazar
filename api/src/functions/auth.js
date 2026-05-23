@@ -34,20 +34,32 @@ const verifyPasswordWithUpgrade = async (profile, password) => {
   }
 
   // Fallback to legacy HMAC-SHA256
-  const SECRET = process.env.OTP_HASH_SECRET || "default-fallback-secret-key-for-local-dev";
-  const oldHash = createHmac("sha256", SECRET).update(password).digest("hex");
-  const isCorrect = timingSafeEqual(Buffer.from(storedHash), Buffer.from(oldHash));
+  try {
+    const SECRET = process.env.OTP_HASH_SECRET || "default-fallback-secret-key-for-local-dev";
+    const oldHash = createHmac("sha256", SECRET).update(password).digest("hex");
+    const storedBuf = Buffer.from(storedHash);
+    const oldBuf = Buffer.from(oldHash);
 
-  if (isCorrect) {
-    // Upgrade database hash to scrypt
-    try {
-      profile.passwordHash = hashPassword(password);
-      await store.upsert("profiles", profile);
-      console.log(`Successfully upgraded password hash format to scrypt for profile: ${profile.email}`);
-    } catch (e) {
-      console.error("Failed to upgrade password hash format:", e);
+    if (storedBuf.length !== oldBuf.length) {
+      return false;
     }
-    return true;
+
+    const isCorrect = timingSafeEqual(storedBuf, oldBuf);
+
+    if (isCorrect) {
+      // Upgrade database hash to scrypt
+      try {
+        profile.passwordHash = hashPassword(password);
+        await store.upsert("profiles", profile);
+        console.log(`Successfully upgraded password hash format to scrypt for profile: ${profile.email}`);
+      } catch (e) {
+        console.error("Failed to upgrade password hash format:", e);
+      }
+      return true;
+    }
+  } catch (err) {
+    console.error("Legacy password verification failed:", err);
+    return false;
   }
 
   return false;

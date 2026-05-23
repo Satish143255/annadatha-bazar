@@ -93,10 +93,12 @@ app.http("myProfile", {
         limit: 30,
         windowSeconds: 60 * 60,
       });
-      return ok(await store.upsert("profiles", {
+      const existing = await store.read("profiles", auth.user.id, auth.user.id) || {};
+      const updatedProfile = {
+        ...existing,
         id: auth.user.id,
         userId: auth.user.id,
-        name: text(body.name || auth.user.name, 120),
+        name: text(body.name || existing.name || auth.user.name, 120),
         village: text(body.village, 120),
         district: text(body.district, 120),
         state: text(body.state, 120),
@@ -104,7 +106,19 @@ app.http("myProfile", {
         longitude: coordinate(body.longitude, -180, 180),
         crops: Array.isArray(body.crops) ? body.crops.map(String).slice(0, 24) : [],
         updatedAt: new Date().toISOString(),
-      }));
+      };
+
+      if (existing.email) {
+        updatedProfile.email = existing.email;
+      } else if (auth.user.email) {
+        updatedProfile.email = auth.user.email;
+      }
+
+      if (existing.passwordHash) {
+        updatedProfile.passwordHash = existing.passwordHash;
+      }
+
+      return ok(await store.upsert("profiles", updatedProfile));
     } catch (error) {
       return fail(error, "Unable to load or save profile.");
     }
