@@ -6,13 +6,11 @@ app.http("agricultureUpdates", {
   methods: ["GET"],
   authLevel: "anonymous",
   route: "agriculture-updates",
-  handler: async () => {
+  handler: async (request) => {
     try {
-      try {
-        const cached = await store.read("publicData", "agriculture-updates", "agriculture-updates");
-        if (cached?.payload) return { jsonBody: { ...cached.payload, cachedAt: cached.refreshedAt } };
-      } catch {}
-      return { jsonBody: await getAgricultureUpdates() };
+      const state = request.query.get("state") || undefined;
+      const body = await getAgricultureUpdates({ state });
+      return { jsonBody: body };
     } catch (error) {
       return {
         status: 502,

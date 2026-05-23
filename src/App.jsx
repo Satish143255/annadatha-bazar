@@ -141,6 +141,7 @@ function App() {
   const userLon = user?.longitude;
   const userVillage = user?.village;
   const userDistrict = user?.district;
+  const userState = user?.state;
 
   useEffect(() => {
     let current = true;
@@ -174,7 +175,7 @@ function App() {
   useEffect(() => {
     const controller = new AbortController();
 
-    fetchMarketPrices({ district: user?.district, signal: controller.signal })
+    fetchMarketPrices({ district: userDistrict, signal: controller.signal })
       .then((prices) => {
         setMarketPrices(prices);
         setMarketPricesState(prices.length ? "ready" : "empty");
@@ -183,7 +184,7 @@ function App() {
         if (error.name !== "AbortError") setMarketPricesState("error");
       });
 
-    fetchOfficialUpdates({ signal: controller.signal })
+    fetchOfficialUpdates({ state: userState, signal: controller.signal })
       .then((updates) => {
         setOfficialUpdates(updates);
         setOfficialUpdatesState("ready");
@@ -196,7 +197,7 @@ function App() {
       });
 
     return () => controller.abort();
-  }, [user?.district]);
+  }, [userDistrict, userState]);
 
   // ===== Navigation =====
   const [tab, setTabRaw]  = useState("home");

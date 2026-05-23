@@ -113,18 +113,18 @@ export const fetchMarketPrices = async ({ district, limit = 40, signal } = {}) =
     .filter((price) => price.commodity && price.market && price.modal != null);
 };
 
-export const fetchOfficialUpdates = async ({ signal } = {}) => {
+export const fetchOfficialUpdates = async ({ state, signal } = {}) => {
   try {
-    const result = await getJson("/agriculture-updates", signal);
-    const news = (result.items || []).map((item) => ({
+    const params = new URLSearchParams();
+    if (state) params.set("state", state);
+    const result = await getJson(`/agriculture-updates?${params.toString()}`, signal);
+    return (result.items || []).map((item) => ({
       ...item,
-      kind: "news",
+      kind: item.kind || "news",
       tag: item.tag || "PIB update",
       source: item.source || "Press Information Bureau",
       accent: item.accent || "#C8902C",
     }));
-
-    return [...news, ...OFFICIAL_SCHEMES];
   } catch (error) {
     error.officialSchemes = OFFICIAL_SCHEMES;
     throw error;
