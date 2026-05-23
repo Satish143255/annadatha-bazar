@@ -4,7 +4,7 @@ import { Icon } from '../icons/Icon.jsx';
 import { Button, Sheet, TopBar, useT } from '../components/index.jsx';
 import { apiForgotPasswordRequest, apiForgotPasswordVerify, apiForgotPasswordReset, DEMO_MODE } from '../services/marketplaceApi.js';
 
-const { useState: useStateA, useEffect: useEffectA, useRef: useRefA } = React;
+const { useState: useStateA, useEffect: useEffectA } = React;
 
 const hostedAuthCopy = {
   login: {
@@ -98,8 +98,7 @@ const HostedAccountScreen = () => {
 };
 
 // ---------- Splash Screen ----------
-const SplashScreen = ({ onGetStarted, lang }) => {
-  const t = useT(lang);
+const SplashScreen = ({ onGetStarted }) => {
   const [progress, setProgress] = useStateA(0);
   const [loadingComplete, setLoadingComplete] = useStateA(false);
 
@@ -233,7 +232,6 @@ const SplashScreen = ({ onGetStarted, lang }) => {
 
 // ---------- Signup & Login Screen ----------
 const SignupLoginScreen = ({ onLogin, onSignup, onForgotPasswordClick, onSkip, lang, error, setError }) => {
-  const t = useT(lang);
   const [tab, setTab] = useStateA("login"); // "login" | "signup"
   const [email, setEmail] = useStateA("");
   const [password, setPassword] = useStateA("");
@@ -456,7 +454,7 @@ const SignupLoginScreen = ({ onLogin, onSignup, onForgotPasswordClick, onSkip, l
 };
 
 // ---------- Forgot Password Screen ----------
-const ForgotPasswordScreen = ({ onBack, onSuccess, showToast, lang }) => {
+const ForgotPasswordScreen = ({ onBack, onSuccess, showToast }) => {
   const [step, setStep] = useStateA(1); // 1: Email, 2: OTP, 3: New Password
   const [email, setEmail] = useStateA("");
   const [otp, setOtp] = useStateA("");

@@ -86,7 +86,6 @@ function App() {
   // ===== App state =====
   const [session, setSession]         = useState({ stage: "splash" });
   const [cachedIdentity, setCachedIdentity] = useState(null);
-  const [identityLoaded, setIdentityLoaded] = useState(false);
   const [authError, setAuthError]     = useState(null);
 
   const [user, setUser]               = useState(DEMO_MODE ? DEMO_DATA.USERS.find(u => u.isMe) : null);
@@ -111,7 +110,6 @@ function App() {
       const savedUser = LS.get("mock_user", null);
       if (current) {
         setCachedIdentity(savedUser);
-        setIdentityLoaded(true);
       }
       return () => {
         current = false;
@@ -122,21 +120,15 @@ function App() {
     fetchIdentity()
       .then(async (identity) => {
         if (!current) return;
-        if (!identity) {
-          setIdentityLoaded(true);
-          return;
-        }
+        if (!identity) return;
         let data = null;
         try {
           data = await loadMarketplace();
         } catch (e) {}
         if (!current) return;
         setCachedIdentity({ identity, data });
-        setIdentityLoaded(true);
       })
-      .catch(() => {
-        if (current) setIdentityLoaded(true);
-      });
+      .catch(() => {});
 
     return () => {
       current = false;
