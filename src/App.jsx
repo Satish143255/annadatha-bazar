@@ -6,12 +6,13 @@ import { TweaksPanel, TweakSection, TweakRadio, TweakColor, TweakSelect } from '
 import { HostedAccountScreen, SplashScreen, SignupLoginScreen, ForgotPasswordScreen, ProfileSetupScreen } from './screens/AuthScreens.jsx';
 import { HomeScreen } from './screens/HomeScreen.jsx';
 import { BrowseScreen, ListingDetailScreen, PostListingScreen } from './screens/BrowseScreen.jsx';
-import { PricesScreen, WeatherScreen, NearbyScreen } from './screens/DiscoverScreen.jsx';
+import { PricesScreen, WeatherScreen, NearbyScreen, SchemesScreen } from './screens/DiscoverScreen.jsx';
 import { ProfileScreen, MyListingsScreen, InquiriesScreen } from './screens/ProfileScreen.jsx';
 import { DashboardScreen } from './screens/DashboardScreen.jsx';
 import { NotificationsScreen, SettingsScreen, HelpScreen } from './screens/UtilityScreens.jsx';
 import { fetchMarketPrices, fetchOfficialUpdates, OFFICIAL_SCHEMES } from './services/agricultureData.js';
-import { createListing, DEMO_MODE, fetchIdentity, loadMarketplace, saveProfile, apiLogin, apiSignup, fetchLiveWeather } from './services/marketplaceApi.js';
+import { createListing, DEMO_MODE, fetchIdentity, loadMarketplace, saveProfile, apiLogin, apiSignup, fetchLiveWeather, reverseGeocode, fetchIpLocation } from './services/marketplaceApi.js';
+
 // localStorage helpers
 const LS = {
   get: (k, def) => { try { const v = localStorage.getItem("agri_" + k); return v == null ? def : JSON.parse(v); } catch { return def; } },
@@ -137,11 +138,51 @@ function App() {
     };
   }, []);
 
-  const userLat = user?.latitude;
-  const userLon = user?.longitude;
-  const userVillage = user?.village;
-  const userDistrict = user?.district;
-  const userState = user?.state;
+  const [detectedLocation, setDetectedLocation] = useState(null);
+
+  // Automatically detect location on startup if not already configured in user profile
+  useEffect(() => {
+    if (user?.latitude && user?.longitude) return;
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async ({ coords }) => {
+          const lat = Number(coords.latitude.toFixed(6));
+          const lon = Number(coords.longitude.toFixed(6));
+          const resolved = await reverseGeocode(lat, lon);
+          if (resolved) {
+            setDetectedLocation({
+              latitude: lat,
+              longitude: lon,
+              village: resolved.village,
+              district: resolved.district,
+              state: resolved.state,
+            });
+          }
+        },
+        async () => {
+          const ipLoc = await fetchIpLocation();
+          if (ipLoc) {
+            setDetectedLocation(ipLoc);
+          }
+        },
+        { timeout: 8000 }
+      );
+    } else {
+      fetchIpLocation().then((ipLoc) => {
+        if (ipLoc) {
+          setDetectedLocation(ipLoc);
+        }
+      });
+    }
+  }, [user]);
+
+  const userLat = user?.latitude || detectedLocation?.latitude;
+  const userLon = user?.longitude || detectedLocation?.longitude;
+  const userVillage = user?.village || detectedLocation?.village;
+  const userDistrict = user?.district || detectedLocation?.district;
+  const userState = user?.state || detectedLocation?.state;
+
 
   useEffect(() => {
     let current = true;
@@ -526,13 +567,13 @@ function App() {
     switch (tab) {
       case "home":    return <HomeScreen    user={user} listings={listings} prices={marketPrices} pricesState={marketPricesState} weather={weather} updates={officialUpdates} updatesState={officialUpdatesState} onOpenListing={openListing} onNavTab={handleNavTab} onOpenNotifs={openNotifs} unreadNotifs={unreadNotifs} onPostListing={(mode) => openPost(mode || "listing")} lang={lang} />;
       case "browse":  return <BrowseScreen  listings={listings} onOpenListing={openListing} onPostListing={() => openPost()} initialCategory={browseInitialCat} lang={lang} />;
-      case "discover":return <DiscoverWrapper screen={discoverScreen} setScreen={setDiscoverScreen} user={user} listings={listings} marketPrices={marketPrices} marketPricesState={marketPricesState} weather={weather} onOpenListing={openListing} nearbyInitialCat={nearbyInitialCat} lang={lang} />;
+      case "discover":return <DiscoverWrapper screen={discoverScreen} setScreen={setDiscoverScreen} user={user} listings={listings} marketPrices={marketPrices} marketPricesState={marketPricesState} weather={weather} updates={officialUpdates} updatesState={officialUpdatesState} onOpenListing={openListing} nearbyInitialCat={nearbyInitialCat} lang={lang} />;
       case "profile": return <ProfileScreen  user={user} myListings={myListings} inquiries={inquiries} orders={orders} onOpenSettings={openSettings} onOpenListings={openMyListings} onOpenDashboard={openDashboard} onOpenInquiries={openInquiries} onLogout={handleLogout} lang={lang} />;
       default: return null;
     }
   };
 
-  const screenLabel = { home:"H1 Home", browse:"B1 Browse", discover: discoverScreen==="prices"?"D1 Prices":discoverScreen==="weather"?"D2 Weather":"D3 Nearby", profile:"P1 Profile" }[tab];
+  const screenLabel = { home:"H1 Home", browse:"B1 Browse", discover: discoverScreen==="prices"?"D1 Prices":discoverScreen==="weather"?"D2 Weather":discoverScreen==="nearby"?"D3 Nearby":"D4 Schemes", profile:"P1 Profile" }[tab];
   const tabEnterClass = tabDir >= 0 ? "tab-enter-forward" : "tab-enter-backward";
 
   return (
@@ -645,22 +686,25 @@ const LoadingScreen = () => (
 );
 
 // ===== Discover wrapper =====
-const DiscoverWrapper = ({ screen, setScreen, user, listings, marketPrices, marketPricesState, weather, onOpenListing, nearbyInitialCat = "all", lang }) => (
+const DiscoverWrapper = ({ screen, setScreen, user, listings, marketPrices, marketPricesState, weather, updates, updatesState, onOpenListing, nearbyInitialCat = "all", lang }) => (
   <div style={{ display:"flex", flexDirection:"column", height:"100%" }}>
     <div style={{ padding:"8px 16px 0", background:"var(--bg)", borderBottom:"1px solid var(--border)" }}>
       <div className="segmented" style={{ background:"var(--surface-2)" }}>
         <button className={screen==="prices"  ? "active" : ""} onClick={() => setScreen("prices")}>Prices</button>
         <button className={screen==="weather" ? "active" : ""} onClick={() => setScreen("weather")}>Weather</button>
         <button className={screen==="nearby"  ? "active" : ""} onClick={() => setScreen("nearby")}>Nearby</button>
+        <button className={screen==="schemes" ? "active" : ""} onClick={() => setScreen("schemes")}>Schemes</button>
       </div>
     </div>
     <div style={{ flex:1, overflow:"hidden", display:"flex", flexDirection:"column" }}>
       {screen==="prices"  && <PricesScreen  user={user} prices={marketPrices} state={marketPricesState} lang={lang} />}
       {screen==="weather" && <WeatherScreen weather={weather} lang={lang} />}
       {screen==="nearby"  && <NearbyScreen  user={user} listings={listings} onOpenListing={onOpenListing} initialCategory={nearbyInitialCat} lang={lang} />}
+      {screen==="schemes" && <SchemesScreen user={user} initialUpdates={updates} initialState={updatesState} lang={lang} />}
     </div>
   </div>
 );
+
 
 // ===== Tweaks UI =====
 const TweaksUI = ({ tweaks, setTweak, onClose }) => (

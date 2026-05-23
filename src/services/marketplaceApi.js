@@ -136,3 +136,42 @@ export const fetchLiveWeather = ({ latitude, longitude, location }) => {
   if (location) params.append("location", location);
   return request(`/weather?${params.toString()}`);
 };
+
+export const reverseGeocode = async (lat, lon) => {
+  try {
+    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`, {
+      headers: { "Accept-Language": "en" }
+    });
+    if (response.ok) {
+      const data = await response.json();
+      const addr = data.address || {};
+      const village = addr.village || addr.town || addr.suburb || addr.city_district || addr.neighbourhood || addr.city || "";
+      const district = addr.county || addr.district || addr.city || "";
+      const state = addr.state || "";
+      return { village, district, state };
+    }
+  } catch (e) {
+    console.error("Reverse geocoding error:", e);
+  }
+  return null;
+};
+
+export const fetchIpLocation = async () => {
+  try {
+    const response = await fetch("https://ipapi.co/json/");
+    if (response.ok) {
+      const data = await response.json();
+      return {
+        latitude: Number(data.latitude),
+        longitude: Number(data.longitude),
+        village: data.city || "",
+        district: data.city || "",
+        state: data.region || "",
+      };
+    }
+  } catch (e) {
+    console.error("IP Geolocation failed:", e);
+  }
+  return null;
+};
+

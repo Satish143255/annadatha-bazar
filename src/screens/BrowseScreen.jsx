@@ -1,8 +1,10 @@
-﻿import React from 'react';
+import React from 'react';
 import { AGRI_DATA } from '../data.js';
 import { CATEGORIES, LISTING_CATEGORIES, SERVICE_TYPES } from '../referenceData.js';
 import { Icon } from '../icons/Icon.jsx';
 import { ListingCard, Button, Avatar, Empty, ImgPh, Sheet, useT, formatINR, formatDistance } from '../components/index.jsx';
+import { reverseGeocode, fetchIpLocation } from '../services/marketplaceApi.js';
+
 
 // ===== Browse: B1 List, B2 Detail, B3 Post =====
 
@@ -440,8 +442,8 @@ const PostListingScreen = ({ onBack, onPost, lang, prefill }) => {
   const [photos, setPhotos] = useStateB(prefill?.photos || []);
   const fileInputRef = useRefB(null);
   const [village, setVillage] = useStateB(prefill?.village || "");
-  const [district] = useStateB(prefill?.district || "");
-  const [stateVal] = useStateB(prefill?.state || "");
+  const [district, setDistrict] = useStateB(prefill?.district || "");
+  const [stateVal, setStateVal] = useStateB(prefill?.state || "");
   const [coordinates, setCoordinates] = useStateB(
     prefill?.latitude != null && prefill?.longitude != null
       ? { latitude: prefill.latitude, longitude: prefill.longitude }
@@ -457,6 +459,17 @@ const PostListingScreen = ({ onBack, onPost, lang, prefill }) => {
     if (!title && !category) return;
     // Draft autosave indication
   }, [title, desc]);
+
+  const handleCoordinatesResolved = async (coords) => {
+    setCoordinates(coords);
+    const resolved = await reverseGeocode(coords.latitude, coords.longitude);
+    if (resolved) {
+      if (resolved.village) setVillage(resolved.village);
+      if (resolved.district) setDistrict(resolved.district);
+      if (resolved.state) setStateVal(resolved.state);
+    }
+  };
+
 
   const placeholderByCat = mode === "service" ? {
     rental:     "eg. Mahindra 575 Tractor on Hire - Rs 650/hr",
@@ -481,27 +494,53 @@ const PostListingScreen = ({ onBack, onPost, lang, prefill }) => {
   const canSubmit = category && title.length >= 6 && coordinates;
   const captureLocation = () => {
     if (!navigator.geolocation) {
-      setLocationError("Browser location is not available on this device.");
+      setLocating(true);
+      fetchIpLocation().then(async (ipLoc) => {
+        if (ipLoc) {
+          const point = { latitude: ipLoc.latitude, longitude: ipLoc.longitude };
+          await handleCoordinatesResolved(point);
+        } else {
+          setLocationError("Browser location is not available on this device.");
+        }
+        setLocating(false);
+      });
       return;
     }
 
     setLocating(true);
     setLocationError("");
     navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
-        setCoordinates({
+      async ({ coords }) => {
+        const point = {
           latitude: Number(coords.latitude.toFixed(6)),
           longitude: Number(coords.longitude.toFixed(6)),
-        });
+        };
+        await handleCoordinatesResolved(point);
         setLocating(false);
       },
-      () => {
-        setLocationError("Allow location to place this listing on the nearby map.");
+      async () => {
+        const ipLoc = await fetchIpLocation();
+        if (ipLoc) {
+          setCoordinates({ latitude: ipLoc.latitude, longitude: ipLoc.longitude });
+          if (ipLoc.village) setVillage(ipLoc.village);
+          if (ipLoc.district) setDistrict(ipLoc.district);
+          if (ipLoc.state) setStateVal(ipLoc.state);
+        } else {
+          setLocationError("Allow location or IP geoloc failed to place this listing.");
+        }
         setLocating(false);
       },
       { enableHighAccuracy: false, maximumAge: 300000, timeout: 8000 }
     );
   };
+
+  // Automatically fetch location on mount if not prefilled
+  useEffectB(() => {
+    if (!coordinates) {
+      captureLocation();
+    }
+  }, []);
+
   const submit = () => {
     if (!canSubmit) return;
     setSubmitting(true);
@@ -752,12 +791,13 @@ const PostListingScreen = ({ onBack, onPost, lang, prefill }) => {
             </div>
             <div className="list-row">
               <span className="row-label">District</span>
-              <span className="row-meta">{district}</span>
+              <input value={district} onChange={e => setDistrict(e.target.value)} style={{ textAlign: "right", border: 0, background: "transparent", outline: 0, color: "var(--ink-2)", fontSize: 14, width: "60%" }} />
             </div>
             <div className="list-row">
               <span className="row-label">State</span>
-              <span className="row-meta">{stateVal}</span>
+              <input value={stateVal} onChange={e => setStateVal(e.target.value)} style={{ textAlign: "right", border: 0, background: "transparent", outline: 0, color: "var(--ink-2)", fontSize: 14, width: "60%" }} />
             </div>
+
             <div className="list-row">
               <span className="row-label">Map point</span>
               <button onClick={captureLocation} className="chip soft" disabled={locating} style={{ height: 30 }}>

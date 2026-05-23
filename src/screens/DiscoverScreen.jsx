@@ -1,7 +1,8 @@
-﻿import React from 'react';
-import { CROPS } from '../referenceData.js';
+import React from 'react';
+import { CROPS, STATES_DISTRICTS } from '../referenceData.js';
 import { Icon } from '../icons/Icon.jsx';
 import { Empty, ImgPh, WeatherIcon, useT, formatINR } from '../components/index.jsx';
+import { fetchOfficialUpdates } from '../services/agricultureData.js';
 
 // ===== Discover: D1 Prices, D2 Weather, D3 Nearby =====
 
@@ -925,5 +926,342 @@ const HeatMap = ({ pins, center, radius, activePin, setActivePin, onOpenListing 
   );
 };
 
-export { PricesScreen, WeatherScreen, NearbyScreen };
+const SchemesScreen = ({ user, initialUpdates = [], initialState = "loading" }) => {
+  const [selectedState, setSelectedState] = useStateD(user?.state || "Telangana");
+  const [items, setItems] = useStateD(initialUpdates);
+  const [state, setState] = useStateD(initialState);
+  const [searchQuery, setSearchQuery] = useStateD("");
+  const [filterType, setFilterType] = useStateD("all"); // all | central-schemes | state-schemes | news
+  const [openItem, setOpenItem] = useStateD(null);
+
+  React.useEffect(() => {
+    if (selectedState === user?.state && initialUpdates && initialUpdates.length > 0) {
+      setItems(initialUpdates);
+      setState(initialState);
+      return;
+    }
+
+    let active = true;
+    setState("loading");
+    
+    fetchOfficialUpdates({ state: selectedState })
+      .then((updates) => {
+        if (!active) return;
+        setItems(updates);
+        setState("ready");
+      })
+      .catch((err) => {
+        if (!active) return;
+        console.error("Failed to fetch updates:", err);
+        setState("error");
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [selectedState, user?.state, initialUpdates, initialState, setItems, setState]);
+
+
+  const filtered = items.filter((item) => {
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const matchTitle = (item.title || "").toLowerCase().includes(q);
+      const matchBody = (item.body || "").toLowerCase().includes(q);
+      const matchTag = (item.tag || "").toLowerCase().includes(q);
+      const matchSource = (item.source || "").toLowerCase().includes(q);
+      if (!matchTitle && !matchBody && !matchTag && !matchSource) return false;
+    }
+
+    if (filterType === "news") {
+      return item.kind === "news";
+    }
+    if (filterType === "central-schemes") {
+      return item.kind === "scheme" && (
+        item.id.includes("pmkisan") || 
+        item.id.includes("pmfby") || 
+        item.id.includes("kcc") || 
+        item.id.includes("soil") || 
+        (!item.id.includes("-ts-") && 
+         !item.id.includes("-mh-") && 
+         !item.id.includes("-ka-") && 
+         !item.id.includes("-pb-") && 
+         !item.id.includes("-up-") && 
+         !item.id.includes("-gj-") && 
+         !item.tag.toLowerCase().includes("state"))
+      );
+    }
+    if (filterType === "state-schemes") {
+      return item.kind === "scheme" && (
+        item.id.includes("-ts-") || 
+        item.id.includes("-mh-") || 
+        item.id.includes("-ka-") || 
+        item.id.includes("-pb-") || 
+        item.id.includes("-up-") || 
+        item.id.includes("-gj-") || 
+        item.tag.toLowerCase().includes("state") || 
+        item.source.toLowerCase().includes("govt of") || 
+        item.source.toLowerCase().includes("dept")
+      );
+    }
+
+    return true;
+  });
+
+  const stateNames = Object.keys(STATES_DISTRICTS);
+
+  return (
+    <div className="scroll">
+      {/* Topbar */}
+      <div className="topbar">
+        <div className="title">Govt Schemes</div>
+        <select
+          value={selectedState}
+          onChange={e => setSelectedState(e.target.value)}
+          className="chip soft"
+          style={{ height: 32, paddingRight: 24, fontWeight: 600 }}
+        >
+          {stateNames.map(s => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Info Banner */}
+      <div style={{ padding: "0 16px 12px", fontSize: 12, color: "var(--ink-3)", lineHeight: 1.4 }}>
+        Real-time central and state agriculture programs with verified links to official portals.
+      </div>
+
+      {/* Search Input */}
+      <div style={{ padding: "0 16px 12px", position: "relative" }}>
+        <input
+          className="input"
+          style={{ paddingLeft: 44, height: 44 }}
+          placeholder="Search schemes or news..."
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+        />
+        <div style={{ position: "absolute", left: 30, top: 13, color: "var(--ink-3)" }}>
+          <Icon name="search" size={18} />
+        </div>
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery("")}
+            style={{
+              position: "absolute", right: 28, top: 12,
+              background: "transparent", border: 0,
+              color: "var(--ink-3)", padding: 4, cursor: "pointer"
+            }}
+          >
+            <Icon name="close" size={16} />
+          </button>
+        )}
+      </div>
+
+      {/* Filter Tabs */}
+      <div style={{ padding: "0 16px 12px" }}>
+        <div className="segmented">
+          <button className={filterType === "all" ? "active" : ""} onClick={() => setFilterType("all")}>All</button>
+          <button className={filterType === "central-schemes" ? "active" : ""} onClick={() => setFilterType("central-schemes")}>Central Schemes</button>
+          <button className={filterType === "state-schemes" ? "active" : ""} onClick={() => setFilterType("state-schemes")}>State Schemes</button>
+          <button className={filterType === "news" ? "active" : ""} onClick={() => setFilterType("news")}>News</button>
+        </div>
+      </div>
+
+      {/* Main List */}
+      <div style={{ padding: "0 16px 28px", display: "grid", gap: 12 }}>
+        {state === "loading" && (
+          <div style={{ textAlign: "center", padding: "40px 0", color: "var(--ink-3)" }}>
+            <div style={{ display: "inline-block", width: 24, height: 24, border: "3px solid var(--border)", borderTopColor: "var(--primary)", borderRadius: "50%", animation: "spin 1s linear infinite", marginBottom: 12 }}></div>
+            <div style={{ fontSize: 13 }}>Fetching official government releases...</div>
+          </div>
+        )}
+
+        {state === "error" && filtered.length === 0 && (
+          <Empty
+            icon="warning"
+            title="Unable to load updates"
+            body="We couldn't connect to the PIB news server. Please check your internet connection."
+          />
+        )}
+
+        {state !== "loading" && filtered.length === 0 && (
+          <Empty
+            icon="search"
+            title="No matching updates"
+            body={`No results found for "${searchQuery}" in ${selectedState}.`}
+          />
+        )}
+
+        {state !== "loading" && filtered.map(item => {
+          const isScheme = item.kind === "scheme";
+          const isCentral = item.id.includes("pmkisan") || item.id.includes("pmfby") || item.id.includes("kcc") || item.id.includes("soil") || (!item.id.includes("-ts-") && !item.id.includes("-mh-") && !item.id.includes("-ka-") && !item.id.includes("-pb-") && !item.id.includes("-up-") && !item.id.includes("-gj-") && !item.tag.toLowerCase().includes("state"));
+          
+          return (
+            <div
+              key={item.id}
+              onClick={() => setOpenItem(item)}
+              className="card"
+              style={{
+                padding: "16px 14px",
+                borderLeft: `4px solid ${item.accent || "var(--primary)"}`,
+                cursor: "pointer",
+                display: "flex",
+                flexDirection: "column",
+                gap: 8,
+                transition: "transform 140ms ease, box-shadow 140ms ease",
+                position: "relative"
+              }}
+              onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "var(--shadow-sm)"; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}
+            >
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span
+                  style={{
+                    fontSize: 9.5,
+                    fontWeight: 700,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                    padding: "2px 8px",
+                    borderRadius: 99,
+                    border: `1px solid ${item.accent || "var(--primary)"}`,
+                    color: item.accent || "var(--primary)"
+                  }}
+                >
+                  {isScheme ? "Scheme" : "News"}
+                </span>
+
+                <span
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 600,
+                    color: isCentral ? "var(--primary)" : "var(--gold)",
+                    background: isCentral ? "var(--primary-soft)" : "var(--gold-soft)",
+                    padding: "2px 8px",
+                    borderRadius: 4
+                  }}
+                >
+                  {isCentral ? "Central Govt" : `${selectedState} State`}
+                </span>
+              </div>
+
+              <div style={{ fontSize: 15, fontWeight: 600, color: "var(--ink)", lineHeight: 1.25 }}>
+                {item.title}
+              </div>
+
+              <div style={{ fontSize: 12, color: "var(--ink-2)", lineHeight: 1.45, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                {item.body}
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderTop: "1px solid var(--border)", paddingTop: 8, marginTop: 4 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 4, color: "#1F5A3A", fontSize: 11, fontWeight: 600 }}>
+                  <Icon name="checkCircle" size={13} color="#1F5A3A" />
+                  <span>Verified Link</span>
+                </div>
+                <span style={{ fontSize: 10.5, color: "var(--ink-3)" }}>{item.date}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Details Sheet Modal */}
+      {openItem && (
+        <div className="news-modal-backdrop" onClick={() => setOpenItem(null)}>
+          <div className="news-modal" onClick={e => e.stopPropagation()} style={{ borderTop: `4px solid ${openItem.accent || "var(--primary)"}` }}>
+            <div className="news-modal-head">
+              <span
+                style={{
+                  fontSize: 10,
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  padding: "2px 8px",
+                  borderRadius: 99,
+                  border: `1px solid ${openItem.accent || "var(--primary)"}`,
+                  color: openItem.accent || "var(--primary)"
+                }}
+              >
+                {openItem.kind === "scheme" ? "Government Scheme" : "Press Release"}
+              </span>
+              <button className="icon-btn" onClick={() => setOpenItem(null)} aria-label="Close">
+                <Icon name="close" size={20} />
+              </button>
+            </div>
+
+            <div style={{ fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 700, lineHeight: 1.2, marginTop: 12, color: "var(--ink)" }}>
+              {openItem.title}
+            </div>
+
+            {/* Proof verification seal */}
+            <div
+              style={{
+                background: "rgba(31, 90, 58, 0.05)",
+                border: "1px solid rgba(31, 90, 58, 0.15)",
+                borderRadius: 10,
+                padding: "10px 12px",
+                marginTop: 12,
+                display: "flex",
+                alignItems: "flex-start",
+                gap: 10
+              }}
+            >
+              <div style={{ color: "#1F5A3A", display: "grid", placeItems: "center", marginTop: 1 }}>
+                <Icon name="checkCircle" size={18} color="#1F5A3A" />
+              </div>
+              <div style={{ fontSize: 12, color: "var(--ink-2)", lineHeight: 1.35 }}>
+                <div style={{ fontWeight: 700, color: "#1F5A3A" }}>Official Source Verified</div>
+                <div style={{ marginTop: 2 }}>This link directs to the authorized government portal:</div>
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--primary)", marginTop: 4, wordBreak: "break-all", background: "var(--surface)", padding: "4px 8px", borderRadius: 4, border: "1px solid var(--border)" }}>
+                  {openItem.link}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ fontSize: 13.5, color: "var(--ink-2)", marginTop: 16, lineHeight: 1.5, whiteSpace: "pre-line" }}>
+              {openItem.body}
+            </div>
+
+            <div style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 16, borderTop: "1px solid var(--border)", paddingTop: 10 }}>
+              Source: {openItem.source} ({openItem.date})
+            </div>
+
+            <button
+              className="news-cta"
+              onClick={() => {
+                if (openItem.link) window.open(openItem.link, "_blank", "noopener,noreferrer");
+                setOpenItem(null);
+              }}
+              style={{
+                background: openItem.accent || "var(--primary)",
+                color: "white",
+                border: 0,
+                borderRadius: 12,
+                padding: 12,
+                width: "100%",
+                marginTop: 16,
+                fontWeight: 600,
+                fontSize: 14,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+                cursor: "pointer"
+              }}
+            >
+              <span>{openItem.kind === "scheme" ? "Apply on Official Portal" : "Read full official release"}</span>
+              <Icon name="chevron" size={16} />
+            </button>
+          </div>
+        </div>
+      )}
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
+    </div>
+  );
+};
+
+export { PricesScreen, WeatherScreen, NearbyScreen, SchemesScreen };
+
 

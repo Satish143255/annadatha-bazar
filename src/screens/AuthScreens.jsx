@@ -1,8 +1,9 @@
 import React from 'react';
-import { CROPS, LANGUAGES, STATES_DISTRICTS } from '../referenceData.js';
+import { CROPS, LANGUAGES } from '../referenceData.js';
 import { Icon } from '../icons/Icon.jsx';
 import { Button, Sheet, TopBar, useT } from '../components/index.jsx';
-import { apiForgotPasswordRequest, apiForgotPasswordVerify, apiForgotPasswordReset, DEMO_MODE } from '../services/marketplaceApi.js';
+import { apiForgotPasswordRequest, apiForgotPasswordVerify, apiForgotPasswordReset, DEMO_MODE, reverseGeocode, fetchIpLocation } from '../services/marketplaceApi.js';
+
 
 const { useState: useStateA, useEffect: useEffectA } = React;
 
@@ -691,7 +692,6 @@ const ProfileSetupScreen = ({ onFinish, lang }) => {
   const [saving, setSaving] = useStateA(false);
   const [submitError, setSubmitError] = useStateA("");
 
-  const districts = STATES_DISTRICTS[state] || [];
   const toggleCrop = (id) => setCrops(c => c.includes(id) ? c.filter(x => x !== id) : [...c, id]);
   const gpsLabel = coordinates
     ? `${coordinates.latitude.toFixed(6)}, ${coordinates.longitude.toFixed(6)}`
@@ -707,29 +707,64 @@ const ProfileSetupScreen = ({ onFinish, lang }) => {
     }
   };
 
-  const useGPS = () => {
+  const handleCoordinatesResolved = async (coords) => {
+    setCoordinates(coords);
+    const resolved = await reverseGeocode(coords.latitude, coords.longitude);
+    if (resolved) {
+      if (resolved.village) setVillage(resolved.village);
+      if (resolved.district) setDistrict(resolved.district);
+      if (resolved.state) setState(resolved.state);
+    }
+  };
+
+  const detectGPS = () => {
     setGpsing(true);
     setLocationError("");
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        ({ coords }) => {
-          setCoordinates({
+        async ({ coords }) => {
+          const point = {
             latitude: Number(coords.latitude.toFixed(6)),
             longitude: Number(coords.longitude.toFixed(6)),
-          });
+          };
+          await handleCoordinatesResolved(point);
           setGpsing(false);
         },
-        () => {
-          setLocationError("Location permission is needed to place nearby listings on the map.");
+        async () => {
+          // GPS Denied/Failed: fallback to IP location
+          const ipLoc = await fetchIpLocation();
+          if (ipLoc) {
+            setCoordinates({ latitude: ipLoc.latitude, longitude: ipLoc.longitude });
+            if (ipLoc.village) setVillage(ipLoc.village);
+            if (ipLoc.district) setDistrict(ipLoc.district);
+            if (ipLoc.state) setState(ipLoc.state);
+          } else {
+            setLocationError("Location permission is needed, or IP fallback failed.");
+          }
           setGpsing(false);
         },
         { timeout: 6000 }
       );
     } else {
-      setLocationError("This device does not provide browser location.");
-      setGpsing(false);
+      fetchIpLocation().then((ipLoc) => {
+        if (ipLoc) {
+          setCoordinates({ latitude: ipLoc.latitude, longitude: ipLoc.longitude });
+          if (ipLoc.village) setVillage(ipLoc.village);
+          if (ipLoc.district) setDistrict(ipLoc.district);
+          if (ipLoc.state) setState(ipLoc.state);
+        } else {
+          setLocationError("This device does not provide browser location.");
+        }
+        setGpsing(false);
+      });
     }
   };
+
+  // Automatically trigger location detection on mount
+  useEffectA(() => {
+    detectGPS();
+  }, []);
+
 
   return (
     <div className="scroll screen-enter" style={{ padding: "0 0 32px" }}>
@@ -771,7 +806,7 @@ const ProfileSetupScreen = ({ onFinish, lang }) => {
           <div style={{ display: "flex", gap: 8 }}>
             <input className="input" placeholder="eg. Hanamkonda" value={village} onChange={e => setVillage(e.target.value)} style={{ flex: 1 }} />
             <button
-              onClick={useGPS}
+              onClick={detectGPS}
               style={{
                 width: 52, height: 52, borderRadius: 12,
                 background: "var(--primary-soft)", color: "var(--primary)",
@@ -783,11 +818,12 @@ const ProfileSetupScreen = ({ onFinish, lang }) => {
                 : <Icon name="pin" size={20} />
               }
             </button>
+
           </div>
           {gpsing && <div style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 6 }}>Detecting your location...</div>}
           {coordinates && (
             <div style={{ fontSize: 11, color: "var(--primary)", marginTop: 6 }}>
-              GPS captured: {gpsLabel}. Enter your village and select district for display.
+              GPS captured: {gpsLabel}.
             </div>
           )}
           {locationError && <div style={{ fontSize: 11, color: "var(--terra)", marginTop: 6 }}>{locationError}</div>}
@@ -796,17 +832,11 @@ const ProfileSetupScreen = ({ onFinish, lang }) => {
         <div className="field" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
           <div>
             <label className="field-label">{t("auth.profile.state")}</label>
-            <select className="input" value={state} onChange={e => { setState(e.target.value); setDistrict(STATES_DISTRICTS[e.target.value]?.[0] || ""); }}>
-              <option value="">Select state</option>
-              {Object.keys(STATES_DISTRICTS).map(s => <option key={s}>{s}</option>)}
-            </select>
+            <input className="input" placeholder="eg. Telangana" value={state} onChange={e => setState(e.target.value)} />
           </div>
           <div>
             <label className="field-label">{t("auth.profile.district")}</label>
-            <select className="input" value={district} onChange={e => setDistrict(e.target.value)}>
-              <option value="">Select district</option>
-              {districts.map(d => <option key={d}>{d}</option>)}
-            </select>
+            <input className="input" placeholder="eg. Warangal" value={district} onChange={e => setDistrict(e.target.value)} />
           </div>
         </div>
 

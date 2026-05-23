@@ -264,31 +264,62 @@ const STATE_SCHEMES = {
   ]
 };
 
+const STATE_PIB_REGIDS = {
+  "Telangana": 3,      // Hyderabad
+  "Maharashtra": 2,    // Mumbai
+  "Karnataka": 7,      // Bengaluru
+  "Punjab": 5,         // Chandigarh
+  "Uttar Pradesh": 19, // Lucknow
+  "Gujarat": 9,        // Ahmedabad
+};
+
 export const getAgricultureUpdates = async ({ state } = {}) => {
+  const feedsToFetch = [{ regId: 1, type: "central", tag: "Central News" }];
+  if (state && STATE_PIB_REGIDS[state]) {
+    feedsToFetch.push({ regId: STATE_PIB_REGIDS[state], type: "state", tag: `${state} PIB News` });
+  }
+
+  const fetchPromises = feedsToFetch.map(async (feedInfo) => {
+    try {
+      const url = `https://pib.gov.in/RssMain.aspx?ModId=6&Lang=1&Regid=${feedInfo.regId}`;
+      const response = await fetch(url);
+      if (!response.ok) {
+        console.warn(`PIB feed for Regid ${feedInfo.regId} failed: ${response.status}`);
+        return [];
+      }
+      const xml = await response.text();
+      const feed = new XMLParser({ ignoreAttributes: false }).parse(xml);
+      const rawItems = feed?.rss?.channel?.item || [];
+      const items = Array.isArray(rawItems) ? rawItems : [rawItems];
+      return items
+        .filter((item) => {
+          if (!item) return false;
+          const title = String(item.title || "").toLowerCase();
+          const desc = String(item.description || item.summary || "").toLowerCase();
+          return AGRICULTURE_TERMS.some((term) => title.includes(term) || desc.includes(term));
+        })
+        .slice(0, 5)
+        .map((item, index) => ({
+          id: `pib-${feedInfo.type}-${index}-${item.link || Math.random()}`,
+          kind: "news",
+          title: String(item.title || "PIB agriculture update").trim(),
+          body: cleanDescription(item.description || item.summary),
+          date: getRelativeTime(item.pubDate),
+          source: feedInfo.type === "central" ? "Press Information Bureau (Delhi)" : `PIB (${state} Office)`,
+          link: item.link || "https://pib.gov.in",
+          tag: feedInfo.tag,
+          accent: feedInfo.type === "central" ? "#2E4A7F" : "#B05E2E"
+        }));
+    } catch (error) {
+      console.error(`Error fetching PIB feed for Regid ${feedInfo.regId}:`, error);
+      return [];
+    }
+  });
+
   let pibItems = [];
   try {
-    const response = await ensureOk(await fetch(PIB_RSS_URL), "PIB");
-    const xml = await response.text();
-    const feed = new XMLParser({ ignoreAttributes: false }).parse(xml);
-    const rawItems = feed?.rss?.channel?.item || [];
-    
-    pibItems = (Array.isArray(rawItems) ? rawItems : [rawItems])
-      .filter((item) => {
-        const title = String(item.title || "").toLowerCase();
-        return AGRICULTURE_TERMS.some((term) => title.includes(term.toLowerCase()));
-      })
-      .slice(0, 5)
-      .map((item, index) => ({
-        id: `pib-${index}-${item.link}`,
-        kind: "news",
-        title: String(item.title || "PIB agriculture update").trim(),
-        body: cleanDescription(item.description || item.summary),
-        date: getRelativeTime(item.pubDate),
-        source: "Press Information Bureau",
-        link: item.link || "https://pib.gov.in",
-        tag: "Cabinet News",
-        accent: "#B05E2E"
-      }));
+    const pibResults = await Promise.all(fetchPromises);
+    pibItems = pibResults.flat();
   } catch (error) {
     console.error("PIB RSS feed fetch failed. Using curated schemes only.", error);
   }
@@ -305,3 +336,4 @@ export const getAgricultureUpdates = async ({ state } = {}) => {
 
   return { source: "Live PIB RSS & Localized Schemes", items: combinedItems };
 };
+
