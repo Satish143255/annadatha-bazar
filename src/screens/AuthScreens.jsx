@@ -41,18 +41,16 @@ const hostedAuthIntent = () => {
 };
 
 const AuthLogo = () => (
-  <div className="auth-logo" style={{
-    width: 88,
-    height: 88,
-    margin: "0 auto 22px",
-    background: "linear-gradient(135deg, var(--primary) 0%, #2d8055 100%)",
-    borderRadius: 24,
-    display: "grid",
-    placeItems: "center",
-    boxShadow: "0 12px 24px -8px rgba(31,90,58,0.4)",
-  }}>
-    <Icon name="leaf" size={44} color="#FFFFFF" stroke={1.8} />
-  </div>
+  <img
+    src="/logo.png"
+    alt="AnnadathaBazar"
+    style={{
+      height: 70,
+      objectFit: "contain",
+      margin: "0 auto 24px",
+      display: "block",
+    }}
+  />
 );
 
 const HostedAccountScreen = () => {
@@ -62,9 +60,6 @@ const HostedAccountScreen = () => {
     <div className="scroll screen-enter" style={{ minHeight: "100%", display: "grid", placeItems: "center", padding: "20px 20px 34px" }}>
       <div style={{ width: "100%", maxWidth: 320, textAlign: "center" }}>
         <AuthLogo />
-        <div style={{ fontFamily: "var(--font-display)", fontSize: 36, lineHeight: 1.05, marginBottom: 8 }}>
-          Annadata<span style={{ color: "var(--primary)" }}>.</span>Bazar
-        </div>
         <div style={{ fontSize: 23, fontWeight: 600, marginTop: 22 }}>{copy.title}</div>
         <div style={{ color: "var(--ink-3)", lineHeight: 1.5, fontSize: 14, margin: "10px auto 24px", maxWidth: 292 }}>
           {copy.body}
@@ -153,30 +148,9 @@ const SplashScreen = ({ onGetStarted }) => {
       }} />
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", width: "100%" }}>
-        <div className="modal-enter" style={{
-          width: 100,
-          height: 100,
-          background: "linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%)",
-          borderRadius: 24,
-          display: "grid",
-          placeItems: "center",
-          boxShadow: "var(--shadow-lg)",
-          marginBottom: 24,
-        }}>
-          <Icon name="leaf" size={50} color="#FFFFFF" stroke={1.8} />
+        <div className="modal-enter" style={{ marginBottom: 28 }}>
+          <img src="/logo.png" alt="AnnadathaBazar" style={{ height: 80, objectFit: "contain" }} />
         </div>
-        
-        <h1 style={{
-          fontFamily: "var(--font-sans)",
-          fontSize: 32,
-          fontWeight: 800,
-          color: "var(--ink)",
-          margin: "0 0 8px 0",
-          letterSpacing: "-0.02em",
-          textAlign: "center"
-        }}>
-          Annadata<span style={{ color: "var(--primary)" }}>.</span>Bazar
-        </h1>
         <p style={{
           fontSize: 14,
           color: "var(--ink-2)",
@@ -281,21 +255,7 @@ const SignupLoginScreen = ({ onLogin, onSignup, onForgotPasswordClick, onSkip, l
       </div>
 
       <div style={{ textAlign: "center", margin: "20px 0 28px" }}>
-        <div style={{
-          width: 72,
-          height: 72,
-          background: "linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%)",
-          borderRadius: 20,
-          display: "grid",
-          placeItems: "center",
-          margin: "0 auto 16px",
-          boxShadow: "var(--shadow)"
-        }}>
-          <Icon name="leaf" size={36} color="#FFFFFF" stroke={1.8} />
-        </div>
-        <div style={{ fontFamily: "var(--font-sans)", fontSize: 28, fontWeight: 800, color: "var(--ink)" }}>
-          Annadata<span style={{ color: "var(--primary)" }}>.</span>Bazar
-        </div>
+        <img src="/logo.png" alt="AnnadathaBazar" style={{ height: 75, objectFit: "contain", margin: "0 auto 16px", display: "block" }} />
         <div style={{ fontSize: 13, color: "var(--ink-3)", marginTop: 6 }}>
           Direct Marketplace. No Middlemen.
         </div>

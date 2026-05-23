@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Icon } from '../icons/Icon.jsx';
 
 // ===== AnnadathaBazar Shared Components =====
@@ -105,7 +105,7 @@ const TopBar = ({ title, onBack, right, brand, withBorder }) => (
     )}
     {brand ? (
       <div className="brand-name" style={{ flex: 1 }}>
-        Annadata<span className="leaf">.</span>Bazar
+        Annadatha<span className="leaf">Bazar</span>
       </div>
     ) : (
       <div className="title">{title}</div>

@@ -32,7 +32,7 @@ const HomeScreen = ({ user, listings, onOpenListing, onNavTab, onOpenNotifs, unr
       {/* Brand top bar */}
       <div className="topbar brand">
         <div className="brand-name" style={{ flex: 1 }}>
-          Annadata<span className="leaf">·</span>Bazar
+          Annadatha<span className="leaf">Bazar</span>
         </div>
         <button className="icon-btn" onClick={onOpenNotifs} style={{ position: "relative" }}>
           <Icon name="bell" size={22} />

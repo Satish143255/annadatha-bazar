@@ -30,7 +30,7 @@ const SignupScreen = ({ onNext, onSkip, lang, setLang }) => {
           <Icon name="leaf" size={44} color="#FFFFFF" stroke={1.8} />
         </div>
         <div style={{ fontFamily: "var(--font-display)", fontSize: 38, lineHeight: 1.05, letterSpacing: "-0.01em", marginBottom: 8 }}>
-          Annadata<span style={{ color: "var(--primary)" }}>·</span>Bazar
+          Annadatha<span style={{ color: "var(--primary)" }}>Bazar</span>
         </div>
         <div style={{ fontSize: 15, color: "var(--ink-3)", textWrap: "balance", maxWidth: 280, margin: "0 auto" }}>
           {lang === "hi" ? "अपनी फ़सल, सेवा या उपकरण के लिए सीधे जोड़ें" : "Find buyers, services, and equipment. Connect direct, no middlemen."}

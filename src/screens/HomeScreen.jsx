@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Icon } from '../icons/Icon.jsx';
 import { ListingCard, WeatherIcon, useT, formatINR } from '../components/index.jsx';
 
@@ -41,7 +41,7 @@ const HomeScreen = ({ user, listings, prices, pricesState, weather, updates, upd
       {/* Brand top bar */}
       <div className="topbar brand">
         <div className="brand-name" style={{ flex: 1 }}>
-          Annadata<span className="leaf">.</span>Bazar
+          Annadatha<span className="leaf">Bazar</span>
         </div>
         <button className="icon-btn" onClick={onOpenNotifs} style={{ position: "relative" }}>
           <Icon name="bell" size={22} />
