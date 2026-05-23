@@ -37,94 +37,105 @@ const HomeScreen = ({ user, listings, prices, pricesState, weather, updates, upd
   const w = weather?.current;
 
   return (
-    <div className="scroll">
+    <div className="flex-1 overflow-y-auto scrollbar-none bg-white">
       {/* Brand top bar */}
-      <div className="topbar brand">
-        <div className="brand-name" style={{ flex: 1 }}>
-          Annadatha<span className="leaf">Bazar</span>
+      <div className="flex items-center justify-between gap-3 px-4 py-3 bg-white sticky top-0 z-10 border-b border-[#E6E8E6]">
+        <div className="font-sans font-extrabold text-2xl text-primary tracking-tight">
+          Annadatha<span className="text-[#C8902C]">Bazar</span>
         </div>
-        <button className="icon-btn" onClick={onOpenNotifs} style={{ position: "relative" }}>
+        <button
+          className="w-[44px] h-[44px] flex items-center justify-center rounded-full hover:bg-[#F9F9F8] transition-colors relative animate-none"
+          onClick={onOpenNotifs}
+        >
           <Icon name="bell" size={22} />
           {unreadNotifs > 0 && (
-            <span style={{
-              position: "absolute", top: 6, right: 6,
-              minWidth: 16, height: 16, padding: "0 4px",
-              background: "var(--terra)", color: "white",
-              fontSize: 10, fontWeight: 700, borderRadius: 999,
-              display: "grid", placeItems: "center",
-              border: "2px solid var(--bg)",
-            }}>{unreadNotifs}</span>
+            <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 bg-accent-terra text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white">
+              {unreadNotifs}
+            </span>
           )}
         </button>
       </div>
 
       {/* Greeting */}
-      <div style={{ padding: "0 16px 12px" }}>
-        <div style={{ fontSize: 14, color: "var(--ink-3)" }}>{greet}, {user.name.split(" ")[0]}</div>
-        <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, color: "var(--ink-2)", marginTop: 2 }}>
+      <div className="px-4 pb-3 pt-2">
+        <div className="text-sm font-semibold text-ink-2">{greet}, {user.name.split(" ")[0]}</div>
+        <div className="flex items-center gap-1.5 text-xs text-ink-3 mt-1 font-medium">
           <Icon name="pin" size={12} />
           <span>{locationLabel}</span>
         </div>
       </div>
 
       {/* Weather strip */}
-      <div style={{ padding: "0 16px 12px" }}>
-        <div className="weather-strip" onClick={() => onNavTab("discover", "weather")}>
+      <div className="px-4 pb-3">
+        <div
+          className="flex items-center gap-4 p-3 bg-gradient-to-br from-[#DBE7F0] to-[#C3D6E2] dark:from-[#1E2D38] dark:to-[#243B4A] rounded-xl text-[#1B3854] dark:text-[#D4E4EF] cursor-pointer min-h-[52px] transition-opacity hover:opacity-95"
+          onClick={() => onNavTab("discover", "weather")}
+        >
           {!w && (
             <>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 600 }}>Weather data unavailable</div>
-                <div style={{ fontSize: 11, opacity: 0.8, marginTop: 2 }}>Connect a live provider for production advisories.</div>
+              <div className="flex-1">
+                <div className="font-semibold text-sm">Weather data unavailable</div>
+                <div className="text-[11px] opacity-80 mt-0.5">Connect a live provider for production advisories.</div>
               </div>
-              <Icon name="chevron" size={18} style={{ opacity: 0.5 }} />
+              <Icon name="chevron" size={18} className="opacity-60" />
             </>
           )}
           {w && (
-          <>
-          <div style={{ display: "grid", placeItems: "center", width: 44, height: 44, borderRadius: 999, background: "rgba(255,255,255,0.4)" }}>
-            <WeatherIcon name={w.icon} size={26} />
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontFamily: "var(--font-display)", fontSize: 26, lineHeight: 1, letterSpacing: "-0.01em" }}>
-              {w.temp} C<span style={{ fontSize: 13, fontFamily: "var(--font-sans)", marginLeft: 6, opacity: 0.7 }}>{w.condition}</span>
-            </div>
-            <div style={{ fontSize: 11, opacity: 0.8, marginTop: 2 }}>
-              <Icon name="drop" size={10} /> {w.rainProb}% rain - <Icon name="wind" size={10} /> {w.wind} km/h
-            </div>
-          </div>
-          <Icon name="chevron" size={18} style={{ opacity: 0.5 }} />
-          </>
+            <>
+              <div className="flex items-center justify-center w-11 h-11 rounded-full bg-white/40">
+                <WeatherIcon name={w.icon} size={26} />
+              </div>
+              <div className="flex-1">
+                <div className="font-serif font-bold text-2xl leading-none">
+                  {w.temp} C<span className="text-xs font-sans font-medium ml-1.5 opacity-80">{w.condition}</span>
+                </div>
+                <div className="text-[11px] opacity-80 mt-1 flex items-center gap-2">
+                  <span className="inline-flex items-center gap-0.5"><Icon name="drop" size={10} /> {w.rainProb}% rain</span>
+                  <span>·</span>
+                  <span className="inline-flex items-center gap-0.5"><Icon name="wind" size={10} /> {w.wind} km/h</span>
+                </div>
+              </div>
+              <Icon name="chevron" size={18} className="opacity-60" />
+            </>
           )}
         </div>
       </div>
 
       {/* Mandi prices strip */}
-      <div className="section-head">
-        <h3>{t("home.prices")}</h3>
-        <button className="more" onClick={() => onNavTab("discover", "prices")}>See all</button>
+      <div className="flex items-baseline justify-between px-4 py-2">
+        <h3 className="font-sans font-bold text-base text-ink">{t("home.prices")}</h3>
+        <button
+          className="text-xs text-primary font-bold px-2 py-1.5 h-[44px] flex items-center"
+          onClick={() => onNavTab("discover", "prices")}
+        >
+          See all
+        </button>
       </div>
-      <div className="hscroll">
+      <div className="flex gap-3 px-4 pb-4 overflow-x-auto scrollbar-none">
         {displayPrices.map(p => (
-          <div key={p.commodity} onClick={() => onNavTab("discover", "prices")} style={{
-            background: "var(--surface)", border: "1px solid var(--border)",
-            borderRadius: 14, padding: "12px 14px", minWidth: 152, flexShrink: 0
-          }}>
-            <div style={{ fontSize: 12, color: "var(--ink-3)", marginBottom: 2 }}>{p.commodity}</div>
-            <div style={{ fontFamily: "var(--font-display)", fontSize: 22, color: "var(--primary)", letterSpacing: "-0.01em", lineHeight: 1 }}>
-              {formatINR(p.modal)}<span style={{ fontSize: 11, color: "var(--ink-3)", fontFamily: "var(--font-sans)", marginLeft: 2 }}>/qtl</span>
+          <div
+            key={p.commodity}
+            onClick={() => onNavTab("discover", "prices")}
+            className="bg-white border border-border rounded-xl p-3 min-w-[152px] shrink-0 cursor-pointer shadow-sm hover:shadow active:scale-[0.98] transition-all"
+          >
+            <div className="text-xs text-ink-3 font-semibold mb-1 truncate">{p.commodity}</div>
+            <div className="font-serif font-bold text-xl text-primary leading-none">
+              {formatINR(p.modal)}<span className="text-[10px] font-sans font-normal text-ink-3 ml-0.5">/qtl</span>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8 }}>
-              <span className="price-pill up">{p.date || "Latest"}</span>
-              <span style={{ fontSize: 10, color: "var(--ink-3)" }}>{p.district}</span>
+            <div className="flex items-center justify-between gap-2 mt-3">
+              <span className="inline-block text-[10px] font-bold text-primary bg-primary-soft px-1.5 py-0.5 rounded-full truncate">
+                {p.date || "Latest"}
+              </span>
+              <span className="text-[10px] text-ink-3 font-semibold truncate">{p.district}</span>
             </div>
           </div>
         ))}
         {displayPrices.length === 0 && (
-          <div className="news-card">
-            <div className="news-card-title">
+          <div className="w-[240px] shrink-0 bg-white border border-border rounded-xl p-4">
+            <div className="text-sm font-bold text-ink">
               {pricesState === "error" ? "Live mandi prices unavailable" : "Live mandi prices loading"}
             </div>
-            <div className="news-card-body">
+            <div className="text-xs text-ink-3 mt-1.5 leading-relaxed">
               {pricesState === "error"
                 ? "The app will not substitute demo rates while data.gov.in is unreachable."
                 : "Prices come from AGMARKNET through data.gov.in."}
@@ -133,27 +144,31 @@ const HomeScreen = ({ user, listings, prices, pricesState, weather, updates, upd
         )}
       </div>
 
-      {/* Split listing and service posting paths. */}
-      <div style={{ padding: "8px 16px 16px" }}>
-        <div style={{
-          display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10,
-        }}>
-          <button onClick={() => onPostListing("listing")} className="post-cta primary">
-            <div className="post-cta-icon">
+      {/* Split listing and service posting paths */}
+      <div className="px-4 py-2">
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            onClick={() => onPostListing("listing")}
+            className="flex items-center gap-3 p-3 rounded-xl cursor-pointer bg-primary text-white hover:bg-primary-dark min-h-[48px] w-full transition-transform active:scale-[0.97] outline-none"
+          >
+            <div className="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
               <Icon name="plus" size={20} stroke={2.2} />
             </div>
-            <div className="post-cta-body">
-              <div className="post-cta-title">Post a Listing</div>
-              <div className="post-cta-sub">Crops - Seeds - Pesticides</div>
+            <div className="text-left">
+              <div className="text-xs font-bold leading-tight">Post Listing</div>
+              <div className="text-[10px] opacity-80 mt-0.5">Crops · Seeds</div>
             </div>
           </button>
-          <button onClick={() => onPostListing("service")} className="post-cta secondary">
-            <div className="post-cta-icon">
+          <button
+            onClick={() => onPostListing("service")}
+            className="flex items-center gap-3 p-3 rounded-xl cursor-pointer bg-white text-ink border border-border-strong hover:bg-surface-2 min-h-[48px] w-full transition-transform active:scale-[0.97] outline-none"
+          >
+            <div className="w-9 h-9 rounded-lg bg-primary-soft text-primary flex items-center justify-center shrink-0">
               <Icon name="tool" size={20} stroke={2} />
             </div>
-            <div className="post-cta-body">
-              <div className="post-cta-title">Post a Service</div>
-              <div className="post-cta-sub">Rentals - Vet - Spraying</div>
+            <div className="text-left">
+              <div className="text-xs font-bold leading-tight">Post Service</div>
+              <div className="text-[10px] text-ink-3 mt-0.5">Rentals · Vet</div>
             </div>
           </button>
         </div>
@@ -165,13 +180,13 @@ const HomeScreen = ({ user, listings, prices, pricesState, weather, updates, upd
       {/* Matching user's crops */}
       {matching.length > 0 && (
         <>
-          <div className="section-head">
-            <h3>{t("home.matching")}</h3>
-            <span style={{ fontSize: 11, color: "var(--ink-3)" }}>{user.crops.slice(0, 2).join(", ")}</span>
+          <div className="flex items-baseline justify-between px-4 py-2 mt-2">
+            <h3 className="font-sans font-bold text-base text-ink">{t("home.matching")}</h3>
+            <span className="text-xs text-ink-3 font-semibold">{user.crops.slice(0, 2).join(", ")}</span>
           </div>
-          <div className="hscroll stagger-list">
+          <div className="flex gap-3 px-4 pb-4 overflow-x-auto scrollbar-none stagger-list">
             {matching.map(l => (
-              <div key={l.id} style={{ width: 188, flexShrink: 0 }} onClick={() => onOpenListing(l)}>
+              <div key={l.id} className="w-[188px] shrink-0" onClick={() => onOpenListing(l)}>
                 <ListingCard listing={l} />
               </div>
             ))}
@@ -228,7 +243,7 @@ const HomeScreen = ({ user, listings, prices, pricesState, weather, updates, upd
         items={vetNearby}
         radius={50}
         onOpenListing={onOpenListing}
-        onSeeAll={() => onNavTab("discover", "nearby", { category: "veterinary" })}
+        onSeeAll={() => onNavTab("browse", null, { category: "veterinary" })}
         onOpenMap={() => onNavTab("discover", "nearby", { category: "veterinary" })}
       />
       <NearbySection
@@ -241,23 +256,19 @@ const HomeScreen = ({ user, listings, prices, pricesState, weather, updates, upd
         onOpenMap={() => onNavTab("discover", "nearby", { category: "service" })}
       />
 
-      <div style={{ height: 24 }} />
+      <div className="h-6" />
     </div>
   );
 };
 
 // ---------- Group header (Posts / Services & Rentals) ----------
 const GroupHeader = ({ title, subtitle }) => (
-  <div style={{
-    margin: "20px 16px 6px",
-    paddingTop: 14,
-    borderTop: "1px solid var(--border)",
-  }}>
-    <div style={{ fontSize: 11, fontWeight: 600, color: "var(--ink-3)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+  <div className="mx-4 mt-6 mb-2 pt-4 border-t border-border">
+    <div className="text-[11px] font-bold text-ink-3 uppercase tracking-wider">
       {title}
     </div>
     {subtitle && (
-      <div style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 2 }}>{subtitle}</div>
+      <div className="text-xs text-ink-3 mt-0.5">{subtitle}</div>
     )}
   </div>
 );
@@ -269,19 +280,16 @@ const NearbySection = ({ title, icon, items, radius, onOpenListing, onSeeAll, on
   const closest = filtered[0];
 
   return (
-    <div style={{ marginTop: 12 }}>
-      <div style={{
-        display: "flex", alignItems: "center", gap: 8,
-        padding: "0 16px 8px",
-      }}>
-        <span style={{ display: "grid", placeItems: "center", width: 24, height: 24, color: "var(--primary)" }}>
+    <div className="mt-4">
+      <div className="flex items-center gap-2 px-4 pb-2">
+        <span className="w-6 h-6 flex items-center justify-center text-primary shrink-0">
           <Icon name={icon} size={18} />
         </span>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 15, fontWeight: 600, lineHeight: 1.1 }}>{title}</div>
-          <div style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 2 }}>
+        <div className="flex-1 min-w-0">
+          <div className="text-sm font-bold text-ink leading-tight">{title}</div>
+          <div className="text-[11px] text-ink-3 mt-0.5 font-medium">
             {filtered.length > 0
-              ? `${filtered.length} within ${radius}km${closest ? ` - closest ${closest.distance}km` : ""}`
+              ? `${filtered.length} within ${radius}km${closest ? ` · closest ${closest.distance}km` : ""}`
               : `None within ${radius}km`}
           </div>
         </div>
@@ -290,22 +298,13 @@ const NearbySection = ({ title, icon, items, radius, onOpenListing, onSeeAll, on
             <button
               onClick={onOpenMap}
               aria-label="Map"
-              style={{
-                width: 32, height: 32, borderRadius: 10,
-                background: "var(--surface-2)", border: "1px solid var(--border)",
-                display: "grid", placeItems: "center",
-                color: "var(--ink-2)", cursor: "pointer",
-              }}
+              className="w-11 h-11 rounded-xl bg-surface-2 border border-border flex items-center justify-center text-ink-2 cursor-pointer transition-transform active:scale-95"
             >
               <Icon name="map" size={14} />
             </button>
             <button
               onClick={onSeeAll}
-              style={{
-                background: "transparent", border: 0,
-                fontSize: 12, color: "var(--primary)", fontWeight: 500,
-                padding: "6px 4px", cursor: "pointer",
-              }}
+              className="text-xs font-bold text-primary h-[44px] px-2 flex items-center justify-center cursor-pointer transition-opacity active:opacity-70"
             >
               See all
             </button>
@@ -314,35 +313,24 @@ const NearbySection = ({ title, icon, items, radius, onOpenListing, onSeeAll, on
       </div>
 
       {filtered.length === 0 ? (
-        <div style={{ padding: "0 16px" }}>
-          <div style={{
-            background: "var(--surface-2)", border: "1px dashed var(--border-strong)",
-            borderRadius: 14, padding: "16px 14px",
-            fontSize: 12, color: "var(--ink-3)",
-            display: "flex", alignItems: "center", gap: 10,
-          }}>
-            <Icon name="pin" size={16} color="var(--ink-4)" />
-            <span style={{ flex: 1 }}>Nothing listed within {radius}km right now.</span>
+        <div className="px-4">
+          <div className="bg-surface-2 border border-dashed border-border-strong rounded-xl p-4 text-xs text-ink-3 flex items-center gap-3">
+            <Icon name="pin" size={16} className="text-ink-4" />
+            <span className="flex-1 leading-normal">Nothing listed within {radius}km right now.</span>
             <button
               onClick={onOpenMap}
-              style={{ background: "transparent", border: 0, fontSize: 12, color: "var(--primary)", fontWeight: 500 }}
+              className="text-xs font-bold text-primary px-1.5 h-[44px] flex items-center"
             >
               Open map
             </button>
           </div>
         </div>
       ) : (
-        <div className="hscroll stagger-list">
+        <div className="flex gap-3 px-4 pb-4 overflow-x-auto scrollbar-none stagger-list">
           {display.map(l => (
-            <div key={l.id} style={{ width: 196, flexShrink: 0, position: "relative" }} onClick={() => onOpenListing(l)}>
+            <div key={l.id} className="w-[196px] shrink-0 relative" onClick={() => onOpenListing(l)}>
               <ListingCard listing={l} />
-              <div style={{
-                position: "absolute", top: 8, right: 8,
-                background: "rgba(27,36,24,0.85)", color: "white",
-                padding: "3px 8px", borderRadius: 999,
-                fontSize: 10, fontWeight: 600,
-                display: "inline-flex", alignItems: "center", gap: 4,
-              }}>
+              <div className="absolute top-2 right-2 bg-[#1b2418]/85 text-white px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1">
                 <Icon name="pin" size={9} /> {l.distance}km
               </div>
             </div>
@@ -350,28 +338,14 @@ const NearbySection = ({ title, icon, items, radius, onOpenListing, onSeeAll, on
           {/* See-all tail card */}
           <div
             onClick={onSeeAll}
-            style={{
-              width: 110, flexShrink: 0,
-              border: "1px dashed var(--border-strong)",
-              borderRadius: 14,
-              background: "transparent",
-              display: "grid", placeItems: "center",
-              cursor: "pointer",
-              color: "var(--primary)",
-              padding: "12px",
-            }}
+            className="w-[110px] shrink-0 border border-dashed border-border-strong rounded-xl bg-transparent flex items-center justify-center cursor-pointer p-3 text-primary transition-transform active:scale-95"
           >
-            <div style={{ textAlign: "center" }}>
-              <div style={{
-                width: 36, height: 36, borderRadius: 999,
-                background: "var(--primary-soft)",
-                display: "grid", placeItems: "center",
-                margin: "0 auto 8px",
-              }}>
+            <div className="text-center">
+              <div className="w-9 h-9 rounded-full bg-primary-soft flex items-center justify-center mx-auto mb-2">
                 <Icon name="chevron" size={16} color="var(--primary)" />
               </div>
-              <div style={{ fontSize: 11, fontWeight: 600 }}>See all</div>
-              <div style={{ fontSize: 10, color: "var(--ink-3)", marginTop: 2 }}>{filtered.length} listings</div>
+              <div className="text-xs font-bold">See all</div>
+              <div className="text-[10px] text-ink-3 mt-0.5 font-semibold">{filtered.length} listings</div>
             </div>
           </div>
         </div>
@@ -388,48 +362,65 @@ const NewsSchemesSection = ({ items, state }) => {
 
   return (
     <div>
-      <div className="section-head">
-        <h3>Trending News &amp; Schemes</h3>
-        <div className="segmented mini" style={{ background: "var(--surface-2)" }}>
-          <button className={filter === "all" ? "active" : ""} onClick={() => setFilter("all")}>All</button>
-          <button className={filter === "scheme" ? "active" : ""} onClick={() => setFilter("scheme")}>Schemes</button>
-          <button className={filter === "news" ? "active" : ""} onClick={() => setFilter("news")}>News</button>
+      <div className="flex items-baseline justify-between px-4 py-2">
+        <h3 className="font-sans font-bold text-base text-ink">Trending News &amp; Schemes</h3>
+        <div className="flex bg-surface-2 rounded-lg p-0.5 gap-0.5">
+          <button
+            className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all h-[32px] flex items-center ${filter === "all" ? "bg-white text-ink shadow-sm" : "text-ink-2"}`}
+            onClick={() => setFilter("all")}
+          >
+            All
+          </button>
+          <button
+            className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all h-[32px] flex items-center ${filter === "scheme" ? "bg-white text-ink shadow-sm" : "text-ink-2"}`}
+            onClick={() => setFilter("scheme")}
+          >
+            Schemes
+          </button>
+          <button
+            className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all h-[32px] flex items-center ${filter === "news" ? "bg-white text-ink shadow-sm" : "text-ink-2"}`}
+            onClick={() => setFilter("news")}
+          >
+            News
+          </button>
         </div>
       </div>
-      <div className="hscroll">
+      <div className="flex gap-3 px-4 pb-4 overflow-x-auto scrollbar-none">
         {state === "loading" && (
-          <div className="news-card">
-            <div className="news-card-title">Loading official agriculture updates</div>
-            <div className="news-card-body">Fetching live government sources.</div>
+          <div className="w-[248px] shrink-0 bg-white border border-border rounded-xl p-4">
+            <div className="text-sm font-bold text-ink leading-tight">Loading official agriculture updates</div>
+            <div className="text-xs text-ink-3 mt-1.5">Fetching live government sources.</div>
           </div>
         )}
         {state === "error" && items.length === 0 && (
-          <div className="news-card">
-            <div className="news-card-title">Official updates unavailable</div>
-            <div className="news-card-body">The live source could not be reached. Retry after connectivity is restored.</div>
+          <div className="w-[248px] shrink-0 bg-white border border-border rounded-xl p-4">
+            <div className="text-sm font-bold text-accent-terra leading-tight">Official updates unavailable</div>
+            <div className="text-xs text-ink-3 mt-1.5">The live source could not be reached. Retry after connectivity is restored.</div>
           </div>
         )}
         {shown.map(item => (
           <div
             key={item.id}
             onClick={() => setOpenItem(item)}
-            className="news-card"
-            style={{ borderLeft: `3px solid ${item.accent}` }}
+            className="w-[248px] shrink-0 bg-white border border-border rounded-xl p-3.5 flex flex-col gap-2 cursor-pointer shadow-sm hover:shadow hover:-translate-y-0.5 active:scale-[0.98] transition-all border-l-4"
+            style={{ borderLeftColor: item.accent }}
           >
-            <div className="news-card-meta">
-              <span className="news-kind" style={{ color: item.accent, borderColor: item.accent }}>
+            <div className="flex items-center justify-between gap-2">
+              <span
+                className="text-[9.5px] font-extrabold tracking-wider uppercase px-2 py-0.5 rounded-full border bg-white"
+                style={{ color: item.accent, borderColor: item.accent }}
+              >
                 {item.kind === "scheme" ? "Scheme" : "News"}
               </span>
-              <span className="news-date">{item.date}</span>
+              <span className="text-[10.5px] text-ink-3 font-semibold">{item.date}</span>
             </div>
-            <div className="news-card-title">{item.title}</div>
-            <div className="news-card-body">{item.body}</div>
-            <div className="news-card-foot">
-              <span className="news-tag">{item.tag}</span>
+            <div className="font-serif text-sm font-bold leading-snug text-ink line-clamp-2">{item.title}</div>
+            <div className="text-xs text-ink-2 leading-relaxed line-clamp-2">{item.body}</div>
+            <div className="flex items-center justify-between gap-2 mt-auto pt-2 border-t border-dashed border-border">
+              <span className="text-[10px] font-bold text-ink-2 bg-surface-2 px-2 py-0.5 rounded">{item.tag}</span>
               {item.deadline && (
-                <span className="news-deadline">
-                  <Icon name="calendar" size={10} />
-                  by {item.deadline}
+                <span className="text-[10px] font-bold text-accent-terra bg-accent-terra-soft px-2 py-0.5 rounded flex items-center gap-1">
+                  <Icon name="calendar" size={10} /> by {item.deadline}
                 </span>
               )}
             </div>
@@ -444,26 +435,30 @@ const NewsSchemesSection = ({ items, state }) => {
               <span className="news-kind" style={{ color: openItem.accent, borderColor: openItem.accent }}>
                 {openItem.kind === "scheme" ? "Scheme" : "News"}
               </span>
-              <button className="icon-btn" onClick={() => setOpenItem(null)} aria-label="Close">
+              <button
+                className="w-11 h-11 rounded-full flex items-center justify-center hover:bg-surface-2 cursor-pointer"
+                onClick={() => setOpenItem(null)}
+                aria-label="Close"
+              >
                 <Icon name="close" size={20} />
               </button>
             </div>
-            <div style={{ fontFamily: "var(--font-display)", fontSize: 22, lineHeight: 1.2, marginTop: 6 }}>
+            <div className="font-serif font-bold text-2xl leading-snug text-ink mt-3">
               {openItem.title}
             </div>
-            <div style={{ fontSize: 14, color: "var(--ink-2)", marginTop: 12, lineHeight: 1.45 }}>
+            <div className="text-sm text-ink-2 leading-relaxed mt-3 whitespace-pre-wrap">
               {openItem.body}
             </div>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 16 }}>
-              <span className="news-tag">{openItem.tag}</span>
+            <div className="flex gap-2 flex-wrap mt-4">
+              <span className="text-[11px] font-bold text-ink-2 bg-surface-2 px-2.5 py-1 rounded">{openItem.tag}</span>
               {openItem.deadline && (
-                <span className="news-deadline">
-                  <Icon name="calendar" size={10} /> Apply by {openItem.deadline}
+                <span className="text-[11px] font-bold text-accent-terra bg-accent-terra-soft px-2.5 py-1 rounded flex items-center gap-1.5">
+                  <Icon name="calendar" size={11} /> Apply by {openItem.deadline}
                 </span>
               )}
             </div>
-            <div style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 14 }}>
-              Source: {openItem.source} - {openItem.date}
+            <div className="text-xs text-ink-3 mt-4 font-semibold">
+              Source: {openItem.source} · {openItem.date}
             </div>
             <button
               className="news-cta"

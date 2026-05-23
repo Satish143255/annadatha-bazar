@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { CROPS } from '../referenceData.js';
 import { Icon } from '../icons/Icon.jsx';
 import { Button, Avatar, Empty, ImgPh, Sheet, useT, formatINR, AnimatedNumber } from '../components/index.jsx';
@@ -21,185 +21,185 @@ const ProfileScreen = ({ user, myListings, inquiries, orders = [], onOpenSetting
     || (user.latitude != null && user.longitude != null ? "GPS location saved" : "Location not added");
 
   return (
-    <div className="scroll">
-      <div className="topbar">
-        <div className="title">{t("profile.title")}</div>
-        <button className="icon-btn" onClick={onOpenSettings}>
+    <div className="scroll bg-white">
+      <div className="topbar border-b border-slate-100 flex items-center justify-between px-4 py-2 bg-white">
+        <div className="title font-bold text-slate-800 text-lg">{t("profile.title")}</div>
+        <button className="w-11 h-11 rounded-full flex items-center justify-center hover:bg-slate-50 transition-colors active:scale-95 cursor-pointer" onClick={onOpenSettings}>
           <Icon name="settings" size={20} />
         </button>
       </div>
 
       {/* Header */}
-      <div style={{ padding: "8px 16px 20px", textAlign: "center" }}>
+      <div className="px-4 py-6 flex flex-col items-center text-center bg-slate-50/20">
         <Avatar name={user.name} size="lg" />
         {editing ? (
           <input
             value={name} onChange={e => setName(e.target.value)}
-            style={{
-              fontSize: 22, fontWeight: 600, textAlign: "center", marginTop: 12,
-              border: 0, borderBottom: "2px solid var(--primary)", background: "transparent",
-              outline: 0, color: "var(--ink)"
-            }}
+            className="text-xl font-bold text-center mt-3 border-b-2 border-[#1F5A3A] bg-transparent outline-none text-slate-800 pb-1"
           />
         ) : (
-          <div style={{ fontSize: 22, fontWeight: 600, marginTop: 12 }}>{name}</div>
+          <div className="text-xl font-bold text-slate-800 mt-3">{name}</div>
         )}
-        <div style={{ fontSize: 13, color: "var(--ink-3)", marginTop: 4 }}>
-          <Icon name="pin" size={12} /> {locationLabel}
+        <div className="flex items-center gap-1 mt-1.5 text-xs text-slate-500 font-medium">
+          <Icon name="pin" size={12} color="#72796e" />
+          <span>{locationLabel}</span>
         </div>
-        <div style={{ fontSize: 11, color: "var(--ink-4)", marginTop: 4 }}>
+        <div className="text-[10px] text-slate-400 font-medium mt-1">
           Member since {user.joined}
         </div>
       </div>
 
       {/* Dashboard hero card */}
-      <div style={{ padding: "0 16px 12px" }}>
-        <button onClick={onOpenDashboard} className="dashboard-hero">
-          <div className="dashboard-hero-icon">
-            <Icon name="trendUp" size={20} stroke={2.2} />
-          </div>
-          <div className="dashboard-hero-body">
-            <div className="dashboard-hero-title">Seller Dashboard</div>
-            <div className="dashboard-hero-sub">
-              {openOrders > 0
-                ? `${openOrders} open ${openOrders === 1 ? "order" : "orders"} need attention`
-                : "View listings, services & orders"}
+      <div className="px-4 pb-4">
+        <button 
+          onClick={onOpenDashboard} 
+          className="w-full bg-[#1F5A3A] text-white p-4 rounded-2xl flex items-center justify-between shadow-sm active:scale-[0.98] transition-transform duration-100 cursor-pointer"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white">
+              <Icon name="trendUp" size={20} stroke={2.2} />
+            </div>
+            <div className="text-left">
+              <div className="text-sm font-bold">Seller Dashboard</div>
+              <div className="text-[11px] text-white/80 font-medium mt-0.5">
+                {openOrders > 0
+                  ? `${openOrders} open ${openOrders === 1 ? "order" : "orders"} need attention`
+                  : "View listings, services & orders"}
+              </div>
             </div>
           </div>
-          <Icon name="chevron" size={18} style={{ opacity: 0.7 }} />
+          <Icon name="chevron" size={18} className="opacity-80" />
         </button>
       </div>
 
       {/* Stats for listings, services, and orders. */}
-      <div style={{ padding: "0 16px 16px", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
-        <button onClick={onOpenDashboard} className="card tight" style={{ textAlign: "center", padding: "14px 8px" }}>
-          <AnimatedNumber value={activeListings} style={{ fontFamily: "var(--font-display)", fontSize: 28, color: "var(--primary)", lineHeight: 1, display: "block" }} />
-          <div style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 4 }}>Listings</div>
+      <div className="px-4 pb-4 grid grid-cols-3 gap-3">
+        <button onClick={onOpenListings} className="flex flex-col items-center bg-white border border-slate-100 rounded-xl p-3 shadow-sm active:scale-[0.98] transition-transform cursor-pointer">
+          <AnimatedNumber value={activeListings} className="font-serif font-bold text-2xl text-[#1F5A3A] leading-none mb-1.5" />
+          <div className="text-[10px] font-bold text-slate-450 uppercase tracking-wide">Listings</div>
         </button>
-        <button onClick={onOpenDashboard} className="card tight" style={{ textAlign: "center", padding: "14px 8px" }}>
-          <AnimatedNumber value={activeServices} style={{ fontFamily: "var(--font-display)", fontSize: 28, color: "#7A4F9E", lineHeight: 1, display: "block" }} />
-          <div style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 4 }}>Services</div>
+        <button onClick={onOpenListings} className="flex flex-col items-center bg-white border border-slate-100 rounded-xl p-3 shadow-sm active:scale-[0.98] transition-transform cursor-pointer">
+          <AnimatedNumber value={activeServices} className="font-serif font-bold text-2xl text-[#7A4F9E] leading-none mb-1.5" />
+          <div className="text-[10px] font-bold text-slate-450 uppercase tracking-wide">Services</div>
         </button>
-        <button onClick={onOpenDashboard} className="card tight" style={{ textAlign: "center", padding: "14px 8px", position: "relative" }}>
-          <AnimatedNumber value={openOrders} style={{ fontFamily: "var(--font-display)", fontSize: 28, color: "#B05E2E", lineHeight: 1, display: "block" }} />
-          <div style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 4 }}>Open Orders</div>
+        <button onClick={onOpenDashboard} className="flex flex-col items-center bg-white border border-slate-100 rounded-xl p-3 shadow-sm active:scale-[0.98] transition-transform relative cursor-pointer">
+          <AnimatedNumber value={openOrders} className="font-serif font-bold text-2xl text-[#B05E2E] leading-none mb-1.5" />
+          <div className="text-[10px] font-bold text-slate-450 uppercase tracking-wide">Orders</div>
           {openOrders > 0 && (
-            <span style={{
-              position: "absolute", top: 8, right: 8,
-              width: 8, height: 8, borderRadius: 999,
-              background: "#B05E2E",
-            }} />
+            <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#B05E2E]" />
           )}
         </button>
       </div>
 
       {/* Crops */}
-      <div className="section-head"><h3 style={{ fontSize: 14 }}>My Crops</h3></div>
-      <div style={{ padding: "0 16px 16px", display: "flex", flexWrap: "wrap", gap: 8 }}>
+      <div className="px-4 py-1.5 flex items-baseline justify-between">
+        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">My Crops</h3>
+      </div>
+      <div className="px-4 pb-4 flex flex-wrap gap-2">
         {user.crops.map(cId => {
           const c = CROPS.find(x => x.id === cId);
           if (!c) return null;
           return (
-            <div key={cId} className="chip" style={{ height: 38, paddingRight: 8 }}>
-              <span style={{ fontSize: 14 }}>{c.emoji}</span>
-              {c.name}
+            <div key={cId} className="h-9 px-4 rounded-full border border-slate-200/60 bg-slate-50 flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+              <span className="text-sm">{c.emoji}</span>
+              <span>{c.name}</span>
               {editing && (
-                <button style={{ marginLeft: 4, opacity: 0.5 }}>
-                  <Icon name="close" size={12} />
+                <button className="ml-1.5 opacity-55 hover:opacity-100 transition-opacity cursor-pointer">
+                  <Icon name="close" size={10} />
                 </button>
               )}
             </div>
           );
         })}
         {editing && (
-          <button className="chip soft" style={{ height: 38 }}>
-            <Icon name="plus" size={14} /> Add
+          <button className="h-9 px-3.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-655 flex items-center gap-1 text-xs font-bold transition-all cursor-pointer">
+            <Icon name="plus" size={12} /> Add
           </button>
         )}
       </div>
 
       {/* Verification */}
-      <div className="section-head"><h3 style={{ fontSize: 14 }}>Verification</h3></div>
-      <div style={{ padding: "0 16px 16px" }}>
-        <div className="card tight" style={{ display: "flex", gap: 16, padding: 14 }}>
+      <div className="px-4 py-1.5 flex items-baseline justify-between">
+        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Verification</h3>
+      </div>
+      <div className="px-4 pb-4">
+        <div className="grid grid-cols-3 gap-3 p-3 bg-white border border-slate-100 rounded-2xl shadow-sm">
           {[
             { label: "Phone", verified: true, icon: "phone" },
             { label: "Location", verified: true, icon: "pin" },
             { label: "Aadhaar", verified: false, icon: "user" },
           ].map(v => (
-            <div key={v.label} style={{ flex: 1, textAlign: "center" }}>
-              <div style={{
-                width: 40, height: 40, margin: "0 auto 6px",
-                borderRadius: 999,
-                background: v.verified ? "var(--primary-soft)" : "var(--surface-2)",
-                color: v.verified ? "var(--primary)" : "var(--ink-3)",
-                display: "grid", placeItems: "center",
-                position: "relative",
-              }}>
+            <div key={v.label} className="flex-1 flex flex-col items-center p-3 bg-slate-50/50 rounded-xl border border-slate-100 relative">
+              <div className={`w-11 h-11 rounded-full flex items-center justify-center relative mb-2 transition-colors ${
+                v.verified 
+                  ? "bg-[#1F5A3A]/10 text-[#1F5A3A]" 
+                  : "bg-slate-100 text-slate-450"
+              }`}>
                 <Icon name={v.icon} size={18} />
                 {v.verified && (
-                  <div style={{
-                    position: "absolute", bottom: -2, right: -2,
-                    width: 16, height: 16, borderRadius: 999,
-                    background: "var(--primary)", color: "white",
-                    display: "grid", placeItems: "center",
-                    border: "2px solid var(--surface)"
-                  }}>
-                    <Icon name="check" size={9} color="white" stroke={3} />
+                  <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#1F5A3A] text-white flex items-center justify-center border-2 border-white shadow-sm">
+                    <Icon name="check" size={10} color="white" stroke={3} />
                   </div>
                 )}
               </div>
-              <div style={{ fontSize: 11, fontWeight: 500 }}>{v.label}</div>
-              {!v.verified && <div style={{ fontSize: 9, color: "var(--primary)", marginTop: 2 }}>Verify</div>}
+              <div className="text-[11px] font-bold text-slate-700">{v.label}</div>
+              {!v.verified ? (
+                <button className="text-[10px] font-bold text-[#1F5A3A] hover:underline mt-1 cursor-pointer">Verify</button>
+              ) : (
+                <div className="text-[9px] font-bold text-[#1F5A3A] uppercase tracking-wider mt-1">Verified</div>
+              )}
             </div>
           ))}
         </div>
       </div>
 
       {/* Actions */}
-      <div style={{ padding: "0 16px 16px", display: "grid", gap: 10 }}>
-        <Button variant="secondary" full icon={editing ? "check" : "edit"} onClick={() => setEditing(!editing)}>
+      <div className="px-4 pb-4 grid grid-cols-2 gap-3">
+        <button 
+          onClick={() => setEditing(!editing)}
+          className="h-11 w-full bg-[#1F5A3A] text-white rounded-xl flex items-center justify-center gap-1.5 font-bold text-xs shadow-sm hover:bg-[#143C26] active:scale-[0.98] transition-all cursor-pointer"
+        >
+          <Icon name={editing ? "check" : "edit"} size={14} />
           {editing ? "Save Changes" : t("profile.edit")}
-        </Button>
-        <Button variant="secondary" full icon="share">
+        </button>
+        <button className="h-11 w-full bg-white border border-slate-200 text-slate-700 rounded-xl flex items-center justify-center gap-1.5 font-bold text-xs shadow-sm hover:bg-slate-50 active:scale-[0.98] transition-all cursor-pointer">
+          <Icon name="share" size={14} />
           {t("profile.share")}
-        </Button>
+        </button>
       </div>
 
       {/* Menu */}
-      <div style={{ padding: "8px 16px 28px" }}>
-        <div className="form-group">
-          <button className="list-row" onClick={onOpenDashboard} style={{ width: "100%", textAlign: "left" }}>
-            <Icon name="trendUp" size={18} color="var(--ink-3)" />
-            <span className="row-label">Seller Dashboard</span>
+      <div className="px-4 pb-20">
+        <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden divide-y divide-slate-100 shadow-sm">
+          <button className="w-full h-[52px] px-4 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left cursor-pointer" onClick={onOpenDashboard}>
+            <div className="text-[#1F5A3A]"><Icon name="trendUp" size={18} /></div>
+            <span className="flex-1 text-sm font-semibold text-slate-700">Seller Dashboard</span>
             {openOrders > 0 && (
-              <span style={{
-                background: "#B05E2E", color: "white", fontSize: 10, fontWeight: 700,
-                padding: "2px 7px", borderRadius: 999,
-              }}>{openOrders} new</span>
+              <span className="bg-[#B05E2E] text-white text-[9px] font-bold px-2 py-0.5 rounded-full">{openOrders} new</span>
             )}
-            <Icon name="chevron" size={16} color="var(--ink-3)" />
+            <Icon name="chevron" size={16} color="#94a3b8" />
           </button>
-          <button className="list-row" onClick={onOpenListings} style={{ width: "100%", textAlign: "left" }}>
-            <Icon name="grid" size={18} color="var(--ink-3)" />
-            <span className="row-label">My Listings &amp; Services</span>
-            <span className="row-meta">{myListings.length}</span>
-            <Icon name="chevron" size={16} color="var(--ink-3)" />
+          <button className="w-full h-[52px] px-4 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left cursor-pointer" onClick={onOpenListings}>
+            <div className="text-[#1F5A3A]"><Icon name="grid" size={18} /></div>
+            <span className="flex-1 text-sm font-semibold text-slate-700">My Listings &amp; Services</span>
+            <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded">{myListings.length}</span>
+            <Icon name="chevron" size={16} color="#94a3b8" />
           </button>
-          <button className="list-row" onClick={() => onOpenInquiries("received")} style={{ width: "100%", textAlign: "left" }}>
-            <Icon name="chat" size={18} color="var(--ink-3)" />
-            <span className="row-label">Inquiries</span>
-            <span className="row-meta">{received + sent}</span>
-            <Icon name="chevron" size={16} color="var(--ink-3)" />
+          <button className="w-full h-[52px] px-4 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left cursor-pointer" onClick={() => onOpenInquiries("received")}>
+            <div className="text-[#1F5A3A]"><Icon name="chat" size={18} /></div>
+            <span className="flex-1 text-sm font-semibold text-slate-700">Inquiries</span>
+            <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded">{received + sent}</span>
+            <Icon name="chevron" size={16} color="#94a3b8" />
           </button>
-          <button className="list-row" onClick={onOpenSettings} style={{ width: "100%", textAlign: "left" }}>
-            <Icon name="settings" size={18} color="var(--ink-3)" />
-            <span className="row-label">Settings</span>
-            <Icon name="chevron" size={16} color="var(--ink-3)" />
+          <button className="w-full h-[52px] px-4 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left cursor-pointer" onClick={onOpenSettings}>
+            <div className="text-[#1F5A3A]"><Icon name="settings" size={18} /></div>
+            <span className="flex-1 text-sm font-semibold text-slate-700">Settings</span>
+            <Icon name="chevron" size={16} color="#94a3b8" />
           </button>
-          <button className="list-row" onClick={onLogout} style={{ width: "100%", textAlign: "left", color: "var(--danger)" }}>
-            <Icon name="logout" size={18} color="var(--danger)" />
-            <span className="row-label" style={{ color: "var(--danger)" }}>{t("profile.logout")}</span>
+          <button className="w-full h-[52px] px-4 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left cursor-pointer" onClick={onLogout}>
+            <div className="text-[#B05E2E]"><Icon name="logout" size={18} /></div>
+            <span className="flex-1 text-sm font-semibold text-[#B05E2E]">{t("profile.logout")}</span>
+            <Icon name="chevron" size={16} color="#94a3b8" />
           </button>
         </div>
       </div>

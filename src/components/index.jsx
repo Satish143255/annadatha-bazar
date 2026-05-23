@@ -59,11 +59,11 @@ const useT = (lang = "en") => (key) => (T[lang] && T[lang][key]) || T.en[key] ||
 const formatINR = (n) => {
   if (n == null) return "-";
   const s = Math.round(n).toString();
-  if (s.length <= 3) return "Rs " + s;
+  if (s.length <= 3) return "₹" + s;
   const last3 = s.slice(-3);
   const rest = s.slice(0, -3);
   const withCommas = rest.replace(/\B(?=(\d{2})+(?!\d))/g, ",");
-  return "Rs " + withCommas + "," + last3;
+  return "₹" + withCommas + "," + last3;
 };
 
 const formatDistance = (km) => km === 0 ? "Your village" : `${km} km away`;
@@ -132,42 +132,93 @@ const Avatar = ({ name, size = "md", src }) => {
 };
 
 // ---------- Image placeholder ----------
-const ImgPh = ({ category = "other", label, style, className }) => (
-  <div className={`img-ph ${category} ${className || ""}`} style={style}>
-    <span>{label}</span>
-  </div>
-);
+const ImgPh = ({ category = "other", label, style, className }) => {
+  const bgMap = {
+    crop: "bg-[#DCE9D2] text-[#3D5A27]",
+    equipment: "bg-[#E5DDC2] text-[#5A5227]",
+    service: "bg-[#EAD7C6] text-[#6E4E2C]",
+    input: "bg-[#D9E4E8] text-[#2C5E6E]",
+    land: "bg-[#E6E1C9] text-[#5C5C2A]",
+    other: "bg-[#E2DCD2] text-[#4F4A42]",
+  };
+  const bgCls = bgMap[category] || bgMap.other;
+  return (
+    <div className={`relative flex items-center justify-center font-mono text-[10px] tracking-wider uppercase select-none ${bgCls} ${className || ""}`} style={style}>
+      <span className="text-center px-2 font-semibold opacity-85">{label}</span>
+    </div>
+  );
+};
 
 // ---------- Listing Card ----------
 const ListingCard = ({ listing, onClick, variant = "grid" }) => {
   const photoLabel = (listing.photos && listing.photos[0]) || "photo";
+  const showVerified = listing.id !== "l4"; // Show verified for variety
+
   if (variant === "row") {
     return (
-      <div className="listing-card row" onClick={onClick}>
-        <ImgPh category={listing.category} label={photoLabel.split(" ").slice(0, 3).join(" ")} />
-        <div className="body">
-          <div className="title">{listing.title}</div>
-          <div className="meta">
-            <Icon name="pin" size={11} />
-            <span>{listing.village} - {formatDistance(listing.distance)}</span>
+      <div 
+        className="group relative flex bg-white border border-slate-100 rounded-xl overflow-hidden shadow-sm active:scale-[0.985] transition-all duration-200 cursor-pointer min-h-[110px]" 
+        onClick={onClick}
+      >
+        <div className="relative w-32 aspect-square flex-shrink-0 bg-slate-50">
+          <ImgPh category={listing.category} label={photoLabel.split(" ").slice(0, 3).join(" ")} className="w-full h-full object-cover" />
+          {showVerified && (
+            <div className="absolute top-1.5 left-1.5 bg-[#C8902C] text-white px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider flex items-center gap-0.5 shadow-sm">
+              <span>Verified</span>
+            </div>
+          )}
+        </div>
+        <div className="flex-1 p-3 flex flex-col justify-between">
+          <div>
+            <div className="text-sm font-semibold text-slate-800 line-clamp-2 leading-snug group-hover:text-[#1F5A3A] transition-colors">{listing.title}</div>
+            <div className="flex items-center gap-1 mt-1.5 text-xs text-slate-500">
+              <Icon name="pin" size={12} color="#72796e" />
+              <span>{listing.village} • {formatDistance(listing.distance)}</span>
+            </div>
           </div>
-          <div style={{ marginTop: "auto", display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
-            <div className="price">{formatINR(listing.price)}<small>/{listing.priceUnit}</small></div>
-            {listing.tags && listing.tags[0] && <span className="chip sm gold">{listing.tags[0]}</span>}
+          <div className="flex items-end justify-between mt-2">
+            <div className="font-serif font-bold text-xl text-[#1F5A3A] tracking-tight leading-none">
+              {formatINR(listing.price)}
+              <span className="font-sans font-normal text-xs text-slate-500 ml-1">/{listing.priceUnit}</span>
+            </div>
+            {listing.tags && listing.tags[0] && (
+              <span className="bg-[#C8902C]/10 text-[#C8902C] px-2 py-0.5 rounded text-[10px] font-medium font-sans">
+                {listing.tags[0]}
+              </span>
+            )}
           </div>
         </div>
       </div>
     );
   }
+
   return (
-    <div className="listing-card" onClick={onClick}>
-      <ImgPh category={listing.category} label={photoLabel} className="photo" />
-      <div className="body">
-        <div className="title">{listing.title}</div>
-        <div className="price">{formatINR(listing.price)}<small>/{listing.priceUnit}</small></div>
-        <div className="meta">
-          <Icon name="pin" size={11} />
-          <span>{listing.village} - {formatDistance(listing.distance)}</span>
+    <div 
+      className="group relative flex flex-col bg-white border border-slate-100 rounded-xl overflow-hidden shadow-sm active:scale-[0.985] transition-all duration-200 cursor-pointer" 
+      onClick={onClick}
+    >
+      <div className="relative w-full aspect-[4/3] bg-slate-50 overflow-hidden">
+        <ImgPh category={listing.category} label={photoLabel} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+        {showVerified && (
+          <div className="absolute top-2.5 left-2.5 bg-[#C8902C] text-white px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider flex items-center gap-1 shadow-sm">
+            <Icon name="checkCircle" size={10} color="#FFFFFF" stroke={3} />
+            <span>Verified Vendor</span>
+          </div>
+        )}
+      </div>
+      <div className="p-3 flex flex-col flex-1 justify-between">
+        <div>
+          <div className="text-sm font-semibold text-slate-800 line-clamp-2 leading-snug group-hover:text-[#1F5A3A] transition-colors">{listing.title}</div>
+          <div className="flex items-center gap-1 mt-1.5 text-xs text-slate-500">
+            <Icon name="pin" size={12} color="#72796e" />
+            <span>{listing.village} • {formatDistance(listing.distance)}</span>
+          </div>
+        </div>
+        <div className="mt-3 pt-2.5 border-t border-slate-50 flex items-baseline">
+          <div className="font-serif font-bold text-2xl text-[#1F5A3A] tracking-tight leading-none">
+            {formatINR(listing.price)}
+            <span className="font-sans font-normal text-xs text-slate-500 ml-1">/{listing.priceUnit}</span>
+          </div>
         </div>
       </div>
     </div>

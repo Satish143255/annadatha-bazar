@@ -633,7 +633,7 @@ function App() {
       </div>
 
       {/* Tab bar */}
-      <div className="tabbar">
+      <div className="relative grid grid-cols-4 bg-white border-t border-slate-100 flex-shrink-0 pt-1 pb-safe shadow-[0_-2px_10px_rgba(0,0,0,0.02)]">
         {/* Sliding indicator */}
         <div className="tab-indicator" style={{ left: `${TAB_ORDER.indexOf(tab) * 25}%` }} />
 
@@ -643,12 +643,24 @@ function App() {
           { id: "discover", icon: "compass", label: T[lang]?.["tab.discover"] || "Discover" },
           { id: "profile",  icon: "user",    label: T[lang]?.["tab.profile"]  || "Profile"  },
         ].map(item => (
-          <button key={item.id} className={`tab${tab === item.id ? " active" : ""}`} onClick={() => setTab(item.id)}>
-            <div className="tab-icon-wrap">
+          <button 
+            key={item.id} 
+            className={`flex flex-col items-center justify-center gap-0.5 h-12 text-[10px] font-bold tracking-wide transition-colors cursor-pointer ${
+              tab === item.id 
+                ? "text-[#1F5A3A]" 
+                : "text-slate-400 hover:text-slate-600"
+            }`} 
+            onClick={() => setTab(item.id)}
+          >
+            <div className="relative flex items-center justify-center">
               <Icon name={item.icon} size={22} stroke={tab === item.id ? 2 : 1.6} />
-              {item.id === "profile" && unreadNotifs > 0 && <span className="badge">{unreadNotifs}</span>}
+              {item.id === "profile" && unreadNotifs > 0 && (
+                <span className="absolute -top-1.5 -right-2.5 min-w-[16px] h-4 px-1 bg-[#B05E2E] text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-white">
+                  {unreadNotifs}
+                </span>
+              )}
             </div>
-            {item.label}
+            <span>{item.label}</span>
           </button>
         ))}
       </div>

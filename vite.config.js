@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 import { resolve } from 'path';
 import { getAgricultureUpdates, getMarketPrices } from './api/src/agricultureSources.js';
 
@@ -35,7 +36,7 @@ const agricultureApi = () => ({
 });
 
 export default defineConfig({
-  plugins: [react(), agricultureApi()],
+  plugins: [react(), tailwindcss(), agricultureApi()],
 
   resolve: {
     alias: {

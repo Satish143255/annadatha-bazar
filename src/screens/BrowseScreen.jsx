@@ -66,68 +66,93 @@ const BrowseScreen = ({ listings, onOpenListing, onPostListing, initialCategory 
   }, [listings, q, cat, sort, distance, priceMin, priceMax]);
 
   return (
-    <div className="scroll">
-      <div className="topbar" style={{ paddingBottom: 8 }}>
-        <div className="title">{t("browse.title")}</div>
+    <div className="scroll bg-white">
+      <div className="topbar border-b border-slate-100" style={{ paddingBottom: 8 }}>
+        <div className="title font-bold text-slate-800 text-lg">{t("browse.title")}</div>
       </div>
 
       {/* Search */}
-      <div style={{ padding: "0 16px 12px" }}>
-        <div style={{ position: "relative" }}>
+      <div className="px-4 py-3">
+        <div className="relative flex items-center">
           <input
-            className="input"
-            style={{ paddingLeft: 44, paddingRight: 48, height: 48 }}
+            className="w-full h-12 pl-11 pr-12 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#1F5A3A] focus:ring-2 focus:ring-[#1F5A3A]/10 transition-all font-sans text-sm"
             placeholder={t("browse.search")}
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
-          <div style={{ position: "absolute", left: 14, top: 15, color: "var(--ink-3)", pointerEvents: "none" }}>
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
             <Icon name="search" size={18} color="var(--ink-3)" />
           </div>
           <button
             onClick={startVoice}
-            style={{ position: "absolute", right: 8, top: 8, width: 32, height: 32, borderRadius: 999, display: "grid", placeItems: "center", color: "var(--primary)" }}
+            className="absolute right-1.5 w-11 h-11 rounded-full flex items-center justify-center text-[#1F5A3A] hover:bg-slate-100 transition-colors active:scale-95"
+            aria-label="Voice Search"
           >
-            <Icon name="mic" size={18} />
+            <Icon name="mic" size={20} />
           </button>
         </div>
       </div>
 
       {/* Category chips */}
-      <div className="hscroll" style={{ padding: "0 16px 12px" }}>
-        <button className={`chip${cat === "all" ? " active" : ""}`} onClick={() => setCat("all")}>All</button>
+      <div className="flex gap-2.5 px-4 pb-3 overflow-x-auto scrollbar-none">
+        <button 
+          className={`h-11 px-5 rounded-full flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap transition-all ${
+            cat === "all" 
+              ? "bg-[#1F5A3A] text-white shadow-sm" 
+              : "bg-slate-50 border border-slate-200/60 text-slate-600 hover:bg-slate-100"
+          }`} 
+          onClick={() => setCat("all")}
+        >
+          All
+        </button>
         {CATEGORIES.map(c => (
-          <button key={c.id} className={`chip${cat === c.id ? " active" : ""}`} onClick={() => setCat(c.id)}>
+          <button 
+            key={c.id} 
+            className={`h-11 px-5 rounded-full flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap transition-all ${
+              cat === c.id 
+                ? "bg-[#1F5A3A] text-white shadow-sm" 
+                : "bg-slate-50 border border-slate-200/60 text-slate-600 hover:bg-slate-100"
+            }`} 
+            onClick={() => setCat(c.id)}
+          >
             {c.label}
           </button>
         ))}
       </div>
 
       {/* Sort + view */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 16px 12px", justifyContent: "space-between" }}>
-        <button onClick={() => setFiltersOpen(true)} className="chip soft" style={{ height: 32 }}>
+      <div className="flex items-center justify-between px-4 pb-3 gap-2.5">
+        <button 
+          onClick={() => setFiltersOpen(true)} 
+          className="h-11 px-4 rounded-full flex items-center gap-1.5 text-xs font-semibold bg-slate-50 border border-slate-200/60 text-slate-700 hover:bg-slate-100 transition-all cursor-pointer relative"
+        >
           <Icon name="filter" size={14} />
           Filters
-          {(distance !== 50 || priceMin || priceMax) && <span className="dot" style={{ background: "var(--primary)" }} />}
+          {(distance !== 50 || priceMin || priceMax) && <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-[#1F5A3A] border-2 border-white" />}
         </button>
-        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+        <div className="flex gap-2.5 items-center">
           <select
             value={sort} onChange={e => setSort(e.target.value)}
-            style={{
-              height: 32, border: "1px solid var(--border)", background: "var(--surface)",
-              borderRadius: 999, fontSize: 12, fontWeight: 500, padding: "0 8px"
-            }}
+            className="h-11 px-4 border border-slate-200/60 bg-white rounded-full text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#1F5A3A] cursor-pointer"
           >
             <option value="nearest">Sort: {t("sort.nearest")}</option>
             <option value="newest">Sort: {t("sort.newest")}</option>
             <option value="priceAsc">Sort: {t("sort.priceAsc")}</option>
             <option value="priceDesc">Sort: {t("sort.priceDesc")}</option>
           </select>
-          <div className="segmented" style={{ height: 32, padding: 2 }}>
-            <button className={view === "grid" ? "active" : ""} onClick={() => setView("grid")} style={{ height: 28, width: 32 }}>
+          <div className="h-11 p-1 bg-slate-100 rounded-full flex items-center gap-1">
+            <button 
+              className={`h-9 w-9 rounded-full flex items-center justify-center transition-all ${view === "grid" ? "bg-white text-[#1F5A3A] shadow-sm font-semibold" : "text-slate-500 hover:text-slate-800"}`} 
+              onClick={() => setView("grid")} 
+              aria-label="Grid View"
+            >
               <Icon name="grid" size={14} />
             </button>
-            <button className={view === "list" ? "active" : ""} onClick={() => setView("list")} style={{ height: 28, width: 32 }}>
+            <button 
+              className={`h-9 w-9 rounded-full flex items-center justify-center transition-all ${view === "list" ? "bg-white text-[#1F5A3A] shadow-sm font-semibold" : "text-slate-500 hover:text-slate-800"}`} 
+              onClick={() => setView("list")} 
+              aria-label="List View"
+            >
               <Icon name="sort" size={14} />
             </button>
           </div>
@@ -135,8 +160,8 @@ const BrowseScreen = ({ listings, onOpenListing, onPostListing, initialCategory 
       </div>
 
       {/* Results count */}
-      <div style={{ padding: "0 16px 12px", fontSize: 12, color: "var(--ink-3)" }}>
-        <strong style={{ color: "var(--ink-2)", fontWeight: 600 }}>{filtered.length}</strong> {t("browse.results")} {distance < 50 ? `within ${distance}km` : "near you"}
+      <div className="px-4 pb-3 text-xs text-slate-500 font-medium">
+        <strong className="text-slate-800 font-bold">{filtered.length}</strong> {t("browse.results")} {distance < 50 ? `within ${distance}km` : "near you"}
       </div>
 
       {/* Results */}
@@ -148,58 +173,53 @@ const BrowseScreen = ({ listings, onOpenListing, onPostListing, initialCategory 
           action={<Button variant="secondary" onClick={() => { setQ(""); setCat("all"); setPriceMin(""); setPriceMax(""); setDistance(50); }}>Clear all</Button>}
         />
       ) : view === "grid" ? (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, padding: "0 16px 90px" }}>
+        <div className="grid grid-cols-2 gap-3 px-4 pb-24">
           {filtered.map(l => <ListingCard key={l.id} listing={l} onClick={() => onOpenListing(l)} />)}
         </div>
       ) : (
-        <div style={{ display: "grid", gap: 10, padding: "0 16px 90px" }}>
+        <div className="grid grid-cols-1 gap-3 px-4 pb-24">
           {filtered.map(l => <ListingCard key={l.id} listing={l} variant="row" onClick={() => onOpenListing(l)} />)}
         </div>
       )}
 
       {/* FAB */}
-      <button className="fab" onClick={onPostListing}>
+      <button className="fab active:scale-95 transition-transform" onClick={onPostListing}>
         <Icon name="plus" size={24} stroke={2.5} />
       </button>
 
       <Sheet open={filtersOpen} onClose={() => setFiltersOpen(false)} title="Filters">
         <div className="field">
-          <label className="field-label">Distance: within {distance} km</label>
+          <label className="field-label font-sans font-medium text-slate-700">Distance: within {distance} km</label>
           <input
             type="range" min="5" max="100" step="5"
             value={distance}
             onChange={e => setDistance(+e.target.value)}
-            style={{ width: "100%", accentColor: "var(--primary)" }}
+            className="w-full accent-[#1F5A3A]"
           />
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--ink-3)" }}>
+          <div className="flex justify-between text-xs text-slate-400 font-medium mt-1">
             <span>5km</span><span>100km</span>
           </div>
         </div>
         <div className="field">
-          <label className="field-label">Price range (Rs)</label>
-          <div style={{ display: "flex", gap: 8 }}>
+          <label className="field-label font-sans font-medium text-slate-700">Price range (Rs)</label>
+          <div className="flex gap-3">
             <input className="input" type="number" placeholder="Min" value={priceMin} onChange={e => setPriceMin(e.target.value)} />
             <input className="input" type="number" placeholder="Max" value={priceMax} onChange={e => setPriceMax(e.target.value)} />
           </div>
         </div>
-        <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
+        <div className="flex gap-3 mt-6">
           <Button variant="secondary" onClick={() => { setDistance(50); setPriceMin(""); setPriceMax(""); }}>Reset</Button>
           <Button full onClick={() => setFiltersOpen(false)}>Apply Filters</Button>
         </div>
       </Sheet>
 
       <Sheet open={voiceOpen} onClose={stopVoice}>
-        <div style={{ textAlign: "center", padding: "12px 0 24px" }}>
-          <div style={{
-            width: 96, height: 96, margin: "0 auto 20px",
-            borderRadius: 999, background: "var(--primary-soft)",
-            display: "grid", placeItems: "center", color: "var(--primary)",
-            animation: "pulse 1.2s ease-in-out infinite"
-          }}>
+        <div className="text-center py-3 pb-6 flex flex-col items-center">
+          <div className="w-24 h-24 mb-5 rounded-full bg-[#1F5A3A]/10 flex items-center justify-center text-[#1F5A3A] animate-pulse">
             <Icon name="mic" size={42} stroke={1.8} />
           </div>
-          <div style={{ fontSize: 17, fontWeight: 600, marginBottom: 6 }}>Listening...</div>
-          <div style={{ fontSize: 13, color: "var(--ink-3)" }}>Try saying "rice in Warangal"</div>
+          <div className="text-lg font-bold text-slate-800 mb-1.5">Listening...</div>
+          <div className="text-xs text-slate-500 font-medium">Try saying "rice in Warangal"</div>
         </div>
         <Button full variant="secondary" onClick={stopVoice}>Cancel</Button>
       </Sheet>

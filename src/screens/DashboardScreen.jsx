@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Icon } from '../icons/Icon.jsx';
 import { Avatar, Button, Empty, ImgPh, formatINR, AnimatedNumber } from '../components/index.jsx';
 
@@ -69,40 +69,40 @@ const DashboardScreen = ({ myListings, orders, onBack, onOpenListing, onPostList
   ];
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%" }} data-screen-label="P2 Dashboard">
-      <div className="topbar with-border">
-        <button className="icon-btn" onClick={onBack}><Icon name="back" size={22} /></button>
-        <div className="title">Seller Dashboard</div>
-        <button className="icon-btn" onClick={() => onPostListing("listing")}>
-          <Icon name="plus" size={22} color="var(--primary)" />
+    <div className="scroll bg-white" data-screen-label="P2 Dashboard">
+      <div className="topbar border-b border-slate-100 flex items-center justify-between px-4 py-2 bg-white">
+        <button className="w-11 h-11 rounded-full flex items-center justify-center hover:bg-slate-50 transition-colors active:scale-95 cursor-pointer" onClick={onBack}>
+          <Icon name="back" size={20} />
+        </button>
+        <div className="title font-bold text-slate-800 text-lg">Seller Dashboard</div>
+        <button className="w-11 h-11 rounded-full flex items-center justify-center hover:bg-slate-50 transition-colors active:scale-95 cursor-pointer" onClick={() => onPostListing("listing")}>
+          <Icon name="plus" size={20} color="#1F5A3A" />
         </button>
       </div>
 
       {/* Tabs */}
-      <div style={{ padding: "10px 12px 0", borderBottom: "1px solid var(--border)" }}>
-        <div style={{ display: "flex", gap: 4, overflowX: "auto", scrollbarWidth: "none" }}>
+      <div className="px-3 pt-2 bg-white border-b border-slate-100">
+        <div className="flex gap-2 overflow-x-auto scrollbar-none">
           {[
             { id: "overview", label: "Overview" },
-            { id: "listings", label: `Listings - ${listings.length}` },
-            { id: "services", label: `Services - ${services.length}` },
-            { id: "orders",   label: `Orders - ${orders.length}` },
+            { id: "listings", label: `Listings (${listings.length})` },
+            { id: "services", label: `Services (${services.length})` },
+            { id: "orders",   label: `Orders (${orders.length})` },
           ].map(s => (
             <button
               key={s.id}
               onClick={() => setTab(s.id)}
-              style={{
-                padding: "10px 12px",
-                borderBottom: tab === s.id ? "2px solid var(--primary)" : "2px solid transparent",
-                color: tab === s.id ? "var(--ink)" : "var(--ink-3)",
-                fontSize: 13, fontWeight: tab === s.id ? 600 : 500,
-                whiteSpace: "nowrap",
-              }}
+              className={`px-3 py-3 border-b-2 text-xs font-semibold tracking-wide whitespace-nowrap transition-all duration-150 cursor-pointer ${
+                tab === s.id 
+                  ? "border-[#1F5A3A] text-[#1F5A3A] font-bold" 
+                  : "border-transparent text-slate-500 hover:text-slate-700"
+              }`}
             >{s.label}</button>
           ))}
         </div>
       </div>
 
-      <div className="scroll" style={{ padding: "16px" }}>
+      <div className="scroll p-4 bg-slate-50/50">
         {tab === "overview" && (
           <OverviewTab
             stats={stats} listings={listings} services={services} orders={orders}
@@ -164,43 +164,61 @@ const OverviewTab = ({ stats, listings, services, orders, onJumpTab, onOpenListi
     .sort((a, b) => (b.orders || 0) - (a.orders || 0))[0];
 
   return (
-    <div style={{ display: "grid", gap: 16 }}>
+    <div className="grid gap-4">
       {/* Stat cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+      <div className="grid grid-cols-2 gap-3">
         {stats.map(s => (
-          <button key={s.key} onClick={s.onClick} className="dash-stat" style={{ borderTop: `3px solid ${s.accent}` }}>
-            <div className="dash-stat-row">
-              <div className="dash-stat-icon" style={{ background: `${s.accent}15`, color: s.accent }}>
+          <button 
+            key={s.key} 
+            onClick={s.onClick} 
+            className="group relative flex flex-col bg-white border border-slate-100 rounded-2xl p-4 shadow-sm text-left active:scale-[0.98] transition-all duration-200 cursor-pointer overflow-hidden"
+          >
+            <div className="absolute top-0 left-0 right-0 h-1" style={{ backgroundColor: s.accent }} />
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors" style={{ backgroundColor: `${s.accent}15`, color: s.accent }}>
                 <Icon name={s.icon} size={16} />
               </div>
-              <div className="dash-stat-label">{s.label}</div>
+              <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">{s.label}</div>
             </div>
-            <div className="dash-stat-value" style={{ fontSize: s.compact ? 22 : 28 }}>
+            <div className={`font-serif font-bold text-slate-850 tracking-tight leading-none ${s.compact ? 'text-xl' : 'text-3xl'}`}>
               {typeof s.value === "number"
                 ? <AnimatedNumber value={s.value} />
                 : s.value}
             </div>
-            <div className="dash-stat-sub">{s.sub}</div>
+            <div className="text-[11px] text-slate-400 font-medium mt-2 flex items-center justify-between">
+              <span>{s.sub}</span>
+              <Icon name="chevron" size={10} color="#94a3b8" />
+            </div>
           </button>
         ))}
       </div>
 
       {/* Sales pipeline */}
-      <div className="dash-section">
-        <div className="dash-section-head">
-          <h4>Sales pipeline</h4>
-          <button onClick={() => onJumpTab("orders")} className="link">See all orders</button>
+      <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="text-sm font-bold text-slate-800">Sales Pipeline</h4>
+          <button onClick={() => onJumpTab("orders")} className="text-xs font-semibold text-[#1F5A3A] hover:underline cursor-pointer">See all orders</button>
         </div>
-        <div className="pipeline">
+        <div className="grid grid-cols-5 items-end gap-2 pt-4">
           {pipelineCounts.map(p => (
-            <div key={p.id} className="pipeline-step">
-              <div className="pipeline-bar" style={{
-                height: 6 + (p.count / maxCount) * 38,
-                background: p.color,
-                opacity: p.count > 0 ? 1 : 0.25,
-              }} />
-              <div className="pipeline-count">{p.count}</div>
-              <div className="pipeline-label">{p.label}</div>
+            <div key={p.id} className="flex flex-col items-center gap-1.5 group cursor-pointer">
+              <div className="relative w-full flex justify-center">
+                {p.count > 0 && (
+                  <span className="absolute -top-6 text-[10px] font-bold text-slate-800 bg-slate-50 border border-slate-100 px-1 py-0.5 rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                    {p.count}
+                  </span>
+                )}
+                <div 
+                  className="w-full max-w-[32px] rounded-t-md transition-all duration-500 hover:brightness-95" 
+                  style={{
+                    height: `${6 + (p.count / maxCount) * 44}px`,
+                    backgroundColor: p.color,
+                    opacity: p.count > 0 ? 1 : 0.2,
+                  }} 
+                />
+              </div>
+              <div className="font-serif font-bold text-base text-slate-800 leading-none mt-1">{p.count}</div>
+              <div className="text-[9px] font-semibold text-slate-400 uppercase tracking-tight text-center">{p.label}</div>
             </div>
           ))}
         </div>

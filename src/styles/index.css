@@ -1,48 +1,77 @@
 /* =========================================
-   AGRI CONNECT — design tokens & base
+   ANNADATHABAZAR — design tokens & base
    ========================================= */
 
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Instrument+Serif:ital,wght@0,400;1,400&display=swap');
+
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #1F5A3A;
+  --color-primary-dark: #143C26;
+  --color-primary-soft: #EAF2EC;
+  --color-accent-gold: #C8902C;
+  --color-accent-gold-soft: #F9F0DF;
+  --color-accent-terra: #B05E2E;
+  --color-accent-terra-soft: #FAF0EA;
+  --color-bg: #FFFFFF;
+  --color-surface: #FFFFFF;
+  --color-surface-2: #F9F9F8;
+  --color-border: #E6E8E6;
+  --color-border-strong: #72796e;
+
+  --color-ink: #1a1c19;
+  --color-ink-2: #42493e;
+  --color-ink-3: #72796e;
+  --color-ink-4: #c2c9bb;
+
+  --font-sans: "Noto Sans", "Plus Jakarta Sans", "Inter", system-ui, -apple-system, sans-serif;
+  --font-serif: "Instrument Serif", "Fraunces", Georgia, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --radius-xl: 12px;
+  --radius-lg: 12px;
+}
+
 :root {
-  /* Agro-Heritage Design System (Modern Stitch styling) */
-  --bg: #fafaf4;           /* Warm Cream (Level 0 canvas) */
-  --surface: #ffffff;      /* Pure White (Level 1 cards & inputs) */
-  --surface-2: #f4f4ee;    /* Level 2 container low */
-  --surface-3: #eeeee9;    /* Level 3 container */
-  --surface-4: #e8e8e3;    /* Level 4 container high */
-  --border: #e3e3de;       /* Level 1 container highest */
-  --border-strong: #72796e; /* Outline */
+  --bg: #FFFFFF;           /* Pure White (highest contrast) */
+  --surface: #FFFFFF;
+  --surface-2: #F9F9F8;
+  --surface-3: #eeeee9;
+  --surface-4: #e8e8e3;
+  --border: #E6E8E6;
+  --border-strong: #72796e;
 
-  --ink: #1a1c19;          /* On-surface (Charcoal) */
-  --ink-2: #42493e;        /* On-surface-variant (Slate green) */
-  --ink-3: #72796e;        /* Outline */
-  --ink-4: #c2c9bb;        /* Outline-variant (Light gray-green) */
+  --ink: #1a1c19;
+  --ink-2: #42493e;
+  --ink-3: #72796e;
+  --ink-4: #c2c9bb;
 
-  --primary: #154212;      /* Deep Forest Green */
-  --primary-2: #2d5a27;    /* Primary Container / Mid-green */
-  --primary-soft: #bcf0ae; /* Primary Fixed (Soft Green accent) */
-  --primary-ink: #ffffff;  /* On-primary */
+  --primary: #1F5A3A;
+  --primary-2: #2d5a27;
+  --primary-soft: #EAF2EC;
+  --primary-ink: #ffffff;
 
-  --gold: #745b00;         /* Harvest Gold secondary */
-  --gold-soft: #fdcc14;    /* Harvest Gold soft accent */
-  --terra: #003c5f;        /* Earthy Terra tertiary */
-  --terra-soft: #cde5ff;   /* Earthy Terra soft accent */
+  --gold: #C8902C;
+  --gold-soft: #F9F0DF;
+  --terra: #B05E2E;
+  --terra-soft: #FAF0EA;
 
   --whatsapp: #25D366;
-  --danger: #ba1a1a;       /* error */
-  --info: #005482;         /* tertiary-container */
+  --danger: #ba1a1a;
+  --info: #005482;
 
   --radius-sm: 8px;
   --radius: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
+  --radius-lg: 12px;
+  --radius-xl: 12px;
 
-  /* Diffused shadows tinted with Primary Green */
-  --shadow-sm: 0 1px 2px rgba(21, 66, 18, 0.04);
-  --shadow: 0 4px 14px -4px rgba(21, 66, 18, 0.08), 0 1px 2px rgba(21, 66, 18, 0.04);
-  --shadow-lg: 0 18px 40px -16px rgba(21, 66, 18, 0.16);
+  --shadow-sm: 0 1px 2px rgba(31, 90, 58, 0.04);
+  --shadow: 0 4px 14px -4px rgba(31, 90, 58, 0.08), 0 1px 2px rgba(31, 90, 58, 0.04);
+  --shadow-lg: 0 18px 40px -16px rgba(31, 90, 58, 0.16);
 
-  --font-sans: "Plus Jakarta Sans", "Inter", system-ui, -apple-system, sans-serif;
-  --font-display: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --font-sans: "Noto Sans", "Plus Jakarta Sans", "Inter", sans-serif;
+  --font-display: "Noto Sans", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
   --tap: 44px;
@@ -51,39 +80,27 @@
 }
 
 [data-theme="dark"] {
-  --bg: #101410;           /* Dark Olive Charcoal background */
-  --surface: #181c17;      /* Surface lowest */
-  --surface-2: #20251f;    /* Surface container low */
-  --surface-3: #282e27;    /* Surface container */
-  --border: #3e453c;       /* Surface container highest */
-  --border-strong: #7c8577; /* Outline */
+  --bg: #101410;
+  --surface: #181c17;
+  --surface-2: #20251f;
+  --surface-3: #282e27;
+  --border: #3e453c;
+  --border-strong: #7c8577;
 
-  --ink: #e2e3dd;          /* Warm off-white text */
-  --ink-2: #c2c9bb;        /* Muted slate text */
-  --ink-3: #8c9388;        /* Outlines */
-  --ink-4: #42493e;        /* Darker details */
+  --ink: #e2e3dd;
+  --ink-2: #c2c9bb;
+  --ink-3: #8c9388;
+  --ink-4: #42493e;
 
-  --primary: #a1d494;      /* Inverse primary (light green) */
-  --primary-2: #2d5a27;    /* Primary Container */
-  --primary-soft: #143511; /* Dark primary accent */
-  --primary-ink: #002201;  /* Dark text on primary */
+  --primary: #a1d494;
+  --primary-2: #2d5a27;
+  --primary-soft: #143511;
+  --primary-ink: #002201;
 
-  --gold: #f1c100;         /* Secondary gold dim */
-  --gold-soft: #4b3b00;    /* Dark gold container */
-  --terra: #94ccff;        /* Tertiary dim */
-  --terra-soft: #00314f;   /* Dark tertiary container */
-}
-
-[data-theme="terra"] {
-  --primary: #745b00;
-  --primary-2: #927500;
-  --primary-soft: #ffe08b;
-}
-
-[data-theme="indigo"] {
-  --primary: #003c5f;
-  --primary-2: #005482;
-  --primary-soft: #cde5ff;
+  --gold: #C8902C;
+  --gold-soft: #4b3b00;
+  --terra: #B05E2E;
+  --terra-soft: #00314f;
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -94,7 +111,6 @@ body {
   background: var(--bg);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
-  font-feature-settings: "ss01", "cv11";
 }
 
 button { font-family: inherit; cursor: pointer; border: 0; background: none; padding: 0; color: inherit; }

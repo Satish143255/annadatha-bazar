@@ -2,6 +2,7 @@
   "name": "annadatha-bazar",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "AnnadathaBazar — Marketplace for Indian farmers. Buy, sell, and discover agricultural products and services.",
   "scripts": {
     "dev": "vite --mode development",
@@ -16,11 +17,13 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.3.0",
     "@vitejs/plugin-react": "^4.3.1",
     "eslint": "^8.57.0",
     "eslint-plugin-react": "^7.35.0",
     "eslint-plugin-react-hooks": "^4.6.2",
     "eslint-plugin-react-refresh": "^0.4.9",
+    "tailwindcss": "^4.3.0",
     "tweetsodium": "^0.0.4",
     "vite": "^5.4.10"
   },

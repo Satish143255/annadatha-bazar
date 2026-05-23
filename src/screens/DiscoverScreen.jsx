@@ -14,6 +14,27 @@ const PRICE_SERIES_COLORS = [
   "#7A3A14", "#5E7A3A", "#8A4A6F", "#3A6F6A",
 ];
 
+const MiniSparkline = ({ history, isUp }) => {
+  if (!history || history.length < 2) return null;
+  const w = 80, h = 24, pad = 2;
+  const max = Math.max(...history);
+  const min = Math.min(...history);
+  const range = max - min || 1;
+  const points = history.map((v, i) => {
+    const x = pad + (i * (w - pad * 2)) / (history.length - 1);
+    const y = h - pad - ((v - min) / range) * (h - pad * 2);
+    return [x, y];
+  });
+  const path = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p[0]} ${p[1]}`).join(" ");
+  const strokeColor = isUp ? "#1F5A3A" : "#B05E2E"; // Forest Green or Clay/Terra
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} className="w-20 h-7" style={{ display: "block" }}>
+      <path d={path} stroke={strokeColor} strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx={points[points.length - 1][0]} cy={points[points.length - 1][1]} r="2" fill={strokeColor} />
+    </svg>
+  );
+};
+
 const PricesScreen = ({ user, prices, state, lang }) => {
   const t = useT(lang);
   const [expanded, setExpanded] = useStateD(null);
@@ -42,10 +63,10 @@ const PricesScreen = ({ user, prices, state, lang }) => {
   };
 
   return (
-    <div className="scroll">
-      <div className="topbar">
-        <div className="title">{t("prices.title")}</div>
-        <button className="chip soft" style={{ height: 32 }}>
+    <div className="scroll bg-white">
+      <div className="topbar border-b border-slate-100 flex items-center justify-between px-4 py-2 bg-white">
+        <div className="title font-bold text-slate-800 text-lg">{t("prices.title")}</div>
+        <button className="h-9 px-3.5 rounded-full flex items-center gap-1 text-xs font-semibold bg-slate-50 border border-slate-200/60 text-slate-700 hover:bg-slate-100 transition-all cursor-pointer">
           <Icon name="pin" size={12} />
           {district}
           <Icon name="chevronDown" size={12} />
@@ -53,40 +74,56 @@ const PricesScreen = ({ user, prices, state, lang }) => {
       </div>
 
       {state === "loading" && (
-        <div style={{ padding: "0 16px 12px", fontSize: 12, color: "var(--ink-3)" }}>
+        <div className="px-4 py-2 text-xs text-slate-400 font-medium">
           Loading live AGMARKNET mandi prices from data.gov.in.
         </div>
       )}
       {state === "error" && (
-        <div style={{ padding: "0 16px 12px", fontSize: 12, color: "var(--terra)" }}>
+        <div className="px-4 py-2 text-xs text-[#B05E2E] font-medium bg-[#B05E2E]/5 border-y border-[#B05E2E]/10">
           Live mandi prices are unavailable right now. The app will not substitute demo rates.
         </div>
       )}
 
       {/* Search */}
-      <div style={{ padding: "0 16px 10px", position: "relative" }}>
-        <input
-          className="input"
-          style={{ paddingLeft: 44, height: 44 }}
-          placeholder="Search crop..."
-          value={q}
-          onChange={e => setQ(e.target.value)}
-        />
-        <div style={{ position: "absolute", left: 30, top: 13, color: "var(--ink-3)" }}>
-          <Icon name="search" size={18} />
+      <div className="px-4 py-3">
+        <div className="relative flex items-center">
+          <input
+            className="w-full h-11 pl-11 pr-4 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#1F5A3A] focus:ring-2 focus:ring-[#1F5A3A]/10 transition-all font-sans text-sm"
+            placeholder="Search crop..."
+            value={q}
+            onChange={e => setQ(e.target.value)}
+          />
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+            <Icon name="search" size={18} />
+          </div>
         </div>
       </div>
 
       {/* View toggle */}
-      <div style={{ padding: "0 16px 14px" }}>
-        <div className="segmented">
-          <button className={view === "cards" ? "active" : ""} onClick={() => setView("cards")}>
+      <div className="px-4 pb-3.5">
+        <div className="h-11 p-1 bg-slate-100 rounded-full flex items-center gap-1">
+          <button 
+            className={`flex-1 h-9 rounded-full flex items-center justify-center gap-1.5 text-xs font-semibold transition-all cursor-pointer ${
+              view === "cards" ? "bg-white text-[#1F5A3A] shadow-sm" : "text-slate-500 hover:text-slate-800"
+            }`} 
+            onClick={() => setView("cards")}
+          >
             <Icon name="grid" size={14} /> Cards
           </button>
-          <button className={view === "table" ? "active" : ""} onClick={() => setView("table")}>
+          <button 
+            className={`flex-1 h-9 rounded-full flex items-center justify-center gap-1.5 text-xs font-semibold transition-all cursor-pointer ${
+              view === "table" ? "bg-white text-[#1F5A3A] shadow-sm" : "text-slate-500 hover:text-slate-800"
+            }`} 
+            onClick={() => setView("table")}
+          >
             <Icon name="sort" size={14} /> Table
           </button>
-          <button className={view === "graph" ? "active" : ""} onClick={() => setView("graph")}>
+          <button 
+            className={`flex-1 h-9 rounded-full flex items-center justify-center gap-1.5 text-xs font-semibold transition-all cursor-pointer ${
+              view === "graph" ? "bg-white text-[#1F5A3A] shadow-sm" : "text-slate-500 hover:text-slate-800"
+            }`} 
+            onClick={() => setView("graph")}
+          >
             <Icon name="trendUp" size={14} /> Graph
           </button>
         </div>
@@ -256,95 +293,125 @@ const PricesScreen = ({ user, prices, state, lang }) => {
         </div>
       )}
 
-      {/* ===== CARDS VIEW (original) ===== */}
+      {/* ===== CARDS VIEW ===== */}
       {view === "cards" && (
-      <div style={{ padding: "0 16px 24px" }}>
-        {filtered.map((p) => {
-          const isOpen = expanded === p.commodity;
-          const matched = userCropMatch(p.commodity);
-          return (
-            <div key={p.commodity} className="card" style={{ marginBottom: 10, padding: 0, overflow: "hidden", borderColor: matched ? "var(--primary-soft)" : "var(--border)" }}>
-              <div
-                onClick={() => setExpanded(isOpen ? null : p.commodity)}
-                style={{
-                  display: "flex", alignItems: "center", gap: 12,
-                  padding: "14px 14px",
-                  background: matched ? "var(--primary-soft)" : "transparent",
-                  cursor: "pointer"
-                }}
+        <div className="px-4 pb-6">
+          {filtered.map((p) => {
+            const isOpen = expanded === p.commodity;
+            const matched = userCropMatch(p.commodity);
+            const pct = p.history && p.history.length > 1 
+              ? ((p.history[p.history.length - 1] - p.history[0]) / p.history[0]) * 100 
+              : 0;
+            const isUp = pct >= 0;
+            const emoji = CROPS.find(c => p.commodity.toLowerCase().includes(c.id))?.emoji || "🌾";
+
+            return (
+              <div 
+                key={p.commodity} 
+                className="bg-white border border-slate-100 rounded-xl overflow-hidden shadow-sm mb-3 active:scale-[0.99] transition-all duration-200"
               >
-                <div style={{
-                  width: 44, height: 44, borderRadius: 12,
-                  background: matched ? "rgba(255,255,255,0.6)" : "var(--surface-2)",
-                  display: "grid", placeItems: "center",
-                  fontSize: 22,
-                }}>
-                  {CROPS.find(c => p.commodity.toLowerCase().includes(c.id))?.emoji || "Crop"}
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, display: "flex", gap: 6, alignItems: "center" }}>
-                    {p.commodity}
-                    {matched && <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 4, background: "var(--primary)", color: "white" }}>Your crop</span>}
+                <div
+                  onClick={() => setExpanded(isOpen ? null : p.commodity)}
+                  className={`flex items-center justify-between p-3.5 cursor-pointer hover:bg-slate-50/50 transition-colors gap-3 ${
+                    matched ? "bg-[#1F5A3A]/5" : "bg-white"
+                  }`}
+                >
+                  {/* Crop Icon + details */}
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0 ${
+                      matched ? "bg-[#1F5A3A]/10 text-[#1F5A3A]" : "bg-slate-100 text-slate-700"
+                    }`}>
+                      {emoji}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-sm font-semibold text-slate-800 flex items-center gap-1.5 flex-wrap">
+                        <span>{p.commodity}</span>
+                        {matched && (
+                          <span className="text-[9px] font-bold uppercase tracking-wider bg-[#1F5A3A] text-white px-1.5 py-0.5 rounded">
+                            Your Crop
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[11px] text-slate-400 truncate font-medium mt-0.5">
+                        {p.market} • {p.variety}
+                      </div>
+                    </div>
                   </div>
-                  <div style={{ fontSize: 11, color: "var(--ink-3)" }}>{p.market} - {p.variety}</div>
-                </div>
-                <div style={{ textAlign: "right" }}>
-                  <div style={{ fontFamily: "var(--font-display)", fontSize: 22, color: "var(--primary)", lineHeight: 1, letterSpacing: "-0.01em" }}>
-                    {formatINR(p.modal)}
+
+                  {/* Sparkline in the middle */}
+                  <div className="flex-1 flex justify-center">
+                    <MiniSparkline history={p.history} isUp={isUp} />
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 4, justifyContent: "flex-end", marginTop: 4 }}>
-                    <span className="price-pill up">{p.date || "Latest"}</span>
+
+                  {/* Price and trend on the right */}
+                  <div className="text-right flex-shrink-0">
+                    <div className="font-serif font-bold text-xl text-[#1F5A3A] tracking-tight leading-none">
+                      {formatINR(p.modal)}
+                      <span className="font-sans font-normal text-[10px] text-slate-400 ml-0.5">/q</span>
+                    </div>
+                    <div className="flex items-center justify-end gap-1 mt-1">
+                      {p.history && p.history.length > 1 ? (
+                        <span className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          isUp 
+                            ? "bg-[#1F5A3A]/10 text-[#1F5A3A]" 
+                            : "bg-[#B05E2E]/10 text-[#B05E2E]"
+                        }`}>
+                          <Icon name={isUp ? "trendUp" : "trendDown"} size={8} color={isUp ? "#1F5A3A" : "#B05E2E"} stroke={3} />
+                          {isUp ? "+" : ""}{pct.toFixed(1)}%
+                        </span>
+                      ) : (
+                        <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full text-[10px] font-bold">
+                          {p.date || "Latest"}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
+
+                {isOpen && (
+                  <div className="p-3.5 border-t border-slate-50 bg-slate-50/20">
+                    {/* Detailed Chart */}
+                    <div className="mb-4">
+                      <div className="text-xs font-semibold text-slate-500 mb-2">7-day price trend details</div>
+                      {p.history?.length > 1 ? (
+                        <PriceChart history={p.history} />
+                      ) : (
+                        <div className="bg-slate-100 text-slate-500 rounded-xl p-3 text-xs text-center font-medium">
+                          Current official snapshot only. Historical price tracking is not available yet.
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Min/Max/Modal stats */}
+                    <div className="grid grid-cols-3 gap-2.5">
+                      {[
+                        { label: "Min Price", val: p.min, color: "text-[#B05E2E]", bg: "bg-[#B05E2E]/5" },
+                        { label: "Modal Rate", val: p.modal, color: "text-[#1F5A3A]", bg: "bg-[#1F5A3A]/5" },
+                        { label: "Max Price", val: p.max, color: "text-slate-800", bg: "bg-slate-100/50" },
+                      ].map(stat => (
+                        <div key={stat.label} className={`p-3 rounded-xl border border-slate-100 ${stat.bg}`}>
+                          <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">{stat.label}</div>
+                          <div className={`font-serif font-bold text-base leading-tight ${stat.color}`}>{formatINR(stat.val)}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="mt-4">
+                      <button className="w-full h-11 bg-white border border-slate-200 rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 cursor-pointer transition-colors">
+                        <Icon name="bell" size={14} />
+                        Set Price Alert
+                        <span className="text-[9px] font-bold uppercase tracking-wider bg-[#C8902C]/10 text-[#C8902C] px-1.5 py-0.5 rounded ml-1">Soon</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
-
-              {isOpen && (
-                <div style={{ padding: "0 14px 14px", borderTop: "1px solid var(--border)" }}>
-                  {/* Chart */}
-                  <div style={{ padding: "14px 0 8px" }}>
-                    <div style={{ fontSize: 11, color: "var(--ink-3)", marginBottom: 6 }}>7-day price trend</div>
-                    {p.history?.length > 1 ? (
-                      <PriceChart history={p.history} />
-                    ) : (
-                      <div style={{ background: "var(--surface-2)", borderRadius: 10, padding: 12, fontSize: 12, color: "var(--ink-3)" }}>
-                        Current official snapshot only. Historical price tracking is not available yet.
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Min/Max/Modal table */}
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginTop: 8 }}>
-                    {[
-                      { label: "Min", val: p.min, color: "var(--terra)" },
-                      { label: "Modal", val: p.modal, color: "var(--primary)" },
-                      { label: "Max", val: p.max, color: "var(--ink)" },
-                    ].map(stat => (
-                      <div key={stat.label} style={{ background: "var(--surface-2)", padding: "10px 12px", borderRadius: 10 }}>
-                        <div style={{ fontSize: 10, color: "var(--ink-3)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{stat.label}</div>
-                        <div style={{ fontFamily: "var(--font-display)", fontSize: 18, color: stat.color, lineHeight: 1.1 }}>{formatINR(stat.val)}</div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div style={{ marginTop: 12 }}>
-                    <button
-                      className="btn secondary sm full"
-                      style={{ width: "100%" }}
-                    >
-                      <Icon name="bell" size={14} />
-                      Set Price Alert
-                      <span style={{ fontSize: 10, padding: "2px 6px", background: "var(--gold-soft)", color: "#6B4E14", borderRadius: 4, marginLeft: 6 }}>Soon</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
       )}
 
-      <div style={{ padding: "0 16px 28px", fontSize: 11, color: "var(--ink-3)", textAlign: "center" }}>
+      <div className="py-6 text-center text-xs text-slate-400 font-medium">
         <Icon name="refresh" size={12} /> Source: AGMARKNET via data.gov.in
       </div>
     </div>
