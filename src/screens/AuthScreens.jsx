@@ -2,7 +2,7 @@ import React from 'react';
 import { CROPS, LANGUAGES } from '../referenceData.js';
 import { Icon } from '../icons/Icon.jsx';
 import { Button, Sheet, TopBar, useT } from '../components/index.jsx';
-import { apiForgotPasswordRequest, apiForgotPasswordVerify, apiForgotPasswordReset, DEMO_MODE, reverseGeocode, fetchIpLocation } from '../services/marketplaceApi.js';
+import { apiForgotPasswordRequest, apiForgotPasswordVerify, apiForgotPasswordReset, DEMO_MODE, reverseGeocode, fetchIpLocation, apiSignupOtpRequest } from '../services/marketplaceApi.js';
 
 
 const { useState: useStateA, useEffect: useEffectA } = React;
@@ -206,7 +206,7 @@ const SplashScreen = ({ onGetStarted }) => {
 };
 
 // ---------- Signup & Login Screen ----------
-const SignupLoginScreen = ({ onLogin, onSignup, onForgotPasswordClick, onSkip, lang, error, setError }) => {
+const SignupLoginScreen = ({ onLogin, onSignup, showToast, onForgotPasswordClick, onSkip, lang, error, setError }) => {
   const [tab, setTab] = useStateA("login"); // "login" | "signup"
   const [email, setEmail] = useStateA("");
   const [password, setPassword] = useStateA("");
@@ -216,34 +216,251 @@ const SignupLoginScreen = ({ onLogin, onSignup, onForgotPasswordClick, onSkip, l
   const [loading, setLoading] = useStateA(false);
   const [langOpen, setLangOpen] = useStateA(false);
 
+  // Unified Profile Location & Crop Fields
+  const [village, setVillage] = useStateA("");
+  const [stateVal, setStateVal] = useStateA("");
+  const [district, setDistrict] = useStateA("");
+  const [crops, setCrops] = useStateA([]);
+  const [gpsing, setGpsing] = useStateA(false);
+  const [coordinates, setCoordinates] = useStateA(null);
+  const [locationError, setLocationError] = useStateA("");
+
+  // OTP Steps
+  const [otpStep, setOtpStep] = useStateA(false);
+  const [otpCode, setOtpCode] = useStateA("");
+  const [cooldown, setCooldown] = useStateA(0);
+
+  const toggleCrop = (id) => setCrops(c => c.includes(id) ? c.filter(x => x !== id) : [...c, id]);
+
+  const gpsLabel = coordinates
+    ? `${coordinates.latitude.toFixed(6)}, ${coordinates.longitude.toFixed(6)}`
+    : "";
+
+  const handleCoordinatesResolved = async (coords) => {
+    setCoordinates(coords);
+    const resolved = await reverseGeocode(coords.latitude, coords.longitude);
+    if (resolved) {
+      if (resolved.village) setVillage(resolved.village);
+      if (resolved.district) setDistrict(resolved.district);
+      if (resolved.state) setStateVal(resolved.state);
+    }
+  };
+
+  const detectGPS = () => {
+    setGpsing(true);
+    setLocationError("");
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async ({ coords }) => {
+          const point = {
+            latitude: Number(coords.latitude.toFixed(6)),
+            longitude: Number(coords.longitude.toFixed(6)),
+          };
+          await handleCoordinatesResolved(point);
+          setGpsing(false);
+        },
+        async () => {
+          const ipLoc = await fetchIpLocation();
+          if (ipLoc) {
+            setCoordinates({ latitude: ipLoc.latitude, longitude: ipLoc.longitude });
+            if (ipLoc.village) setVillage(ipLoc.village);
+            if (ipLoc.district) setDistrict(ipLoc.district);
+            if (ipLoc.state) setStateVal(ipLoc.state);
+          } else {
+            setLocationError("Location permission is needed, or IP fallback failed.");
+          }
+          setGpsing(false);
+        },
+        { timeout: 6000 }
+      );
+    } else {
+      fetchIpLocation().then((ipLoc) => {
+        if (ipLoc) {
+          setCoordinates({ latitude: ipLoc.latitude, longitude: ipLoc.longitude });
+          if (ipLoc.village) setVillage(ipLoc.village);
+          if (ipLoc.district) setDistrict(ipLoc.district);
+          if (ipLoc.state) setStateVal(ipLoc.state);
+        } else {
+          setLocationError("This device does not provide browser location.");
+        }
+        setGpsing(false);
+      });
+    }
+  };
+
+  useEffectA(() => {
+    if (cooldown <= 0) return;
+    const interval = setInterval(() => {
+      setCooldown(c => c - 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [cooldown]);
+
   const handleTabChange = (newTab) => {
     setTab(newTab);
     setError && setError(null);
+    setOtpStep(false);
+    setOtpCode("");
   };
 
   const isEmailValid = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 
   const isFormValid = tab === "login"
     ? (isEmailValid(email) && password.length >= 6)
-    : (name.trim().length >= 2 && isEmailValid(email) && password.length >= 6 && password === confirmPassword && agreed);
+    : (name.trim().length >= 2 &&
+       isEmailValid(email) &&
+       password.length >= 6 &&
+       password === confirmPassword &&
+       agreed &&
+       village.trim().length > 0 &&
+       stateVal.trim().length > 0 &&
+       district.trim().length > 0);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!isFormValid || loading) return;
+  const requestSignupOtp = async () => {
     setLoading(true);
     setError && setError(null);
     try {
-      if (tab === "login") {
-        await onLogin(email, password);
+      if (DEMO_MODE) {
+        setCooldown(35);
+        setOtpStep(true);
+        showToast && showToast("Demo OTP sent (Code: 123456)", "check");
       } else {
-        await onSignup(name, email, password);
+        const response = await apiSignupOtpRequest(email);
+        setCooldown(35);
+        setOtpStep(true);
+        showToast && showToast("Verification code sent to your email", "check");
+        if (response?.otp) {
+          setTimeout(() => {
+            showToast && showToast(`Demo OTP is ${response.otp}`, "info");
+          }, 800);
+        }
       }
     } catch (err) {
-      setError && setError(err.message || "Authentication failed. Please try again.");
+      setError && setError(err.message || "Failed to send verification code. Please try again.");
     } finally {
       setLoading(false);
     }
   };
+
+  const handleSubmit = async (e) => {
+    if (e) e.preventDefault();
+    setError && setError(null);
+
+    if (tab === "login") {
+      if (loading) return;
+      setLoading(true);
+      try {
+        await onLogin(email, password);
+      } catch (err) {
+        setError && setError(err.message || "Authentication failed. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      if (!otpStep) {
+        await requestSignupOtp();
+      } else {
+        if (!otpCode || otpCode.length !== 6 || loading) return;
+        setLoading(true);
+        try {
+          await onSignup({
+            name: name.trim(),
+            email: email.trim().toLowerCase(),
+            password,
+            village: village.trim(),
+            district: district.trim(),
+            state: stateVal.trim(),
+            crops,
+            latitude: coordinates?.latitude,
+            longitude: coordinates?.longitude,
+            otpCode: otpCode.trim()
+          });
+        } catch (err) {
+          setError && setError(err.message || "Verification failed. Please try again.");
+        } finally {
+          setLoading(false);
+        }
+      }
+    }
+  };
+
+  if (otpStep) {
+    return (
+      <div className="scroll screen-enter" style={{ padding: "40px 24px 30px" }}>
+        <div style={{ textAlign: "center", marginBottom: 30 }}>
+          <img src="/logo.png" alt="AnnadathaBazar" style={{ height: 75, objectFit: "contain", margin: "0 auto 16px", display: "block" }} />
+          <h2 style={{ fontSize: 22, fontWeight: 600, color: "var(--ink)" }}>Verify Your Email</h2>
+          <p style={{ fontSize: 13, color: "var(--ink-3)", marginTop: 6, lineHeight: 1.4 }}>
+            We've sent a 6-digit verification code to <strong>{email}</strong>. Enter it below to complete your registration.
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          {error && (
+            <div style={{
+              background: "rgba(186, 26, 26, 0.08)",
+              border: "1px solid var(--danger)",
+              color: "var(--danger)",
+              borderRadius: 12,
+              padding: "12px 14px",
+              fontSize: 13,
+              marginBottom: 20,
+              lineHeight: 1.4
+            }}>
+              {error}
+            </div>
+          )}
+
+          <div className="field">
+            <label className="field-label">6-Digit Verification Code</label>
+            <input
+              className="input"
+              type="text"
+              pattern="\d*"
+              maxLength={6}
+              placeholder="123456"
+              value={otpCode}
+              onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+              required
+              style={{ letterSpacing: "0.5em", textAlign: "center", fontSize: 20, fontWeight: "bold" }}
+            />
+          </div>
+
+          <div style={{ display: "grid", gap: 10, marginTop: 24 }}>
+            <Button full disabled={otpCode.length !== 6 || loading} type="submit">
+              {loading ? "Verifying..." : "Verify & Complete Signup"}
+            </Button>
+
+            <button
+              type="button"
+              className="chip"
+              disabled={cooldown > 0 || loading}
+              onClick={requestSignupOtp}
+              style={{
+                height: 44,
+                width: "100%",
+                borderRadius: 12,
+                justifyContent: "center",
+                background: cooldown > 0 ? "var(--surface-2)" : "var(--primary-soft)",
+                color: cooldown > 0 ? "var(--ink-3)" : "var(--primary)",
+                fontWeight: 600
+              }}
+            >
+              {cooldown > 0 ? `Resend Code in ${cooldown}s` : "Resend Code"}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => { setOtpStep(false); setError(null); }}
+              style={{ height: 44, fontSize: 13, color: "var(--ink-3)" }}
+            >
+              Back to Edit Info
+            </button>
+          </div>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className="scroll screen-enter" style={{ padding: "0 0 30px" }}>
@@ -324,6 +541,78 @@ const SignupLoginScreen = ({ onLogin, onSignup, onForgotPasswordClick, onSkip, l
             />
           </div>
 
+          {tab === "signup" && (
+            <>
+              {/* Village Location with GPS Capture */}
+              <div className="field">
+                <label className="field-label">Village / Location<span className="req"> *</span></label>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input
+                    className="input"
+                    placeholder="eg. Hanamkonda"
+                    value={village}
+                    onChange={e => setVillage(e.target.value)}
+                    style={{ flex: 1 }}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={detectGPS}
+                    style={{
+                      width: 52, height: 52, borderRadius: 12,
+                      background: "var(--primary-soft)", color: "var(--primary)",
+                      display: "grid", placeItems: "center", flexShrink: 0
+                    }}
+                  >
+                    {gpsing
+                      ? <div className="skel" style={{ width: 18, height: 18, borderRadius: 999 }} />
+                      : <Icon name="pin" size={20} />
+                    }
+                  </button>
+                </div>
+                {gpsing && <div style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 6 }}>Detecting location...</div>}
+                {coordinates && (
+                  <div style={{ fontSize: 11, color: "var(--primary)", marginTop: 6 }}>
+                    GPS coordinates captured: {gpsLabel}.
+                  </div>
+                )}
+                {locationError && <div style={{ fontSize: 11, color: "var(--terra)", marginTop: 6 }}>{locationError}</div>}
+              </div>
+
+              {/* State & District fields */}
+              <div className="field" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div>
+                  <label className="field-label">State<span className="req"> *</span></label>
+                  <input className="input" placeholder="eg. Telangana" value={stateVal} onChange={e => setStateVal(e.target.value)} required />
+                </div>
+                <div>
+                  <label className="field-label">District<span className="req"> *</span></label>
+                  <input className="input" placeholder="eg. Warangal" value={district} onChange={e => setDistrict(e.target.value)} required />
+                </div>
+              </div>
+
+              {/* Crop Preference Chips Grid */}
+              <div className="field" style={{ marginTop: 8 }}>
+                <label className="field-label">Select Crops of Interest</label>
+                <div style={{ fontSize: 12, color: "var(--ink-3)", marginBottom: 10 }}>Select one or more crops to customize your mandi prices feed.</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {CROPS.map(c => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => toggleCrop(c.id)}
+                      className={`chip${crops.includes(c.id) ? " active" : ""}`}
+                      style={{ height: 38 }}
+                    >
+                      <span style={{ fontSize: 14 }}>{c.emoji}</span>
+                      {c.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+
           <div className="field">
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
               <label className="field-label">Password<span className="req"> *</span></label>
@@ -383,7 +672,7 @@ const SignupLoginScreen = ({ onLogin, onSignup, onForgotPasswordClick, onSkip, l
 
           <div style={{ marginTop: 28 }}>
             <Button full disabled={!isFormValid || loading} type="submit">
-              {loading ? "Authenticating..." : tab === "login" ? "Sign In" : "Create Account"}
+              {loading ? "Processing..." : tab === "login" ? "Sign In" : "Register & Verify"}
             </Button>
           </div>
         </form>

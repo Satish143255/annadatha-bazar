@@ -851,144 +851,214 @@ const categoryMarker = (listing) => {
   return categories[listing.category] || { icon: "pin", color: "#6B7763", label: "Listing" };
 };
 
-const positionFor = (pin, index, total, center, radius) => {
-  const point = pointOf(pin);
-  if (center && point) {
-    const latitudeKm = (point.latitude - center.latitude) * 110.574;
-    const longitudeKm = (point.longitude - center.longitude) * 111.320 * Math.cos(center.latitude * Math.PI / 180);
-    const scale = Math.max(radius, 5) * 1.18;
-    return {
-      ...pin,
-      source: "gps",
-      x: Math.min(94, Math.max(6, 50 + (longitudeKm / scale) * 44)),
-      y: Math.min(94, Math.max(6, 50 - (latitudeKm / scale) * 44)),
-    };
-  }
 
-  const angle = ((index + 1) / Math.max(total, 1)) * Math.PI * 2;
-  const km = Number.isFinite(pin.distance) ? pin.distance : radius * 0.55;
-  const fallbackDistance = Math.min(38, (km / Math.max(radius, 10)) * 34 + 7);
-  return {
-    ...pin,
-    source: "distance",
-    x: 50 + Math.cos(angle + index * 0.45) * fallbackDistance,
-    y: 50 + Math.sin(angle + index * 0.45) * fallbackDistance,
+
+const loadLeaflet = () => {
+  return new Promise((resolve, reject) => {
+    if (window.L) {
+      resolve(window.L);
+      return;
+    }
+    
+    let link = document.querySelector('link[href*="leaflet.css"]');
+    if (!link) {
+      link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+      document.head.appendChild(link);
+    }
+
+    let script = document.querySelector('script[src*="leaflet.js"]');
+    if (!script) {
+      script = document.createElement("script");
+      script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+      script.onload = () => {
+        if (window.L) resolve(window.L);
+        else reject(new Error("Leaflet L is not available on window"));
+      };
+      script.onerror = () => reject(new Error("Failed to load Leaflet script"));
+      document.body.appendChild(script);
+    } else {
+      const interval = setInterval(() => {
+        if (window.L) {
+          clearInterval(interval);
+          resolve(window.L);
+        }
+      }, 100);
+    }
+  });
+};
+
+const createCustomMarkerIcon = (L, marker, isActive) => {
+  const size = isActive ? 34 : 29;
+  const iconSize = isActive ? 18 : 15;
+
+  const getIconSvg = (name) => {
+    const icons = {
+      wheat: '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 22 22 2M8.5 13.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/><path d="M11.5 16.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/><path d="M15.5 16.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/><path d="M8 12a4 4 0 0 1 8 0"/></svg>',
+      tractor: '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15h11M16 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/><circle cx="6" cy="18" r="2"/><path d="M16 14V9h-3V5h-3v4H6"/></svg>',
+      tool: '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>',
+      leaf: '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 3.5 1 9.8A7 7 0 0 1 11 20z"/><path d="M19 2c-2.26 4.33-5.27 7.14-8 10"/></svg>',
+      seed: '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 6v12M6 12h12"/></svg>',
+      field: '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v18H3z"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>',
+      vet: '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14M18 12a6 6 0 1 1-12 0 6 6 0 0 1 12 0z"/></svg>',
+      pin: '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>'
+    };
+    return icons[name] || icons.pin;
   };
+
+  const html = `
+    <div style="
+      width: ${size}px;
+      height: ${size}px;
+      border-radius: 50%;
+      background: ${marker.color};
+      color: white;
+      border: 2px solid white;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 3px 10px rgba(27,36,24,0.3);
+      transition: all 0.2s ease-in-out;
+    ">
+      <div style="width: ${iconSize}px; height: ${iconSize}px; display: flex; align-items: center; justify-content: center;">
+        ${getIconSvg(marker.icon)}
+      </div>
+    </div>
+  `;
+  
+  return L.divIcon({
+    html,
+    className: 'custom-map-marker',
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  });
 };
 
 const HeatMap = ({ pins, center, radius, activePin, setActivePin, onOpenListing }) => {
-  const positions = pins.slice(0, 24).map((p, i, subset) => positionFor(p, i, subset.length, center, radius));
-  const active = positions.find(p => p.id === activePin);
+  const mapRef = React.useRef(null);
+  const mapInstance = React.useRef(null);
+  const markersGroupRef = React.useRef(null);
+  const [mapLoaded, setMapLoaded] = React.useState(false);
+
+  const active = pins.find(p => p.id === activePin);
+
+  React.useEffect(() => {
+    let active = true;
+    loadLeaflet().then(() => {
+      if (active) setMapLoaded(true);
+    }).catch(console.error);
+    return () => { active = false; };
+  }, []);
+
+  React.useEffect(() => {
+    if (!mapLoaded || !mapRef.current) return;
+
+    const L = window.L;
+    
+    if (!mapInstance.current) {
+      const centerLatLng = center && center.latitude && center.longitude
+        ? [center.latitude, center.longitude]
+        : [17.3850, 78.4867];
+
+      mapInstance.current = L.map(mapRef.current, {
+        zoomControl: true,
+        scrollWheelZoom: true,
+      }).setView(centerLatLng, 11);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap'
+      }).addTo(mapInstance.current);
+
+      markersGroupRef.current = L.layerGroup().addTo(mapInstance.current);
+    }
+
+    const map = mapInstance.current;
+    const markersGroup = markersGroupRef.current;
+
+    markersGroup.clearLayers();
+
+    if (center && center.latitude && center.longitude) {
+      const centerLatLng = [center.latitude, center.longitude];
+      
+      map.setView(centerLatLng, map.getZoom());
+
+      L.circle(centerLatLng, {
+        color: 'var(--primary)',
+        fillColor: 'var(--primary)',
+        fillOpacity: 0.12,
+        radius: radius * 1000,
+        weight: 1.5
+      }).addTo(markersGroup);
+
+      L.circleMarker(centerLatLng, {
+        color: '#ffffff',
+        fillColor: 'var(--primary)',
+        fillOpacity: 1,
+        radius: 8,
+        weight: 3,
+        pane: 'markerPane'
+      }).addTo(markersGroup);
+    }
+
+    pins.forEach((pin) => {
+      const point = pointOf(pin);
+      if (point && point.latitude && point.longitude) {
+        const markerInfo = categoryMarker(pin);
+        const isActive = activePin === pin.id;
+        const icon = createCustomMarkerIcon(L, markerInfo, isActive);
+        
+        const marker = L.marker([point.latitude, point.longitude], { icon })
+          .addTo(markersGroup);
+
+        marker.on('click', () => {
+          setActivePin(pin.id);
+        });
+      }
+    });
+
+  }, [mapLoaded, center, pins, radius, activePin, setActivePin]);
+
+  React.useEffect(() => {
+    return () => {
+      if (mapInstance.current) {
+        mapInstance.current.remove();
+        mapInstance.current = null;
+      }
+    };
+  }, []);
 
   return (
-    <div style={{
-      position: "relative",
-      width: "100%", aspectRatio: "4/3",
-      borderRadius: 18, overflow: "hidden",
-      background: `
-        radial-gradient(circle at 50% 50%, #E5F0DC 0%, #C7DBA8 60%, #B0CB8C 100%)
-      `,
-      backgroundImage: `
-        radial-gradient(circle at 25% 30%, rgba(124,159,86,0.35) 0%, transparent 30%),
-        radial-gradient(circle at 75% 65%, rgba(170,140,90,0.28) 0%, transparent 25%),
-        radial-gradient(circle at 50% 50%, #DDE9CC 0%, #C0D49E 70%)
-      `,
-      border: "1px solid var(--border)",
-    }}>
-      {/* Mock roads */}
-      <svg viewBox="0 0 100 75" preserveAspectRatio="none" style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}>
-        <path d="M 0 38 Q 30 35, 50 42 T 100 38" stroke="rgba(255,255,255,0.55)" strokeWidth="0.8" fill="none" />
-        <path d="M 0 38 Q 30 35, 50 42 T 100 38" stroke="rgba(0,0,0,0.12)" strokeWidth="0.18" fill="none" />
-        <path d="M 50 0 Q 47 30, 50 42 T 48 75" stroke="rgba(255,255,255,0.5)" strokeWidth="0.6" fill="none" />
-        <path d="M 18 0 Q 25 25, 32 50 T 35 75" stroke="rgba(255,255,255,0.35)" strokeWidth="0.4" fill="none" />
-        {/* river */}
-        <path d="M 0 60 Q 20 55, 40 62 T 80 58 L 100 64" stroke="#7AAACB" strokeWidth="0.6" fill="none" opacity="0.5" />
-      </svg>
+    <div style={{ position: "relative", width: "100%", aspectRatio: "4/3", borderRadius: 18, overflow: "hidden", border: "1px solid var(--border)" }}>
+      {!mapLoaded ? (
+        <div style={{ height: "100%", display: "grid", placeItems: "center", background: "var(--surface-2)", color: "var(--ink-3)", fontSize: 13 }}>
+          <div className="skel" style={{ width: "80%", height: "80%", borderRadius: 12, display: "grid", placeItems: "center" }}>
+            Loading Interactive Map...
+          </div>
+        </div>
+      ) : (
+        <div ref={mapRef} style={{ width: "100%", height: "100%", zIndex: 1 }} />
+      )}
 
-      {/* User position */}
-      <div style={{
-        position: "absolute", left: "50%", top: "50%",
-        transform: "translate(-50%, -50%)",
-      }}>
-        <div style={{
-          width: 40, height: 40, borderRadius: 999,
-          background: "rgba(31, 90, 58, 0.2)",
-          animation: "pulse 2s infinite",
-        }} />
-        <div style={{
-          position: "absolute", top: "50%", left: "50%",
-          width: 14, height: 14, borderRadius: 999,
-          background: "var(--primary)",
-          border: "3px solid white",
-          transform: "translate(-50%, -50%)",
-          boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
-        }} />
-      </div>
-
-      {/* Heat layer */}
-      {positions.map((p) => {
-        const marker = categoryMarker(p);
-        return (
-          <div
-            key={`${p.id}-heat`}
-            style={{
-              position: "absolute", left: `${p.x}%`, top: `${p.y}%`,
-              width: 72, height: 72, borderRadius: 999,
-              transform: "translate(-50%, -50%)",
-              background: `radial-gradient(circle, ${marker.color}55 0%, ${marker.color}22 42%, transparent 72%)`,
-              filter: "blur(1px)",
-            }}
-          />
-        );
-      })}
-
-      {/* Category icon markers */}
-      {positions.map((p) => (
-        (() => {
-          const marker = categoryMarker(p);
-          return (
-        <button
-          key={p.id}
-          onClick={() => setActivePin(p.id)}
-          aria-label={`${marker.label}: ${p.title}`}
-          style={{
-            position: "absolute", left: `${p.x}%`, top: `${p.y}%`,
-            transform: "translate(-50%, -50%)",
-            zIndex: activePin === p.id ? 5 : 1,
-            width: activePin === p.id ? 34 : 29,
-            height: activePin === p.id ? 34 : 29,
-            borderRadius: 999,
-            background: marker.color,
-            color: "white",
-            border: "2px solid white",
-            display: "grid",
-            placeItems: "center",
-            boxShadow: "0 3px 10px rgba(27,36,24,0.24)",
-          }}
-        >
-          <Icon name={marker.icon} size={activePin === p.id ? 18 : 15} stroke={2} />
-        </button>
-          );
-        })()
-      ))}
-
-      {/* Mini card popup */}
       {active && (
         <div onClick={() => onOpenListing(active)} style={{
-          position: "absolute", bottom: 8, left: 8, right: 8,
+          position: "absolute", bottom: 12, left: 12, right: 12,
           background: "white", borderRadius: 12, padding: 10,
           display: "flex", gap: 10, alignItems: "center",
-          boxShadow: "var(--shadow-lg)", animation: "scaleIn 180ms"
+          boxShadow: "var(--shadow-lg)", animation: "scaleIn 180ms",
+          zIndex: 1000, cursor: "pointer"
         }}>
           <ImgPh category={active.category} label={active.photos[0]?.split(" ")[0]} style={{ width: 48, height: 48, borderRadius: 8, fontSize: 9 }} />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{active.title}</div>
-            <div style={{ fontSize: 11, color: "var(--ink-3)" }}>{Number.isFinite(active.distance) ? `${active.distance}km - ` : ""}{formatINR(active.price)}/{active.priceUnit}</div>
+            <div style={{ fontSize: 13, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "var(--ink)" }}>{active.title}</div>
+            <div style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 2 }}>
+              {Number.isFinite(active.distance) ? `${active.distance}km - ` : ""}
+              {formatINR(active.price)}/{active.priceUnit}
+            </div>
           </div>
           <Icon name="chevron" size={16} color="var(--ink-3)" />
         </div>
       )}
-      <style>{`@keyframes pulse { 0% { transform: scale(0.8); opacity: 0.7; } 100% { transform: scale(2); opacity: 0; } }`}</style>
     </div>
   );
 };

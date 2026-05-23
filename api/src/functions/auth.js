@@ -71,22 +71,17 @@ const hashOtp = (email, code) => {
   return createHmac("sha256", SECRET).update(`${email}:${code}`).digest("hex");
 };
 
-app.http("authSignup", {
+app.http("authSignupOtpRequest", {
   methods: ["POST"],
   authLevel: "anonymous",
-  route: "auth/signup",
+  route: "auth/signup/otp",
   handler: async (request) => {
     try {
       const body = await json(request);
       const email = String(body.email || "").trim().toLowerCase();
-      const password = String(body.password || "");
-      const name = String(body.name || "Farmer").trim();
 
-      if (!email || !password) {
-        return ok({ error: "Email and password are required." }, 400);
-      }
-      if (password.length < 6) {
-        return ok({ error: "Password must be at least 6 characters." }, 400);
+      if (!email) {
+        return ok({ error: "Email is required." }, 400);
       }
 
       // Check if user already exists
@@ -99,6 +94,105 @@ app.http("authSignup", {
         return ok({ error: "An account with this email already exists." }, 400);
       }
 
+      const isDemoMode = process.env.VITE_ENABLE_DEMO_DATA !== "false" && process.env.NODE_ENV !== "production";
+      const otp = isDemoMode ? "123456" : String(randomInt(100000, 999999));
+
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 mins
+      await store.upsert("otpChallenges", {
+        id: `${email}:signup`,
+        email,
+        codeHash: hashOtp(email, otp),
+        attempts: 0,
+        expiresAt,
+      });
+
+      await sendEmailOtp(email, otp, isDemoMode, "signup");
+
+      return ok({
+        message: "OTP sent to your email. Check inbox or server logs.",
+        email,
+        ...(isDemoMode ? { otp } : {}),
+      });
+    } catch (error) {
+      return fail(error, "Signup OTP request failed.");
+    }
+  },
+});
+
+app.http("authSignup", {
+  methods: ["POST"],
+  authLevel: "anonymous",
+  route: "auth/signup",
+  handler: async (request) => {
+    try {
+      const body = await json(request);
+      const email = String(body.email || "").trim().toLowerCase();
+      const password = String(body.password || "");
+      const name = String(body.name || "Farmer").trim();
+      const otpCode = String(body.otpCode || "").trim();
+
+      const village = String(body.village || "").trim();
+      const district = String(body.district || "").trim();
+      const state = String(body.state || "").trim();
+      const crops = Array.isArray(body.crops) ? body.crops : [];
+      const latitude = body.latitude != null ? Number(body.latitude) : null;
+      const longitude = body.longitude != null ? Number(body.longitude) : null;
+
+      if (!email || !password) {
+        return ok({ error: "Email and password are required." }, 400);
+      }
+      if (password.length < 6) {
+        return ok({ error: "Password must be at least 6 characters." }, 400);
+      }
+      if (!name) {
+        return ok({ error: "Name is required." }, 400);
+      }
+      if (!otpCode) {
+        return ok({ error: "Verification code is required." }, 400);
+      }
+
+      // Check if user already exists
+      const existing = await store.query("profiles", {
+        query: "SELECT * FROM c WHERE c.email = @email",
+        parameters: [{ name: "@email", value: email }],
+      });
+
+      if (existing && existing.length > 0) {
+        return ok({ error: "An account with this email already exists." }, 400);
+      }
+
+      // Verify OTP Challenge
+      const challengeId = `${email}:signup`;
+      const challenge = await store.read("otpChallenges", challengeId, challengeId);
+
+      if (!challenge || new Date(challenge.expiresAt) < new Date()) {
+        return ok({ error: "Invalid or expired verification code." }, 400);
+      }
+
+      if (challenge.attempts >= 5) {
+        return ok({ error: "Too many verification attempts. Please request a new code." }, 429);
+      }
+
+      challenge.attempts = (challenge.attempts || 0) + 1;
+      await store.upsert("otpChallenges", challenge);
+
+      const expected = Buffer.from(challenge.codeHash, "hex");
+      const actual = Buffer.from(hashOtp(email, otpCode), "hex");
+
+      if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) {
+        return ok({ error: "Invalid or expired verification code." }, 400);
+      }
+
+      // Cleanup Challenge
+      try {
+        await store.upsert("otpChallenges", {
+          id: challengeId,
+          email,
+          codeHash: "",
+          expiresAt: new Date(0).toISOString(),
+        });
+      } catch (e) {}
+
       const userId = randomUUID();
       const passwordHash = hashPassword(password);
       
@@ -108,10 +202,12 @@ app.http("authSignup", {
         email: email,
         passwordHash: passwordHash,
         name: name,
-        village: "",
-        district: "",
-        state: "",
-        crops: [],
+        village: village,
+        district: district,
+        state: state,
+        crops: crops,
+        latitude: latitude,
+        longitude: longitude,
         joined: new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" }),
         createdAt: new Date().toISOString(),
       };

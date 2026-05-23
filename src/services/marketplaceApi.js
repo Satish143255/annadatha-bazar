@@ -59,10 +59,15 @@ export const fetchIdentity = async () => {
   return null;
 };
 
-export const apiSignup = async (name, email, password) => {
+export const apiSignupOtpRequest = (email) => request("/auth/signup/otp", {
+  method: "POST",
+  body: JSON.stringify({ email }),
+});
+
+export const apiSignup = async (signupData) => {
   const data = await request("/auth/signup", {
     method: "POST",
-    body: JSON.stringify({ name, email, password }),
+    body: JSON.stringify(signupData),
   });
   if (data?.token) {
     localStorage.setItem("agri_auth_token", data.token);

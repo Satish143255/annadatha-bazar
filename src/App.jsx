@@ -439,10 +439,10 @@ function App() {
     }
   };
 
-  const handleSignup = async (name, email, password) => {
+  const handleSignup = async (signupData) => {
     if (DEMO_MODE) {
       const usersList = LS.get("mock_users_list", []);
-      if (usersList.some(u => u.email.toLowerCase() === email.toLowerCase())) {
+      if (usersList.some(u => u.email.toLowerCase() === signupData.email.toLowerCase())) {
         throw new Error("An account with this email already exists.");
       }
 
@@ -450,29 +450,32 @@ function App() {
       const profile = {
         id: userId,
         userId: userId,
-        email: email.toLowerCase(),
-        name: name,
-        village: "",
-        district: "",
-        state: "",
-        crops: [],
+        email: signupData.email.toLowerCase(),
+        name: signupData.name,
+        village: signupData.village,
+        district: signupData.district,
+        state: signupData.state,
+        crops: signupData.crops || [],
+        latitude: signupData.latitude,
+        longitude: signupData.longitude,
         joined: new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" }),
+        createdAt: new Date().toISOString(),
       };
 
-      usersList.push({ email: email.toLowerCase(), password, profile });
+      usersList.push({ email: signupData.email.toLowerCase(), password: signupData.password, profile });
       LS.set("mock_users_list", usersList);
       LS.set("mock_user", profile);
       
       setUser(profile);
       setCachedIdentity(profile);
-      setSession({ stage: "profile-setup" });
-      showToast("Account created! Please set up your profile.", "check");
+      setSession({ stage: "app" });
+      showToast("Welcome to AnnadathaBazar!", "check");
     } else {
-      const response = await apiSignup(name, email, password);
+      const response = await apiSignup(signupData);
       if (response && response.profile) {
         setUser(response.profile);
-        setSession({ stage: "profile-setup" });
-        showToast("Account created! Please set up your profile.", "check");
+        setSession({ stage: "app" });
+        showToast("Welcome to AnnadathaBazar!", "check");
       } else {
         throw new Error("Registration failed.");
       }
@@ -515,6 +518,7 @@ function App() {
           <SignupLoginScreen
             onLogin={handleLogin}
             onSignup={handleSignup}
+            showToast={showToast}
             onForgotPasswordClick={() => setSession({ stage: "forgot-password" })}
             onSkip={() => {
               setUser(DEMO_MODE ? DEMO_DATA.USERS.find(u => u.isMe) : null);
