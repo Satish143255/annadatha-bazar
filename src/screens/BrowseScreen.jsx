@@ -422,8 +422,8 @@ const ListingDetailScreen = ({ listing, listings, onBack, onMessage, onUserTap, 
             </div>
             <div className="hscroll">
               {similar.map(l => (
-                <div key={l.id} style={{ width: 168, flexShrink: 0 }} onClick={() => onOpenListing(l)}>
-                  <ListingCard listing={l} />
+                <div key={l.id} className="w-[168px] shrink-0">
+                  <ListingCard listing={l} onClick={() => onOpenListing(l)} />
                 </div>
               ))}
             </div>

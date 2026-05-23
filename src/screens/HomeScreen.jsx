@@ -186,8 +186,8 @@ const HomeScreen = ({ user, listings, prices, pricesState, weather, updates, upd
           </div>
           <div className="flex gap-3 px-4 pb-4 overflow-x-auto scrollbar-none stagger-list">
             {matching.map(l => (
-              <div key={l.id} className="w-[188px] shrink-0" onClick={() => onOpenListing(l)}>
-                <ListingCard listing={l} />
+              <div key={l.id} className="w-[188px] shrink-0">
+                <ListingCard listing={l} onClick={() => onOpenListing(l)} />
               </div>
             ))}
           </div>
@@ -328,9 +328,9 @@ const NearbySection = ({ title, icon, items, radius, onOpenListing, onSeeAll, on
       ) : (
         <div className="flex gap-3 px-4 pb-4 overflow-x-auto scrollbar-none stagger-list">
           {display.map(l => (
-            <div key={l.id} className="w-[196px] shrink-0 relative" onClick={() => onOpenListing(l)}>
-              <ListingCard listing={l} />
-              <div className="absolute top-2 right-2 bg-[#1b2418]/85 text-white px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1">
+            <div key={l.id} className="w-[196px] shrink-0 relative">
+              <ListingCard listing={l} onClick={() => onOpenListing(l)} />
+              <div className="absolute top-2 right-2 bg-[#1b2418]/85 text-white px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 pointer-events-none">
                 <Icon name="pin" size={9} /> {l.distance}km
               </div>
             </div>
