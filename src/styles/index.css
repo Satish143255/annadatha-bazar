@@ -104,36 +104,63 @@
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-html, body { margin: 0; padding: 0; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+}
+
 body {
   font-family: var(--font-sans);
   color: var(--ink);
-  background: var(--bg);
-  min-height: 100vh;
+  background: var(--surface-3);
   -webkit-font-smoothing: antialiased;
 }
 
 button { font-family: inherit; cursor: pointer; border: 0; background: none; padding: 0; color: inherit; }
 input, textarea, select { font-family: inherit; color: inherit; }
 
+/* Disable user selection on UI buttons to avoid highlight boxes on double tap */
+button, .tab, .btn, .chip, .icon-btn, .topbar button {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
 /* ============== App stage ============== */
 #stage {
-  min-height: 100vh;
+  height: 100%;
+  height: 100dvh;
   display: flex;
-  align-items: stretch;
-  justify-content: stretch;
+  align-items: center;
+  justify-content: center;
+  background: #eaeae5;
+  background-image: radial-gradient(circle at 10% 10%, rgba(31, 90, 58, 0.04) 0%, transparent 50%),
+                    radial-gradient(circle at 90% 90%, rgba(176, 94, 46, 0.03) 0%, transparent 50%);
+  overflow: hidden;
 }
 
 .phone-frame {
   width: 100%;
-  min-height: 100vh;
+  max-width: 480px;
+  height: 100%;
+  max-height: min(880px, 92dvh);
   background: var(--bg);
   position: relative;
+  box-shadow: 0 24px 64px -12px rgba(27, 36, 24, 0.16);
+  border: 8px solid #1a1c19;
+  border-radius: 36px;
+  overflow: hidden;
+  transition: max-width 0.3s ease, border-radius 0.3s ease, border 0.3s ease;
 }
 
 .phone-screen {
   width: 100%;
-  min-height: 100vh;
+  height: 100%;
   background: var(--bg);
   overflow: hidden;
   position: relative;
@@ -141,9 +168,19 @@ input, textarea, select { font-family: inherit; color: inherit; }
   flex-direction: column;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 480px) {
+  #stage {
+    background: transparent;
+    padding: 0;
+  }
   .phone-frame {
-    width: 100vw;
+    max-width: 100%;
+    height: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
   }
 }
 
@@ -177,6 +214,7 @@ input, textarea, select { font-family: inherit; color: inherit; }
 .scroll {
   flex: 1;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* Smooth inertia scrolling on iOS */
   overscroll-behavior: contain;
   scrollbar-width: none;
 }
@@ -1184,3 +1222,12 @@ textarea.input { padding: 14px 16px; height: auto; min-height: 96px; resize: non
   pointer-events: none;
   animation: rippleExpand 500ms ease-out forwards;
 }
+
+/* ── Bottom navigation tab scaling feedback ── */
+.app-body + div button {
+  transition: transform 120ms var(--spring);
+}
+.app-body + div button:active {
+  transform: scale(0.92);
+}
+
