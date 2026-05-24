@@ -101,6 +101,7 @@ app.http("authSignupOtpRequest", {
       await store.upsert("otpChallenges", {
         id: `${email}:signup`,
         email,
+        phone: email,
         codeHash: hashOtp(email, otp),
         attempts: 0,
         expiresAt,
@@ -163,7 +164,7 @@ app.http("authSignup", {
 
       // Verify OTP Challenge
       const challengeId = `${email}:signup`;
-      const challenge = await store.read("otpChallenges", challengeId, challengeId);
+      const challenge = await store.read("otpChallenges", challengeId, email);
 
       if (!challenge || new Date(challenge.expiresAt) < new Date()) {
         return ok({ error: "Invalid or expired verification code." }, 400);
@@ -188,6 +189,7 @@ app.http("authSignup", {
         await store.upsert("otpChallenges", {
           id: challengeId,
           email,
+          phone: email,
           codeHash: "",
           expiresAt: new Date(0).toISOString(),
         });
@@ -314,6 +316,7 @@ app.http("authForgotRequest", {
       await store.upsert("otpChallenges", {
         id: email, // use email as ID for direct lookup
         email,
+        phone: email,
         codeHash: hashOtp(email, otp),
         attempts: 0,
         expiresAt,
@@ -430,6 +433,7 @@ app.http("authForgotReset", {
         await store.upsert("otpChallenges", {
           id: email,
           email,
+          phone: email,
           codeHash: "",
           expiresAt: new Date(0).toISOString(),
         });
