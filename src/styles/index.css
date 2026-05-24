@@ -77,6 +77,15 @@
   --tap: 44px;
   --phone-w: 390px;
   --phone-h: 844px;
+
+  --weather-banner-bg: linear-gradient(135deg, #DBE7F0 0%, #B3CDDE 100%);
+  --weather-banner-text: #1B3854;
+  --advisory-warn-bg: var(--terra-soft);
+  --advisory-warn-text: #7A3A14;
+  --advisory-info-bg: #D6E2F0;
+  --advisory-info-text: #1B3854;
+  --advisory-tip-bg: var(--gold-soft);
+  --advisory-tip-text: #6B4E14;
 }
 
 [data-theme="dark"] {
@@ -101,6 +110,15 @@
   --gold-soft: #4b3b00;
   --terra: #B05E2E;
   --terra-soft: #00314f;
+
+  --weather-banner-bg: linear-gradient(135deg, #1B2C3F 0%, #111A24 100%);
+  --weather-banner-text: #E2ECF5;
+  --advisory-warn-bg: #3F1F11;
+  --advisory-warn-text: #FFB494;
+  --advisory-info-bg: #112A47;
+  --advisory-info-text: #ADCCF0;
+  --advisory-tip-bg: #3B2A0F;
+  --advisory-tip-text: #FFE082;
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -879,9 +897,9 @@ textarea.input { padding: 14px 16px; height: auto; min-height: 96px; resize: non
   border-radius: 5px;
   white-space: nowrap;
 }
-.status-active    { background: rgba(31, 90, 58, 0.12);  color: #1F5A3A; }
-.status-paused    { background: rgba(176, 94, 46, 0.12); color: #B05E2E; }
-.status-fulfilled { background: rgba(46, 74, 127, 0.12); color: #2E4A7F; }
+.status-active    { background: var(--primary-soft);  color: var(--primary); }
+.status-paused    { background: var(--advisory-warn-bg); color: var(--advisory-warn-text); }
+.status-fulfilled { background: var(--advisory-info-bg); color: var(--advisory-info-text); }
 .status-expired   { background: var(--surface-2);        color: var(--ink-3); }
 
 /* Item card on dashboard */

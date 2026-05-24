@@ -66,26 +66,26 @@ const BrowseScreen = ({ listings, onOpenListing, onPostListing, initialCategory 
   }, [listings, q, cat, sort, distance, priceMin, priceMax]);
 
   return (
-    <div className="scroll bg-white">
-      <div className="topbar border-b border-slate-100" style={{ paddingBottom: 8 }}>
-        <div className="title font-bold text-slate-800 text-lg">{t("browse.title")}</div>
+    <div className="scroll bg-[var(--surface-2)] text-[var(--ink)]">
+      <div className="topbar with-border bg-[var(--surface)]" style={{ paddingBottom: 8 }}>
+        <div className="title font-bold text-[var(--ink)] text-lg">{t("browse.title")}</div>
       </div>
 
       {/* Search */}
       <div className="px-4 py-3">
         <div className="relative flex items-center">
           <input
-            className="w-full h-12 pl-11 pr-12 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#1F5A3A] focus:ring-2 focus:ring-[#1F5A3A]/10 transition-all font-sans text-sm"
+            className="w-full h-12 pl-11 pr-12 bg-[var(--surface)] border border-[var(--border)] rounded-xl text-[var(--ink)] placeholder-[var(--ink-4)] focus:outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-soft)] transition-all font-sans text-sm"
             placeholder={t("browse.search")}
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--ink-3)] pointer-events-none">
             <Icon name="search" size={18} color="var(--ink-3)" />
           </div>
           <button
             onClick={startVoice}
-            className="absolute right-1.5 w-11 h-11 rounded-full flex items-center justify-center text-[#1F5A3A] hover:bg-slate-100 transition-colors active:scale-95"
+            className="absolute right-1.5 w-11 h-11 rounded-full flex items-center justify-center text-[var(--primary)] hover:bg-[var(--surface-2)] transition-colors active:scale-95"
             aria-label="Voice Search"
           >
             <Icon name="mic" size={20} />
@@ -98,8 +98,8 @@ const BrowseScreen = ({ listings, onOpenListing, onPostListing, initialCategory 
         <button 
           className={`h-11 px-5 rounded-full flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap transition-all ${
             cat === "all" 
-              ? "bg-[#1F5A3A] text-white shadow-sm" 
-              : "bg-slate-50 border border-slate-200/60 text-slate-600 hover:bg-slate-100"
+              ? "bg-[var(--primary)] text-[var(--primary-ink)] shadow-sm" 
+              : "bg-[var(--surface)] border border-[var(--border)] text-[var(--ink-2)] hover:bg-[var(--surface-2)]"
           }`} 
           onClick={() => setCat("all")}
         >
@@ -110,8 +110,8 @@ const BrowseScreen = ({ listings, onOpenListing, onPostListing, initialCategory 
             key={c.id} 
             className={`h-11 px-5 rounded-full flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap transition-all ${
               cat === c.id 
-                ? "bg-[#1F5A3A] text-white shadow-sm" 
-                : "bg-slate-50 border border-slate-200/60 text-slate-600 hover:bg-slate-100"
+                ? "bg-[var(--primary)] text-[var(--primary-ink)] shadow-sm" 
+                : "bg-[var(--surface)] border border-[var(--border)] text-[var(--ink-2)] hover:bg-[var(--surface-2)]"
             }`} 
             onClick={() => setCat(c.id)}
           >
@@ -124,32 +124,32 @@ const BrowseScreen = ({ listings, onOpenListing, onPostListing, initialCategory 
       <div className="flex items-center justify-between px-4 pb-3 gap-2.5">
         <button 
           onClick={() => setFiltersOpen(true)} 
-          className="h-11 px-4 rounded-full flex items-center gap-1.5 text-xs font-semibold bg-slate-50 border border-slate-200/60 text-slate-700 hover:bg-slate-100 transition-all cursor-pointer relative"
+          className="h-11 px-4 rounded-full flex items-center gap-1.5 text-xs font-semibold bg-[var(--surface)] border border-[var(--border)] text-[var(--ink-2)] hover:bg-[var(--surface-2)] transition-all cursor-pointer relative"
         >
           <Icon name="filter" size={14} />
           Filters
-          {(distance !== 50 || priceMin || priceMax) && <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-[#1F5A3A] border-2 border-white" />}
+          {(distance !== 50 || priceMin || priceMax) && <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-[var(--primary)] border-2 border-[var(--surface)]" />}
         </button>
         <div className="flex gap-2.5 items-center">
           <select
             value={sort} onChange={e => setSort(e.target.value)}
-            className="h-11 px-4 border border-slate-200/60 bg-white rounded-full text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#1F5A3A] cursor-pointer"
+            className="h-11 px-4 border border-[var(--border)] bg-[var(--surface)] rounded-full text-xs font-semibold text-[var(--ink-2)] focus:outline-none focus:border-[var(--primary)] cursor-pointer"
           >
             <option value="nearest">Sort: {t("sort.nearest")}</option>
             <option value="newest">Sort: {t("sort.newest")}</option>
             <option value="priceAsc">Sort: {t("sort.priceAsc")}</option>
             <option value="priceDesc">Sort: {t("sort.priceDesc")}</option>
           </select>
-          <div className="h-11 p-1 bg-slate-100 rounded-full flex items-center gap-1">
+          <div className="h-11 p-1 bg-[var(--surface-3)] rounded-full flex items-center gap-1">
             <button 
-              className={`h-9 w-9 rounded-full flex items-center justify-center transition-all ${view === "grid" ? "bg-white text-[#1F5A3A] shadow-sm font-semibold" : "text-slate-500 hover:text-slate-800"}`} 
+              className={`h-9 w-9 rounded-full flex items-center justify-center transition-all ${view === "grid" ? "bg-[var(--surface)] text-[var(--primary)] shadow-sm font-semibold" : "text-[var(--ink-3)] hover:text-[var(--ink)]"}`} 
               onClick={() => setView("grid")} 
               aria-label="Grid View"
             >
               <Icon name="grid" size={14} />
             </button>
             <button 
-              className={`h-9 w-9 rounded-full flex items-center justify-center transition-all ${view === "list" ? "bg-white text-[#1F5A3A] shadow-sm font-semibold" : "text-slate-500 hover:text-slate-800"}`} 
+              className={`h-9 w-9 rounded-full flex items-center justify-center transition-all ${view === "list" ? "bg-[var(--surface)] text-[var(--primary)] shadow-sm font-semibold" : "text-[var(--ink-3)] hover:text-[var(--ink)]"}`} 
               onClick={() => setView("list")} 
               aria-label="List View"
             >
@@ -160,8 +160,8 @@ const BrowseScreen = ({ listings, onOpenListing, onPostListing, initialCategory 
       </div>
 
       {/* Results count */}
-      <div className="px-4 pb-3 text-xs text-slate-500 font-medium">
-        <strong className="text-slate-800 font-bold">{filtered.length}</strong> {t("browse.results")} {distance < 50 ? `within ${distance}km` : "near you"}
+      <div className="px-4 pb-3 text-xs text-[var(--ink-3)] font-medium">
+        <strong className="text-[var(--ink)] font-bold">{filtered.length}</strong> {t("browse.results")} {distance < 50 ? `within ${distance}km` : "near you"}
       </div>
 
       {/* Results */}
@@ -189,19 +189,19 @@ const BrowseScreen = ({ listings, onOpenListing, onPostListing, initialCategory 
 
       <Sheet open={filtersOpen} onClose={() => setFiltersOpen(false)} title="Filters">
         <div className="field">
-          <label className="field-label font-sans font-medium text-slate-700">Distance: within {distance} km</label>
+          <label className="field-label font-sans font-medium text-[var(--ink-2)]">Distance: within {distance} km</label>
           <input
             type="range" min="5" max="100" step="5"
             value={distance}
             onChange={e => setDistance(+e.target.value)}
-            className="w-full accent-[#1F5A3A]"
+            className="w-full accent-[var(--primary)]"
           />
-          <div className="flex justify-between text-xs text-slate-400 font-medium mt-1">
+          <div className="flex justify-between text-xs text-[var(--ink-3)] font-medium mt-1">
             <span>5km</span><span>100km</span>
           </div>
         </div>
         <div className="field">
-          <label className="field-label font-sans font-medium text-slate-700">Price range (Rs)</label>
+          <label className="field-label font-sans font-medium text-[var(--ink-2)]">Price range (Rs)</label>
           <div className="flex gap-3">
             <input className="input" type="number" placeholder="Min" value={priceMin} onChange={e => setPriceMin(e.target.value)} />
             <input className="input" type="number" placeholder="Max" value={priceMax} onChange={e => setPriceMax(e.target.value)} />
@@ -215,11 +215,11 @@ const BrowseScreen = ({ listings, onOpenListing, onPostListing, initialCategory 
 
       <Sheet open={voiceOpen} onClose={stopVoice}>
         <div className="text-center py-3 pb-6 flex flex-col items-center">
-          <div className="w-24 h-24 mb-5 rounded-full bg-[#1F5A3A]/10 flex items-center justify-center text-[#1F5A3A] animate-pulse">
+          <div className="w-24 h-24 mb-5 rounded-full bg-[var(--primary-soft)] flex items-center justify-center text-[var(--primary)] animate-pulse">
             <Icon name="mic" size={42} stroke={1.8} />
           </div>
-          <div className="text-lg font-bold text-slate-800 mb-1.5">Listening...</div>
-          <div className="text-xs text-slate-500 font-medium">Try saying "rice in Warangal"</div>
+          <div className="text-lg font-bold text-[var(--ink)] mb-1.5">Listening...</div>
+          <div className="text-xs text-[var(--ink-3)] font-medium">Try saying "rice in Warangal"</div>
         </div>
         <Button full variant="secondary" onClick={stopVoice}>Cancel</Button>
       </Sheet>

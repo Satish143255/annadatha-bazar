@@ -63,23 +63,23 @@ const PricesScreen = ({ user, prices, state, lang }) => {
   };
 
   return (
-    <div className="scroll bg-white">
-      <div className="topbar border-b border-slate-100 flex items-center justify-between px-4 py-2 bg-white">
-        <div className="title font-bold text-slate-800 text-lg">{t("prices.title")}</div>
-        <button className="h-9 px-3.5 rounded-full flex items-center gap-1 text-xs font-semibold bg-slate-50 border border-slate-200/60 text-slate-700 hover:bg-slate-100 transition-all cursor-pointer">
-          <Icon name="pin" size={12} />
+    <div className="scroll bg-[var(--surface-2)] text-[var(--ink)]">
+      <div className="topbar with-border flex items-center justify-between px-4 py-2 bg-[var(--surface)]">
+        <div className="title font-bold text-[var(--ink)] text-lg">{t("prices.title")}</div>
+        <button className="h-9 px-3.5 rounded-full flex items-center gap-1 text-xs font-semibold bg-[var(--surface-2)] border border-[var(--border)] text-[var(--ink-2)] hover:bg-[var(--surface-3)] transition-all cursor-pointer">
+          <Icon name="pin" size={12} color="var(--ink-3)" />
           {district}
-          <Icon name="chevronDown" size={12} />
+          <Icon name="chevronDown" size={12} color="var(--ink-3)" />
         </button>
       </div>
 
       {state === "loading" && (
-        <div className="px-4 py-2 text-xs text-slate-400 font-medium">
+        <div className="px-4 py-2 text-xs text-[var(--ink-3)] font-medium">
           Loading live AGMARKNET mandi prices from data.gov.in.
         </div>
       )}
       {state === "error" && (
-        <div className="px-4 py-2 text-xs text-[#B05E2E] font-medium bg-[#B05E2E]/5 border-y border-[#B05E2E]/10">
+        <div className="px-4 py-2 text-xs text-[var(--terra)] font-medium bg-[var(--terra-soft)] border-y border-[var(--border)]">
           Live mandi prices are unavailable right now. The app will not substitute demo rates.
         </div>
       )}
@@ -88,31 +88,31 @@ const PricesScreen = ({ user, prices, state, lang }) => {
       <div className="px-4 py-3">
         <div className="relative flex items-center">
           <input
-            className="w-full h-11 pl-11 pr-4 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#1F5A3A] focus:ring-2 focus:ring-[#1F5A3A]/10 transition-all font-sans text-sm"
+            className="w-full h-11 pl-11 pr-4 bg-[var(--surface)] border border-[var(--border)] rounded-xl text-[var(--ink)] placeholder-[var(--ink-4)] focus:outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-soft)] transition-all font-sans text-sm"
             placeholder="Search crop..."
             value={q}
             onChange={e => setQ(e.target.value)}
           />
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-            <Icon name="search" size={18} />
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--ink-3)] pointer-events-none">
+            <Icon name="search" size={18} color="var(--ink-3)" />
           </div>
         </div>
       </div>
 
       {/* View toggle */}
       <div className="px-4 pb-3.5">
-        <div className="h-11 p-1 bg-slate-100 rounded-full flex items-center gap-1">
+        <div className="h-11 p-1 bg-[var(--surface-3)] rounded-full flex items-center gap-1">
           <button 
             className={`flex-1 h-9 rounded-full flex items-center justify-center gap-1.5 text-xs font-semibold transition-all cursor-pointer ${
-              view === "cards" ? "bg-white text-[#1F5A3A] shadow-sm" : "text-slate-500 hover:text-slate-800"
+              view === "cards" ? "bg-[var(--surface)] text-[var(--primary)] shadow-sm" : "text-[var(--ink-3)] hover:text-[var(--ink)]"
             }`} 
             onClick={() => setView("cards")}
           >
             <Icon name="grid" size={14} /> Cards
           </button>
           <button 
-            className={`flex-1 h-9 rounded-full flex items-center justify-center gap-1.5 text-xs font-semibold transition-all cursor-pointer ${
-              view === "table" ? "bg-white text-[#1F5A3A] shadow-sm" : "text-slate-500 hover:text-slate-800"
+            className={`flex-1 h-9 rounded-full flex-items-center justify-center gap-1.5 text-xs font-semibold transition-all cursor-pointer ${
+              view === "table" ? "bg-[var(--surface)] text-[var(--primary)] shadow-sm" : "text-[var(--ink-3)] hover:text-[var(--ink)]"
             }`} 
             onClick={() => setView("table")}
           >
@@ -120,7 +120,7 @@ const PricesScreen = ({ user, prices, state, lang }) => {
           </button>
           <button 
             className={`flex-1 h-9 rounded-full flex items-center justify-center gap-1.5 text-xs font-semibold transition-all cursor-pointer ${
-              view === "graph" ? "bg-white text-[#1F5A3A] shadow-sm" : "text-slate-500 hover:text-slate-800"
+              view === "graph" ? "bg-[var(--surface)] text-[var(--primary)] shadow-sm" : "text-[var(--ink-3)] hover:text-[var(--ink)]"
             }`} 
             onClick={() => setView("graph")}
           >
@@ -308,31 +308,31 @@ const PricesScreen = ({ user, prices, state, lang }) => {
             return (
               <div 
                 key={p.commodity} 
-                className="bg-white border border-slate-100 rounded-xl overflow-hidden shadow-sm mb-3 active:scale-[0.99] transition-all duration-200"
+                className="bg-[var(--surface)] border border-[var(--border)] rounded-xl overflow-hidden shadow-sm mb-3 active:scale-[0.99] transition-all duration-200"
               >
                 <div
                   onClick={() => setExpanded(isOpen ? null : p.commodity)}
-                  className={`flex items-center justify-between p-3.5 cursor-pointer hover:bg-slate-50/50 transition-colors gap-3 ${
-                    matched ? "bg-[#1F5A3A]/5" : "bg-white"
+                  className={`flex items-center justify-between p-3.5 cursor-pointer hover:bg-[var(--surface-2)] transition-colors gap-3 ${
+                    matched ? "bg-[var(--primary-soft)]/20" : "bg-[var(--surface)]"
                   }`}
                 >
                   {/* Crop Icon + details */}
                   <div className="flex items-center gap-3 min-w-0">
                     <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0 ${
-                      matched ? "bg-[#1F5A3A]/10 text-[#1F5A3A]" : "bg-slate-100 text-slate-700"
+                      matched ? "bg-[var(--primary-soft)] text-[var(--primary)]" : "bg-[var(--surface-3)] text-[var(--ink-2)]"
                     }`}>
                       {emoji}
                     </div>
                     <div className="min-w-0">
-                      <div className="text-sm font-semibold text-slate-800 flex items-center gap-1.5 flex-wrap">
+                      <div className="text-sm font-semibold text-[var(--ink)] flex items-center gap-1.5 flex-wrap">
                         <span>{p.commodity}</span>
                         {matched && (
-                          <span className="text-[9px] font-bold uppercase tracking-wider bg-[#1F5A3A] text-white px-1.5 py-0.5 rounded">
+                          <span className="text-[9px] font-bold uppercase tracking-wider bg-[var(--primary)] text-[var(--primary-ink)] px-1.5 py-0.5 rounded">
                             Your Crop
                           </span>
                         )}
                       </div>
-                      <div className="text-[11px] text-slate-400 truncate font-medium mt-0.5">
+                      <div className="text-[11px] text-[var(--ink-3)] truncate font-medium mt-0.5">
                         {p.market} • {p.variety}
                       </div>
                     </div>
@@ -345,22 +345,22 @@ const PricesScreen = ({ user, prices, state, lang }) => {
 
                   {/* Price and trend on the right */}
                   <div className="text-right flex-shrink-0">
-                    <div className="font-serif font-bold text-xl text-[#1F5A3A] tracking-tight leading-none">
+                    <div className="font-serif font-bold text-xl text-[var(--primary)] tracking-tight leading-none">
                       {formatINR(p.modal)}
-                      <span className="font-sans font-normal text-[10px] text-slate-400 ml-0.5">/q</span>
+                      <span className="font-sans font-normal text-[10px] text-[var(--ink-3)] ml-0.5">/q</span>
                     </div>
                     <div className="flex items-center justify-end gap-1 mt-1">
                       {p.history && p.history.length > 1 ? (
                         <span className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold ${
                           isUp 
-                            ? "bg-[#1F5A3A]/10 text-[#1F5A3A]" 
-                            : "bg-[#B05E2E]/10 text-[#B05E2E]"
+                            ? "bg-[var(--primary-soft)] text-[var(--primary)]" 
+                            : "bg-[var(--terra-soft)] text-[var(--terra)]"
                         }`}>
-                          <Icon name={isUp ? "trendUp" : "trendDown"} size={8} color={isUp ? "#1F5A3A" : "#B05E2E"} stroke={3} />
+                          <Icon name={isUp ? "trendUp" : "trendDown"} size={8} color={isUp ? "var(--primary)" : "var(--terra)"} stroke={3} />
                           {isUp ? "+" : ""}{pct.toFixed(1)}%
                         </span>
                       ) : (
-                        <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full text-[10px] font-bold">
+                        <span className="bg-[var(--surface-3)] text-[var(--ink-3)] px-2 py-0.5 rounded-full text-[10px] font-bold">
                           {p.date || "Latest"}
                         </span>
                       )}
@@ -369,14 +369,14 @@ const PricesScreen = ({ user, prices, state, lang }) => {
                 </div>
 
                 {isOpen && (
-                  <div className="p-3.5 border-t border-slate-50 bg-slate-50/20">
+                  <div className="p-3.5 border-t border-[var(--border)] bg-[var(--surface-2)]/30">
                     {/* Detailed Chart */}
                     <div className="mb-4">
-                      <div className="text-xs font-semibold text-slate-500 mb-2">7-day price trend details</div>
+                      <div className="text-xs font-semibold text-[var(--ink-3)] mb-2">7-day price trend details</div>
                       {p.history?.length > 1 ? (
                         <PriceChart history={p.history} />
                       ) : (
-                        <div className="bg-slate-100 text-slate-500 rounded-xl p-3 text-xs text-center font-medium">
+                        <div className="bg-[var(--surface-3)] text-[var(--ink-3)] rounded-xl p-3 text-xs text-center font-medium">
                           Current official snapshot only. Historical price tracking is not available yet.
                         </div>
                       )}
@@ -385,22 +385,22 @@ const PricesScreen = ({ user, prices, state, lang }) => {
                     {/* Min/Max/Modal stats */}
                     <div className="grid grid-cols-3 gap-2.5">
                       {[
-                        { label: "Min Price", val: p.min, color: "text-[#B05E2E]", bg: "bg-[#B05E2E]/5" },
-                        { label: "Modal Rate", val: p.modal, color: "text-[#1F5A3A]", bg: "bg-[#1F5A3A]/5" },
-                        { label: "Max Price", val: p.max, color: "text-slate-800", bg: "bg-slate-100/50" },
+                        { label: "Min Price", val: p.min, color: "text-[var(--terra)]", bg: "bg-[var(--terra-soft)]" },
+                        { label: "Modal Rate", val: p.modal, color: "text-[var(--primary)]", bg: "bg-[var(--primary-soft)]" },
+                        { label: "Max Price", val: p.max, color: "text-[var(--ink)]", bg: "bg-[var(--surface-3)]" },
                       ].map(stat => (
-                        <div key={stat.label} className={`p-3 rounded-xl border border-slate-100 ${stat.bg}`}>
-                          <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">{stat.label}</div>
+                        <div key={stat.label} className={`p-3 rounded-xl border border-[var(--border)] ${stat.bg}`}>
+                          <div className="text-[10px] font-semibold text-[var(--ink-3)] uppercase tracking-wider mb-1">{stat.label}</div>
                           <div className={`font-serif font-bold text-base leading-tight ${stat.color}`}>{formatINR(stat.val)}</div>
                         </div>
                       ))}
                     </div>
 
                     <div className="mt-4">
-                      <button className="w-full h-11 bg-white border border-slate-200 rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 cursor-pointer transition-colors">
-                        <Icon name="bell" size={14} />
+                      <button className="w-full h-11 bg-[var(--surface)] border border-[var(--border)] rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold text-[var(--ink-2)] hover:bg-[var(--surface-2)] cursor-pointer transition-colors">
+                        <Icon name="bell" size={14} color="var(--ink-2)" />
                         Set Price Alert
-                        <span className="text-[9px] font-bold uppercase tracking-wider bg-[#C8902C]/10 text-[#C8902C] px-1.5 py-0.5 rounded ml-1">Soon</span>
+                        <span className="text-[9px] font-bold uppercase tracking-wider bg-[var(--accent-gold-soft)] text-[var(--gold)] px-1.5 py-0.5 rounded ml-1">Soon</span>
                       </button>
                     </div>
                   </div>
@@ -551,8 +551,8 @@ const WeatherScreen = ({ weather, lang }) => {
         <div style={{
           padding: "24px 20px",
           borderRadius: 22,
-          background: "linear-gradient(135deg, #DBE7F0 0%, #B3CDDE 100%)",
-          color: "#1B3854",
+          background: "var(--weather-banner-bg)",
+          color: "var(--weather-banner-text)",
           position: "relative", overflow: "hidden"
         }}>
           <div style={{ position: "absolute", top: -10, right: -10, opacity: 0.25 }}>
@@ -647,9 +647,9 @@ const WeatherScreen = ({ weather, lang }) => {
       <div style={{ padding: "0 16px 28px", display: "grid", gap: 10 }}>
         {w.advisory.map((a, i) => {
           const cfg = {
-            warn: { bg: "var(--terra-soft)", color: "#7A3A14", icon: "warning" },
-            info: { bg: "#D6E2F0", color: "#1B3854", icon: "info" },
-            tip: { bg: "var(--gold-soft)", color: "#6B4E14", icon: "leaf" },
+            warn: { bg: "var(--advisory-warn-bg)", color: "var(--advisory-warn-text)", icon: "warning" },
+            info: { bg: "var(--advisory-info-bg)", color: "var(--advisory-info-text)", icon: "info" },
+            tip: { bg: "var(--advisory-tip-bg)", color: "var(--advisory-tip-text)", icon: "leaf" },
           }[a.type];
           return (
             <div key={i} className="card tight" style={{ background: cfg.bg, border: 0, display: "flex", gap: 12 }}>
@@ -807,7 +807,7 @@ const NearbyScreen = ({ user, listings, onOpenListing, initialCategory = "all", 
               </div>
               <div style={{
                 position: "absolute", top: 8, right: 8,
-                background: "var(--primary)", color: "white",
+                background: "var(--primary)", color: "var(--primary-ink)",
                 padding: "3px 8px", borderRadius: 999,
                 fontSize: 11, fontWeight: 600
               }}>
@@ -1043,7 +1043,7 @@ const HeatMap = ({ pins, center, radius, activePin, setActivePin, onOpenListing 
       {active && (
         <div onClick={() => onOpenListing(active)} style={{
           position: "absolute", bottom: 12, left: 12, right: 12,
-          background: "white", borderRadius: 12, padding: 10,
+          background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, padding: 10,
           display: "flex", gap: 10, alignItems: "center",
           boxShadow: "var(--shadow-lg)", animation: "scaleIn 180ms",
           zIndex: 1000, cursor: "pointer"
@@ -1290,8 +1290,8 @@ const SchemesScreen = ({ user, initialUpdates = [], initialState = "loading" }) 
               </div>
 
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderTop: "1px solid var(--border)", paddingTop: 8, marginTop: 4 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 4, color: "#1F5A3A", fontSize: 11, fontWeight: 600 }}>
-                  <Icon name="checkCircle" size={13} color="#1F5A3A" />
+                <div style={{ display: "flex", alignItems: "center", gap: 4, color: "var(--primary)", fontSize: 11, fontWeight: 600 }}>
+                  <Icon name="checkCircle" size={13} color="var(--primary)" />
                   <span>Verified Link</span>
                 </div>
                 <span style={{ fontSize: 10.5, color: "var(--ink-3)" }}>{item.date}</span>
@@ -1328,11 +1328,10 @@ const SchemesScreen = ({ user, initialUpdates = [], initialState = "loading" }) 
               {openItem.title}
             </div>
 
-            {/* Proof verification seal */}
             <div
               style={{
-                background: "rgba(31, 90, 58, 0.05)",
-                border: "1px solid rgba(31, 90, 58, 0.15)",
+                background: "var(--primary-soft)",
+                border: "1px solid color-mix(in srgb, var(--primary) 15%, transparent)",
                 borderRadius: 10,
                 padding: "10px 12px",
                 marginTop: 12,
@@ -1341,11 +1340,11 @@ const SchemesScreen = ({ user, initialUpdates = [], initialState = "loading" }) 
                 gap: 10
               }}
             >
-              <div style={{ color: "#1F5A3A", display: "grid", placeItems: "center", marginTop: 1 }}>
-                <Icon name="checkCircle" size={18} color="#1F5A3A" />
+              <div style={{ color: "var(--primary)", display: "grid", placeItems: "center", marginTop: 1 }}>
+                <Icon name="checkCircle" size={18} color="var(--primary)" />
               </div>
               <div style={{ fontSize: 12, color: "var(--ink-2)", lineHeight: 1.35 }}>
-                <div style={{ fontWeight: 700, color: "#1F5A3A" }}>Official Source Verified</div>
+                <div style={{ fontWeight: 700, color: "var(--primary)" }}>Official Source Verified</div>
                 <div style={{ marginTop: 2 }}>This link directs to the authorized government portal:</div>
                 <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--primary)", marginTop: 4, wordBreak: "break-all", background: "var(--surface)", padding: "4px 8px", borderRadius: 4, border: "1px solid var(--border)" }}>
                   {openItem.link}

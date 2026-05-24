@@ -8,10 +8,10 @@ const { useState: useStateD, useMemo: useMemoD } = React;
 
 // ---------- Stage pipeline ----------
 const ORDER_STAGES = [
-  { id: "new",         label: "New",         color: "#B05E2E" },
+  { id: "new",         label: "New",         color: "var(--terra)" },
   { id: "confirmed",   label: "Confirmed",   color: "#2E4A7F" },
   { id: "in_progress", label: "In Progress", color: "#7A4F9E" },
-  { id: "delivered",   label: "Delivered",   color: "#1F5A3A" },
+  { id: "delivered",   label: "Delivered",   color: "var(--primary)" },
   { id: "completed",   label: "Completed",   color: "#5C6650" },
 ];
 const stageIdx = (id) => ORDER_STAGES.findIndex(s => s.id === id);
@@ -55,7 +55,7 @@ const DashboardScreen = ({ myListings, orders, onBack, onOpenListing, onPostList
       key: "orders", label: "Open Orders",
       value: openOrders.length,
       sub: openValue > 0 ? `${formatINR(openValue)} value` : "Nothing pending",
-      icon: "truck", accent: "#B05E2E",
+      icon: "truck", accent: "var(--terra)",
       onClick: () => setTab("orders"),
     },
     {
@@ -69,19 +69,19 @@ const DashboardScreen = ({ myListings, orders, onBack, onOpenListing, onPostList
   ];
 
   return (
-    <div className="scroll bg-white" data-screen-label="P2 Dashboard">
-      <div className="topbar border-b border-slate-100 flex items-center justify-between px-4 py-2 bg-white">
-        <button className="w-11 h-11 rounded-full flex items-center justify-center hover:bg-slate-50 transition-colors active:scale-95 cursor-pointer" onClick={onBack}>
+    <div className="scroll bg-[var(--bg)]" data-screen-label="P2 Dashboard">
+      <div className="topbar border-b border-[var(--border)] flex items-center justify-between px-4 py-2 bg-[var(--surface)]">
+        <button className="w-11 h-11 rounded-full flex items-center justify-center hover:bg-[var(--surface-2)] transition-colors active:scale-95 cursor-pointer" onClick={onBack}>
           <Icon name="back" size={20} />
         </button>
-        <div className="title font-bold text-slate-800 text-lg">Seller Dashboard</div>
-        <button className="w-11 h-11 rounded-full flex items-center justify-center hover:bg-slate-50 transition-colors active:scale-95 cursor-pointer" onClick={() => onPostListing("listing")}>
-          <Icon name="plus" size={20} color="#1F5A3A" />
+        <div className="title font-bold text-[var(--ink)] text-lg">Seller Dashboard</div>
+        <button className="w-11 h-11 rounded-full flex items-center justify-center hover:bg-[var(--surface-2)] transition-colors active:scale-95 cursor-pointer" onClick={() => onPostListing("listing")}>
+          <Icon name="plus" size={20} color="var(--primary)" />
         </button>
       </div>
 
       {/* Tabs */}
-      <div className="px-3 pt-2 bg-white border-b border-slate-100">
+      <div className="px-3 pt-2 bg-[var(--surface)] border-b border-[var(--border)]">
         <div className="flex gap-2 overflow-x-auto scrollbar-none">
           {[
             { id: "overview", label: "Overview" },
@@ -94,15 +94,15 @@ const DashboardScreen = ({ myListings, orders, onBack, onOpenListing, onPostList
               onClick={() => setTab(s.id)}
               className={`px-3 py-3 border-b-2 text-xs font-semibold tracking-wide whitespace-nowrap transition-all duration-150 cursor-pointer ${
                 tab === s.id 
-                  ? "border-[#1F5A3A] text-[#1F5A3A] font-bold" 
-                  : "border-transparent text-slate-500 hover:text-slate-700"
+                  ? "border-[var(--primary)] text-[var(--primary)] font-bold" 
+                  : "border-transparent text-[var(--ink-3)] hover:text-[var(--ink)]"
               }`}
             >{s.label}</button>
           ))}
         </div>
       </div>
 
-      <div className="scroll p-4 bg-slate-50/50">
+      <div className="scroll p-4 bg-[var(--surface-2)]">
         {tab === "overview" && (
           <OverviewTab
             stats={stats} listings={listings} services={services} orders={orders}
@@ -171,40 +171,40 @@ const OverviewTab = ({ stats, listings, services, orders, onJumpTab, onOpenListi
           <button 
             key={s.key} 
             onClick={s.onClick} 
-            className="group relative flex flex-col bg-white border border-slate-100 rounded-2xl p-4 shadow-sm text-left active:scale-[0.98] transition-all duration-200 cursor-pointer overflow-hidden"
+            className="group relative flex flex-col bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-4 shadow-sm text-left active:scale-[0.98] transition-all duration-200 cursor-pointer overflow-hidden"
           >
             <div className="absolute top-0 left-0 right-0 h-1" style={{ backgroundColor: s.accent }} />
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors" style={{ backgroundColor: `${s.accent}15`, color: s.accent }}>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors" style={{ backgroundColor: `color-mix(in srgb, ${s.accent} 15%, transparent)`, color: s.accent }}>
                 <Icon name={s.icon} size={16} />
               </div>
-              <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">{s.label}</div>
+              <div className="text-[11px] font-semibold text-[var(--ink-3)] uppercase tracking-wider">{s.label}</div>
             </div>
-            <div className={`font-serif font-bold text-slate-850 tracking-tight leading-none ${s.compact ? 'text-xl' : 'text-3xl'}`}>
+            <div className={`font-serif font-bold text-[var(--ink)] tracking-tight leading-none ${s.compact ? 'text-xl' : 'text-3xl'}`}>
               {typeof s.value === "number"
                 ? <AnimatedNumber value={s.value} />
                 : s.value}
             </div>
-            <div className="text-[11px] text-slate-400 font-medium mt-2 flex items-center justify-between">
+            <div className="text-[11px] text-[var(--ink-3)] font-medium mt-2 flex items-center justify-between">
               <span>{s.sub}</span>
-              <Icon name="chevron" size={10} color="#94a3b8" />
+              <Icon name="chevron" size={10} color="var(--ink-3)" />
             </div>
           </button>
         ))}
       </div>
 
       {/* Sales pipeline */}
-      <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm">
+      <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-4 shadow-sm">
         <div className="flex items-center justify-between mb-4">
-          <h4 className="text-sm font-bold text-slate-800">Sales Pipeline</h4>
-          <button onClick={() => onJumpTab("orders")} className="text-xs font-semibold text-[#1F5A3A] hover:underline cursor-pointer">See all orders</button>
+          <h4 className="text-sm font-bold text-[var(--ink)]">Sales Pipeline</h4>
+          <button onClick={() => onJumpTab("orders")} className="text-xs font-semibold text-[var(--primary)] hover:underline cursor-pointer">See all orders</button>
         </div>
         <div className="grid grid-cols-5 items-end gap-2 pt-4">
           {pipelineCounts.map(p => (
             <div key={p.id} className="flex flex-col items-center gap-1.5 group cursor-pointer">
               <div className="relative w-full flex justify-center">
                 {p.count > 0 && (
-                  <span className="absolute -top-6 text-[10px] font-bold text-slate-800 bg-slate-50 border border-slate-100 px-1 py-0.5 rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="absolute -top-6 text-[10px] font-bold text-[var(--ink)] bg-[var(--surface-3)] border border-[var(--border)] px-1 py-0.5 rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
                     {p.count}
                   </span>
                 )}
@@ -217,8 +217,8 @@ const OverviewTab = ({ stats, listings, services, orders, onJumpTab, onOpenListi
                   }} 
                 />
               </div>
-              <div className="font-serif font-bold text-base text-slate-800 leading-none mt-1">{p.count}</div>
-              <div className="text-[9px] font-semibold text-slate-400 uppercase tracking-tight text-center">{p.label}</div>
+              <div className="font-serif font-bold text-base text-[var(--ink)] leading-none mt-1">{p.count}</div>
+              <div className="text-[9px] font-semibold text-[var(--ink-3)] uppercase tracking-tight text-center">{p.label}</div>
             </div>
           ))}
         </div>

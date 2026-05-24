@@ -259,7 +259,17 @@ function App() {
   const [discoverScreen, setDiscoverScreen]   = useState("prices");
   const [browseInitialCat, setBrowseInitialCat]   = useState("all");
   const [nearbyInitialCat, setNearbyInitialCat]   = useState("all");
-  const [modal, setModal]   = useState(null);
+  const [modalStack, setModalStack] = useState([]);
+  const modal = modalStack[modalStack.length - 1] || null;
+  const setModal = (m) => {
+    if (m === null) {
+      setModalStack([]);
+    } else {
+      setModalStack([m]);
+    }
+  };
+  const pushModal = (m) => setModalStack(prev => [...prev, m]);
+  const popModal = () => setModalStack(prev => prev.slice(0, -1));
   const [toasts, setToasts] = useState([]);
 
   const showToast = (msg, icon = "check") => {
@@ -611,40 +621,40 @@ function App() {
         {/* Modals */}
         {modal?.kind === "detail" && (
           <ModalScreen>
-            <ListingDetailScreen listing={modal.listing} listings={listings} onBack={() => setModal(null)} onMessage={() => { setModal(null); setTimeout(() => handleMessageSeller(modal.listing), 50); }} onOpenListing={(l) => setModal({ kind: "detail", listing: l })} lang={lang} onToast={showToast} />
+            <ListingDetailScreen listing={modal.listing} listings={listings} onBack={popModal} onMessage={() => { setModal(null); setTimeout(() => handleMessageSeller(modal.listing), 50); }} onOpenListing={(l) => pushModal({ kind: "detail", listing: l })} lang={lang} onToast={showToast} />
           </ModalScreen>
         )}
         {modal?.kind === "post" && (
           <ModalScreen>
-            <PostListingScreen onBack={() => setModal(null)} onPost={handlePost} prefill={modal.prefill} lang={lang} />
+            <PostListingScreen onBack={popModal} onPost={handlePost} prefill={modal.prefill} lang={lang} />
           </ModalScreen>
         )}
         {modal?.kind === "notifications" && (
           <ModalScreen>
-            <NotificationsScreen notifications={notifications} onBack={() => setModal(null)} onOpenNotif={handleNotifTap} lang={lang} />
+            <NotificationsScreen notifications={notifications} onBack={popModal} onOpenNotif={handleNotifTap} lang={lang} />
           </ModalScreen>
         )}
         {modal?.kind === "settings" && (
           <ModalScreen>
-            <SettingsScreen onBack={() => setModal(null)} onEditProfile={() => { setModal(null); setTab("profile"); setProfileEditing(true); }} user={user} lang={lang} setLang={(l) => setTweak("lang", l)} theme={theme} setTheme={(t) => setTweak("theme", t)} dark={dark} setDark={(d) => setTweak("dark", d)} density={density} setDensity={(d) => setTweak("density", d)} onLogout={handleLogout} onOpenHelp={() => setModal({ kind: "help" })} onResetDemo={resetDemo} />
+            <SettingsScreen onBack={popModal} onEditProfile={() => { setModal(null); setTab("profile"); setProfileEditing(true); }} user={user} lang={lang} setLang={(l) => setTweak("lang", l)} theme={theme} setTheme={(t) => setTweak("theme", t)} dark={dark} setDark={(d) => setTweak("dark", d)} density={density} setDensity={(d) => setTweak("density", d)} onLogout={handleLogout} onOpenHelp={() => pushModal({ kind: "help" })} onResetDemo={resetDemo} />
           </ModalScreen>
         )}
         {modal?.kind === "help" && (
-          <ModalScreen><HelpScreen onBack={() => setModal(null)} lang={lang} /></ModalScreen>
+          <ModalScreen><HelpScreen onBack={popModal} lang={lang} /></ModalScreen>
         )}
         {modal?.kind === "my-listings" && (
           <ModalScreen>
-            <MyListingsScreen myListings={myListings} onBack={() => setModal(null)} onOpenListing={openListing} onPostListing={(prefill) => setModal({ kind: "post", prefill })} lang={lang} />
+            <MyListingsScreen myListings={myListings} onBack={popModal} onOpenListing={openListing} onPostListing={(prefill) => pushModal({ kind: "post", prefill })} lang={lang} />
           </ModalScreen>
         )}
         {modal?.kind === "dashboard" && (
           <ModalScreen>
-            <DashboardScreen myListings={myListings} orders={orders} onBack={() => setModal(null)} onOpenListing={openListing} onPostListing={(mode) => setModal({ kind: "post", prefill: { mode: mode || "listing" } })} lang={lang} />
+            <DashboardScreen myListings={myListings} orders={orders} onBack={popModal} onOpenListing={openListing} onPostListing={(mode) => pushModal({ kind: "post", prefill: { mode: mode || "listing" } })} lang={lang} />
           </ModalScreen>
         )}
         {modal?.kind === "inquiries" && (
           <ModalScreen>
-            <InquiriesScreen inquiries={inquiries} onBack={() => setModal(null)} initialTab={modal.which} openInquiry={modal.inquiryId} onOpenListing={openListing} lang={lang} />
+            <InquiriesScreen inquiries={inquiries} onBack={popModal} initialTab={modal.which} openInquiry={modal.inquiryId} onOpenListing={openListing} lang={lang} />
           </ModalScreen>
         )}
 
@@ -657,7 +667,7 @@ function App() {
       </div>
 
       {/* Tab bar */}
-      <div className="relative grid grid-cols-4 bg-white border-t border-slate-100 flex-shrink-0 pt-1 pb-safe shadow-[0_-2px_10px_rgba(0,0,0,0.02)]">
+      <div className="relative grid grid-cols-4 bg-[var(--surface)] border-t border-[var(--border)] flex-shrink-0 pt-1 pb-safe shadow-[0_-2px_10px_rgba(0,0,0,0.02)]">
         {/* Sliding indicator */}
         <div className="tab-indicator" style={{ left: `${TAB_ORDER.indexOf(tab) * 25}%` }} />
 
@@ -671,15 +681,15 @@ function App() {
             key={item.id} 
             className={`flex flex-col items-center justify-center gap-0.5 h-12 text-[10px] font-bold tracking-wide transition-colors cursor-pointer ${
               tab === item.id 
-                ? "text-[#1F5A3A]" 
-                : "text-slate-400 hover:text-slate-600"
+                ? "text-[var(--primary)]" 
+                : "text-[var(--ink-3)] hover:text-[var(--ink-2)]"
             }`} 
             onClick={() => setTab(item.id)}
           >
             <div className="relative flex items-center justify-center">
               <Icon name={item.icon} size={22} stroke={tab === item.id ? 2 : 1.6} />
               {item.id === "profile" && unreadNotifs > 0 && (
-                <span className="absolute -top-1.5 -right-2.5 min-w-[16px] h-4 px-1 bg-[#B05E2E] text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-white">
+                <span className="absolute -top-1.5 -right-2.5 min-w-[16px] h-4 px-1 bg-[var(--terra)] text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-[var(--surface)]">
                   {unreadNotifs}
                 </span>
               )}
