@@ -5,3 +5,7 @@ local.settings.*.json
 local.settings.sample.json
 .env*
 *.log
+test_*.js
+check_*.js
+*.tmp
+*.temp

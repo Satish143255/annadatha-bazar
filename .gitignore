@@ -57,3 +57,6 @@ coverage/
 # Stitch design extracts
 stitch_modern_visual_interface_design_extracted/
 
+# Azure Functions local settings
+api/local.settings.json
+api/local.settings.*.json
