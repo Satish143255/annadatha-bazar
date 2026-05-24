@@ -8,201 +8,248 @@ import { Button, Avatar, Empty, ImgPh, Sheet, useT, formatINR, AnimatedNumber } 
 const { useState: useStateP, useRef: useRefP, useEffect: useEffectP } = React;
 
 // ---------- P1: My Profile ----------
-const ProfileScreen = ({ user, myListings, inquiries, orders = [], onOpenSettings, onOpenListings, onOpenDashboard, onOpenInquiries, onLogout, lang }) => {
+const ProfileScreen = ({ user, myListings, inquiries, orders = [], onOpenSettings, onOpenListings, onOpenDashboard, onOpenInquiries, onLogout, onUpdateProfile, editing, setEditing, lang }) => {
   const t = useT(lang);
   const received = inquiries.filter(i => i.type === "received").length;
   const sent = inquiries.filter(i => i.type === "sent").length;
   const activeListings = myListings.filter(l => l.status === "active" && l.kind !== "service").length;
   const activeServices = myListings.filter(l => l.status === "active" && l.kind === "service").length;
   const openOrders = orders.filter(o => !["completed", "cancelled"].includes(o.stage)).length;
-  const [editing, setEditing] = useStateP(false);
   const [name, setName] = useStateP(user.name);
+  const [crops, setCrops] = useStateP(user.crops || []);
+  const [addCropOpen, setAddCropOpen] = useStateP(false);
+
+  useEffectP(() => {
+    setName(user.name);
+    setCrops(user.crops || []);
+  }, [user]);
+
   const locationLabel = [user.village, user.district, user.state].filter(Boolean).join(", ")
     || (user.latitude != null && user.longitude != null ? "GPS location saved" : "Location not added");
 
+  const handleRemoveCrop = (cropId) => {
+    setCrops(prev => prev.filter(c => c !== cropId));
+  };
+
+  const handleAddCrop = (cropId) => {
+    if (!crops.includes(cropId)) {
+      setCrops([...crops, cropId]);
+    }
+    setAddCropOpen(false);
+  };
+
+  const handleSave = () => {
+    onUpdateProfile?.({ name, crops });
+    setEditing(false);
+  };
+
   return (
-    <div className="scroll bg-white">
-      <div className="topbar border-b border-slate-100 flex items-center justify-between px-4 py-2 bg-white">
-        <div className="title font-bold text-slate-800 text-lg">{t("profile.title")}</div>
-        <button className="w-11 h-11 rounded-full flex items-center justify-center hover:bg-slate-50 transition-colors active:scale-95 cursor-pointer" onClick={onOpenSettings}>
-          <Icon name="settings" size={20} />
+    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      <div className="topbar with-border flex items-center justify-between">
+        <div className="title font-bold text-[var(--ink)] text-lg">{t("profile.title")}</div>
+        <button className="icon-btn flex items-center justify-center hover:bg-[var(--surface-2)] transition-colors active:scale-95 cursor-pointer" onClick={onOpenSettings}>
+          <Icon name="settings" size={20} color="var(--ink)" />
         </button>
       </div>
 
-      {/* Header */}
-      <div className="px-4 py-6 flex flex-col items-center text-center bg-slate-50/20">
-        <Avatar name={user.name} size="lg" />
-        {editing ? (
-          <input
-            value={name} onChange={e => setName(e.target.value)}
-            className="text-xl font-bold text-center mt-3 border-b-2 border-[#1F5A3A] bg-transparent outline-none text-slate-800 pb-1"
-          />
-        ) : (
-          <div className="text-xl font-bold text-slate-800 mt-3">{name}</div>
-        )}
-        <div className="flex items-center gap-1 mt-1.5 text-xs text-slate-500 font-medium">
-          <Icon name="pin" size={12} color="#72796e" />
-          <span>{locationLabel}</span>
-        </div>
-        <div className="text-[10px] text-slate-400 font-medium mt-1">
-          Member since {user.joined}
-        </div>
-      </div>
-
-      {/* Dashboard hero card */}
-      <div className="px-4 pb-4">
-        <button 
-          onClick={onOpenDashboard} 
-          className="w-full bg-[#1F5A3A] text-white p-4 rounded-2xl flex items-center justify-between shadow-sm active:scale-[0.98] transition-transform duration-100 cursor-pointer"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white">
-              <Icon name="trendUp" size={20} stroke={2.2} />
+      <div className="scroll bg-[var(--surface-2)]">
+        {/* Header Card */}
+        <div className="px-4 pt-6 pb-4">
+          <div className="bg-gradient-to-b from-[var(--primary)]/5 to-transparent border border-[var(--border)] rounded-3xl p-6 flex flex-col items-center text-center shadow-[0_2px_8px_rgba(0,0,0,0.01)] bg-[var(--surface)]">
+            <Avatar name={user.name} size="lg" className="ring-4 ring-[var(--surface)] shadow-sm" />
+            {editing ? (
+              <input
+                value={name} onChange={e => setName(e.target.value)}
+                className="text-xl font-bold text-center mt-4 border-b-2 border-[var(--primary)] bg-transparent outline-none text-[var(--ink)] pb-1 w-full max-w-[200px]"
+              />
+            ) : (
+              <div className="text-xl font-bold text-[var(--ink)] mt-4">{name}</div>
+            )}
+            <div className="flex items-center justify-center gap-1 mt-2 text-xs text-[var(--ink-3)] font-medium max-w-[280px]">
+              <Icon name="pin" size={12} color="var(--ink-3)" className="flex-shrink-0" />
+              <span className="truncate">{locationLabel}</span>
             </div>
-            <div className="text-left">
-              <div className="text-sm font-bold">Seller Dashboard</div>
-              <div className="text-[11px] text-white/80 font-medium mt-0.5">
-                {openOrders > 0
-                  ? `${openOrders} open ${openOrders === 1 ? "order" : "orders"} need attention`
-                  : "View listings, services & orders"}
-              </div>
+            <div className="text-[10px] text-[var(--ink-3)] font-semibold mt-2.5 bg-[var(--surface-2)] px-2.5 py-1 rounded-full uppercase tracking-wider">
+              Member since {user.joined}
             </div>
           </div>
-          <Icon name="chevron" size={18} className="opacity-80" />
-        </button>
-      </div>
+        </div>
 
-      {/* Stats for listings, services, and orders. */}
-      <div className="px-4 pb-4 grid grid-cols-3 gap-3">
-        <button onClick={onOpenListings} className="flex flex-col items-center bg-white border border-slate-100 rounded-xl p-3 shadow-sm active:scale-[0.98] transition-transform cursor-pointer">
-          <AnimatedNumber value={activeListings} className="font-serif font-bold text-2xl text-[#1F5A3A] leading-none mb-1.5" />
-          <div className="text-[10px] font-bold text-slate-450 uppercase tracking-wide">Listings</div>
-        </button>
-        <button onClick={onOpenListings} className="flex flex-col items-center bg-white border border-slate-100 rounded-xl p-3 shadow-sm active:scale-[0.98] transition-transform cursor-pointer">
-          <AnimatedNumber value={activeServices} className="font-serif font-bold text-2xl text-[#7A4F9E] leading-none mb-1.5" />
-          <div className="text-[10px] font-bold text-slate-450 uppercase tracking-wide">Services</div>
-        </button>
-        <button onClick={onOpenDashboard} className="flex flex-col items-center bg-white border border-slate-100 rounded-xl p-3 shadow-sm active:scale-[0.98] transition-transform relative cursor-pointer">
-          <AnimatedNumber value={openOrders} className="font-serif font-bold text-2xl text-[#B05E2E] leading-none mb-1.5" />
-          <div className="text-[10px] font-bold text-slate-450 uppercase tracking-wide">Orders</div>
-          {openOrders > 0 && (
-            <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#B05E2E]" />
-          )}
-        </button>
-      </div>
-
-      {/* Crops */}
-      <div className="px-4 py-1.5 flex items-baseline justify-between">
-        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">My Crops</h3>
-      </div>
-      <div className="px-4 pb-4 flex flex-wrap gap-2">
-        {user.crops.map(cId => {
-          const c = CROPS.find(x => x.id === cId);
-          if (!c) return null;
-          return (
-            <div key={cId} className="h-9 px-4 rounded-full border border-slate-200/60 bg-slate-50 flex items-center gap-1.5 text-xs font-semibold text-slate-700">
-              <span className="text-sm">{c.emoji}</span>
-              <span>{c.name}</span>
-              {editing && (
-                <button className="ml-1.5 opacity-55 hover:opacity-100 transition-opacity cursor-pointer">
-                  <Icon name="close" size={10} />
-                </button>
-              )}
+        {/* Dashboard hero card */}
+        <div className="px-4 pb-4">
+          <button 
+            onClick={onOpenDashboard} 
+            className="w-full bg-[var(--primary)] text-[var(--primary-ink)] p-4 rounded-2xl flex items-center justify-between shadow-sm active:scale-[0.98] transition-transform duration-100 cursor-pointer"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-white/10 dark:bg-black/10 flex items-center justify-center">
+                <Icon name="trendUp" size={20} stroke={2.2} />
+              </div>
+              <div className="text-left">
+                <div className="text-sm font-bold">Seller Dashboard</div>
+                <div className="text-[11px] opacity-80 font-medium mt-0.5">
+                  {openOrders > 0
+                    ? `${openOrders} open ${openOrders === 1 ? "order" : "orders"} need attention`
+                    : "View listings, services & orders"}
+                </div>
+              </div>
             </div>
-          );
-        })}
-        {editing && (
-          <button className="h-9 px-3.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-655 flex items-center gap-1 text-xs font-bold transition-all cursor-pointer">
-            <Icon name="plus" size={12} /> Add
+            <Icon name="chevron" size={18} className="opacity-80" />
           </button>
-        )}
-      </div>
+        </div>
 
-      {/* Verification */}
-      <div className="px-4 py-1.5 flex items-baseline justify-between">
-        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Verification</h3>
-      </div>
-      <div className="px-4 pb-4">
-        <div className="grid grid-cols-3 gap-3 p-3 bg-white border border-slate-100 rounded-2xl shadow-sm">
-          {[
-            { label: "Phone", verified: true, icon: "phone" },
-            { label: "Location", verified: true, icon: "pin" },
-            { label: "Aadhaar", verified: false, icon: "user" },
-          ].map(v => (
-            <div key={v.label} className="flex-1 flex flex-col items-center p-3 bg-slate-50/50 rounded-xl border border-slate-100 relative">
-              <div className={`w-11 h-11 rounded-full flex items-center justify-center relative mb-2 transition-colors ${
-                v.verified 
-                  ? "bg-[#1F5A3A]/10 text-[#1F5A3A]" 
-                  : "bg-slate-100 text-slate-450"
-              }`}>
-                <Icon name={v.icon} size={18} />
-                {v.verified && (
-                  <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#1F5A3A] text-white flex items-center justify-center border-2 border-white shadow-sm">
-                    <Icon name="check" size={10} color="white" stroke={3} />
-                  </div>
+        {/* Stats for listings, services, and orders. */}
+        <div className="px-4 pb-4 grid grid-cols-3 gap-3">
+          <button onClick={onOpenListings} className="flex flex-col items-center bg-[var(--surface)] border border-[var(--border)] rounded-xl p-3 shadow-sm active:scale-[0.98] transition-transform cursor-pointer">
+            <AnimatedNumber value={activeListings} className="font-serif font-bold text-2xl text-[var(--primary)] leading-none mb-1.5" />
+            <div className="text-[10px] font-bold text-[var(--ink-3)] uppercase tracking-wide">Listings</div>
+          </button>
+          <button onClick={onOpenListings} className="flex flex-col items-center bg-[var(--surface)] border border-[var(--border)] rounded-xl p-3 shadow-sm active:scale-[0.98] transition-transform cursor-pointer">
+            <AnimatedNumber value={activeServices} className="font-serif font-bold text-2xl text-purple-600 dark:text-purple-400 leading-none mb-1.5" />
+            <div className="text-[10px] font-bold text-[var(--ink-3)] uppercase tracking-wide">Services</div>
+          </button>
+          <button onClick={onOpenDashboard} className="flex flex-col items-center bg-[var(--surface)] border border-[var(--border)] rounded-xl p-3 shadow-sm active:scale-[0.98] transition-transform relative cursor-pointer">
+            <AnimatedNumber value={openOrders} className="font-serif font-bold text-2xl text-[var(--terra)] leading-none mb-1.5" />
+            <div className="text-[10px] font-bold text-[var(--ink-3)] uppercase tracking-wide">Orders</div>
+            {openOrders > 0 && (
+              <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[var(--terra)]" />
+            )}
+          </button>
+        </div>
+
+        {/* Crops */}
+        <div className="px-4 py-1.5 flex items-baseline justify-between">
+          <h3 className="text-xs font-bold text-[var(--ink-3)] uppercase tracking-wider">My Crops</h3>
+        </div>
+        <div className="px-4 pb-4 flex flex-wrap gap-2">
+          {crops.length === 0 ? (
+            <div className="text-xs text-[var(--ink-3)] font-semibold italic py-1">No crops selected</div>
+          ) : (
+            crops.map(cId => {
+              const c = CROPS.find(x => x.id === cId);
+              if (!c) return null;
+              return (
+                <div key={cId} className="h-9 px-4 rounded-full border border-[var(--border)] bg-[var(--surface)] flex items-center gap-1.5 text-xs font-semibold text-[var(--ink-2)]">
+                  <span className="text-sm">{c.emoji}</span>
+                  <span>{c.name}</span>
+                  {editing && (
+                    <button onClick={() => handleRemoveCrop(cId)} className="ml-1.5 opacity-55 hover:opacity-100 transition-opacity cursor-pointer">
+                      <Icon name="close" size={10} color="var(--ink)" />
+                    </button>
+                  )}
+                </div>
+              );
+            })
+          )}
+          {editing && (
+            <button onClick={() => setAddCropOpen(true)} className="h-9 px-3.5 rounded-full bg-[var(--surface-3)] hover:bg-[var(--surface-4)] text-[var(--ink-2)] flex items-center gap-1 text-xs font-bold transition-all cursor-pointer">
+              <Icon name="plus" size={12} color="var(--ink)" /> Add
+            </button>
+          )}
+        </div>
+
+        {/* Verification */}
+        <div className="px-4 py-1.5 flex items-baseline justify-between">
+          <h3 className="text-xs font-bold text-[var(--ink-3)] uppercase tracking-wider">Verification</h3>
+        </div>
+        <div className="px-4 pb-4">
+          <div className="grid grid-cols-3 gap-3 p-3 bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-sm">
+            {[
+              { label: "Phone", verified: true, icon: "phone" },
+              { label: "Location", verified: true, icon: "pin" },
+              { label: "Aadhaar", verified: false, icon: "user" },
+            ].map(v => (
+              <div key={v.label} className="flex-1 flex flex-col items-center p-3 bg-[var(--surface-2)] rounded-xl border border-[var(--border)] relative">
+                <div className={`w-11 h-11 rounded-full flex items-center justify-center relative mb-2 transition-colors ${
+                  v.verified 
+                    ? "bg-[var(--primary-soft)] text-[var(--primary)]" 
+                    : "bg-[var(--surface-3)] text-[var(--ink-3)]"
+                }`}>
+                  <Icon name={v.icon} size={18} />
+                  {v.verified && (
+                    <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[var(--primary)] text-white flex items-center justify-center border-2 border-[var(--surface)] shadow-sm">
+                      <Icon name="check" size={10} color="white" stroke={3} />
+                    </div>
+                  )}
+                </div>
+                <div className="text-[11px] font-bold text-[var(--ink-2)]">{v.label}</div>
+                {!v.verified ? (
+                  <button className="text-[10px] font-bold text-[var(--primary)] hover:underline mt-1 cursor-pointer">Verify</button>
+                ) : (
+                  <div className="text-[9px] font-bold text-[var(--primary)] uppercase tracking-wider mt-1">Verified</div>
                 )}
               </div>
-              <div className="text-[11px] font-bold text-slate-700">{v.label}</div>
-              {!v.verified ? (
-                <button className="text-[10px] font-bold text-[#1F5A3A] hover:underline mt-1 cursor-pointer">Verify</button>
-              ) : (
-                <div className="text-[9px] font-bold text-[#1F5A3A] uppercase tracking-wider mt-1">Verified</div>
+            ))}
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="px-4 pb-4 grid grid-cols-2 gap-3">
+          <button 
+            onClick={editing ? handleSave : () => setEditing(true)}
+            className="h-11 w-full bg-[var(--primary)] text-[var(--primary-ink)] rounded-xl flex items-center justify-center gap-1.5 font-bold text-xs shadow-sm hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer"
+          >
+            <Icon name={editing ? "check" : "edit"} size={14} />
+            {editing ? "Save Changes" : t("profile.edit")}
+          </button>
+          <button className="h-11 w-full bg-[var(--surface)] border border-[var(--border)] text-[var(--ink-2)] rounded-xl flex items-center justify-center gap-1.5 font-bold text-xs shadow-sm hover:bg-[var(--surface-2)] active:scale-[0.98] transition-all cursor-pointer">
+            <Icon name="share" size={14} />
+            {t("profile.share")}
+          </button>
+        </div>
+
+        {/* Menu */}
+        <div className="px-4 pb-6">
+          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl overflow-hidden divide-y divide-[var(--border)] shadow-sm">
+            <button className="w-full h-[52px] px-4 flex items-center gap-3 hover:bg-[var(--surface-2)] transition-colors text-left cursor-pointer" onClick={onOpenDashboard}>
+              <div className="text-[var(--primary)]"><Icon name="trendUp" size={18} /></div>
+              <span className="flex-1 text-sm font-semibold text-[var(--ink-2)]">Seller Dashboard</span>
+              {openOrders > 0 && (
+                <span className="bg-[var(--terra)] text-white text-[9px] font-bold px-2 py-0.5 rounded-full">{openOrders} new</span>
               )}
-            </div>
+              <Icon name="chevron" size={16} color="var(--ink-3)" />
+            </button>
+            <button className="w-full h-[52px] px-4 flex items-center gap-3 hover:bg-[var(--surface-2)] transition-colors text-left cursor-pointer" onClick={onOpenListings}>
+              <div className="text-[var(--primary)]"><Icon name="grid" size={18} /></div>
+              <span className="flex-1 text-sm font-semibold text-[var(--ink-2)]">My Listings &amp; Services</span>
+              <span className="text-xs font-bold text-[var(--ink-3)] bg-[var(--surface-2)] px-2 py-0.5 rounded">{myListings.length}</span>
+              <Icon name="chevron" size={16} color="var(--ink-3)" />
+            </button>
+            <button className="w-full h-[52px] px-4 flex items-center gap-3 hover:bg-[var(--surface-2)] transition-colors text-left cursor-pointer" onClick={() => onOpenInquiries("received")}>
+              <div className="text-[var(--primary)]"><Icon name="chat" size={18} /></div>
+              <span className="flex-1 text-sm font-semibold text-[var(--ink-2)]">Inquiries</span>
+              <span className="text-xs font-bold text-[var(--ink-3)] bg-[var(--surface-2)] px-2 py-0.5 rounded">{received + sent}</span>
+              <Icon name="chevron" size={16} color="var(--ink-3)" />
+            </button>
+            <button className="w-full h-[52px] px-4 flex items-center gap-3 hover:bg-[var(--surface-2)] transition-colors text-left cursor-pointer" onClick={onOpenSettings}>
+              <div className="text-[var(--primary)]"><Icon name="settings" size={18} /></div>
+              <span className="flex-1 text-sm font-semibold text-[var(--ink-2)]">Settings</span>
+              <Icon name="chevron" size={16} color="var(--ink-3)" />
+            </button>
+            <button className="w-full h-[52px] px-4 flex items-center gap-3 hover:bg-[var(--surface-2)] transition-colors text-left cursor-pointer" onClick={onLogout}>
+              <div className="text-[var(--terra)]"><Icon name="logout" size={18} /></div>
+              <span className="flex-1 text-sm font-semibold text-[var(--terra)]">{t("profile.logout")}</span>
+              <Icon name="chevron" size={16} color="var(--ink-3)" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <Sheet open={addCropOpen} onClose={() => setAddCropOpen(false)} title="Add Crop">
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, maxHeight: "300px", overflowY: "auto" }}>
+          {CROPS.filter(c => !crops.includes(c.id)).map(c => (
+            <button
+              key={c.id}
+              className="chip bg-[var(--surface-2)] text-[var(--ink-2)] hover:bg-[var(--surface-3)]"
+              style={{ height: 44, padding: "0 12px", justifyContent: "flex-start", borderRadius: 10, cursor: "pointer" }}
+              onClick={() => handleAddCrop(c.id)}
+            >
+              <span className="text-sm mr-2">{c.emoji}</span>
+              <span className="font-semibold text-xs text-[var(--ink)]">{c.name}</span>
+            </button>
           ))}
         </div>
-      </div>
-
-      {/* Actions */}
-      <div className="px-4 pb-4 grid grid-cols-2 gap-3">
-        <button 
-          onClick={() => setEditing(!editing)}
-          className="h-11 w-full bg-[#1F5A3A] text-white rounded-xl flex items-center justify-center gap-1.5 font-bold text-xs shadow-sm hover:bg-[#143C26] active:scale-[0.98] transition-all cursor-pointer"
-        >
-          <Icon name={editing ? "check" : "edit"} size={14} />
-          {editing ? "Save Changes" : t("profile.edit")}
-        </button>
-        <button className="h-11 w-full bg-white border border-slate-200 text-slate-700 rounded-xl flex items-center justify-center gap-1.5 font-bold text-xs shadow-sm hover:bg-slate-50 active:scale-[0.98] transition-all cursor-pointer">
-          <Icon name="share" size={14} />
-          {t("profile.share")}
-        </button>
-      </div>
-
-      {/* Menu */}
-      <div className="px-4 pb-20">
-        <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden divide-y divide-slate-100 shadow-sm">
-          <button className="w-full h-[52px] px-4 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left cursor-pointer" onClick={onOpenDashboard}>
-            <div className="text-[#1F5A3A]"><Icon name="trendUp" size={18} /></div>
-            <span className="flex-1 text-sm font-semibold text-slate-700">Seller Dashboard</span>
-            {openOrders > 0 && (
-              <span className="bg-[#B05E2E] text-white text-[9px] font-bold px-2 py-0.5 rounded-full">{openOrders} new</span>
-            )}
-            <Icon name="chevron" size={16} color="#94a3b8" />
-          </button>
-          <button className="w-full h-[52px] px-4 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left cursor-pointer" onClick={onOpenListings}>
-            <div className="text-[#1F5A3A]"><Icon name="grid" size={18} /></div>
-            <span className="flex-1 text-sm font-semibold text-slate-700">My Listings &amp; Services</span>
-            <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded">{myListings.length}</span>
-            <Icon name="chevron" size={16} color="#94a3b8" />
-          </button>
-          <button className="w-full h-[52px] px-4 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left cursor-pointer" onClick={() => onOpenInquiries("received")}>
-            <div className="text-[#1F5A3A]"><Icon name="chat" size={18} /></div>
-            <span className="flex-1 text-sm font-semibold text-slate-700">Inquiries</span>
-            <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded">{received + sent}</span>
-            <Icon name="chevron" size={16} color="#94a3b8" />
-          </button>
-          <button className="w-full h-[52px] px-4 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left cursor-pointer" onClick={onOpenSettings}>
-            <div className="text-[#1F5A3A]"><Icon name="settings" size={18} /></div>
-            <span className="flex-1 text-sm font-semibold text-slate-700">Settings</span>
-            <Icon name="chevron" size={16} color="#94a3b8" />
-          </button>
-          <button className="w-full h-[52px] px-4 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left cursor-pointer" onClick={onLogout}>
-            <div className="text-[#B05E2E]"><Icon name="logout" size={18} /></div>
-            <span className="flex-1 text-sm font-semibold text-[#B05E2E]">{t("profile.logout")}</span>
-            <Icon name="chevron" size={16} color="#94a3b8" />
-          </button>
-        </div>
-      </div>
+      </Sheet>
     </div>
   );
 };

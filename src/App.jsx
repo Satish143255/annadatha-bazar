@@ -102,6 +102,7 @@ function App() {
 
   const unreadNotifs = notifications.filter(n => n.unread).length;
   const [weather, setWeather] = useState(null);
+  const [profileEditing, setProfileEditing] = useState(false);
 
   // Background identity fetch during Splash
   useEffect(() => {
@@ -495,6 +496,25 @@ function App() {
     showToast("Logged out successfully", "check");
   };
 
+  const handleUpdateProfile = async (updates) => {
+    let profile;
+    const updatedUser = { ...user, ...updates };
+    if (DEMO_MODE) {
+      profile = updatedUser;
+      const usersList = LS.get("mock_users_list", []);
+      const idx = usersList.findIndex(u => u.email?.toLowerCase() === user?.email?.toLowerCase());
+      if (idx !== -1) {
+        usersList[idx].profile = profile;
+        LS.set("mock_users_list", usersList);
+      }
+      LS.set("mock_user", profile);
+    } else {
+      profile = await saveProfile(updatedUser);
+    }
+    setUser(profile);
+    showToast("Profile updated successfully", "check");
+  };
+
   const resetDemo = () => {
     if (!DEMO_MODE) return;
     setMyListings(DEMO_DATA.MY_LISTINGS);
@@ -572,7 +592,7 @@ function App() {
       case "home":    return <HomeScreen    user={user} listings={listings} prices={marketPrices} pricesState={marketPricesState} weather={weather} updates={officialUpdates} updatesState={officialUpdatesState} onOpenListing={openListing} onNavTab={handleNavTab} onOpenNotifs={openNotifs} unreadNotifs={unreadNotifs} onPostListing={(mode) => openPost(mode || "listing")} lang={lang} />;
       case "browse":  return <BrowseScreen  listings={listings} onOpenListing={openListing} onPostListing={() => openPost()} initialCategory={browseInitialCat} lang={lang} />;
       case "discover":return <DiscoverWrapper screen={discoverScreen} setScreen={setDiscoverScreen} user={user} listings={listings} marketPrices={marketPrices} marketPricesState={marketPricesState} weather={weather} updates={officialUpdates} updatesState={officialUpdatesState} onOpenListing={openListing} nearbyInitialCat={nearbyInitialCat} lang={lang} />;
-      case "profile": return <ProfileScreen  user={user} myListings={myListings} inquiries={inquiries} orders={orders} onOpenSettings={openSettings} onOpenListings={openMyListings} onOpenDashboard={openDashboard} onOpenInquiries={openInquiries} onLogout={handleLogout} lang={lang} />;
+      case "profile": return <ProfileScreen  user={user} myListings={myListings} inquiries={inquiries} orders={orders} onOpenSettings={openSettings} onOpenListings={openMyListings} onOpenDashboard={openDashboard} onOpenInquiries={openInquiries} onLogout={handleLogout} onUpdateProfile={handleUpdateProfile} editing={profileEditing} setEditing={setProfileEditing} lang={lang} />;
       default: return null;
     }
   };
@@ -606,7 +626,7 @@ function App() {
         )}
         {modal?.kind === "settings" && (
           <ModalScreen>
-            <SettingsScreen onBack={() => setModal(null)} user={user} lang={lang} setLang={(l) => setTweak("lang", l)} theme={theme} setTheme={(t) => setTweak("theme", t)} dark={dark} setDark={(d) => setTweak("dark", d)} density={density} setDensity={(d) => setTweak("density", d)} onLogout={handleLogout} onOpenHelp={() => setModal({ kind: "help" })} onResetDemo={resetDemo} />
+            <SettingsScreen onBack={() => setModal(null)} onEditProfile={() => { setModal(null); setTab("profile"); setProfileEditing(true); }} user={user} lang={lang} setLang={(l) => setTweak("lang", l)} theme={theme} setTheme={(t) => setTweak("theme", t)} dark={dark} setDark={(d) => setTweak("dark", d)} density={density} setDensity={(d) => setTweak("density", d)} onLogout={handleLogout} onOpenHelp={() => setModal({ kind: "help" })} onResetDemo={resetDemo} />
           </ModalScreen>
         )}
         {modal?.kind === "help" && (

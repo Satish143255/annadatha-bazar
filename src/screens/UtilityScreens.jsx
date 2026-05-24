@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { LANGUAGES } from '../referenceData.js';
 import { Icon } from '../icons/Icon.jsx';
 import { Button, Empty, Sheet, useT } from '../components/index.jsx';
@@ -101,7 +101,7 @@ const NotificationsScreen = ({ notifications: initial, onBack, onOpenNotif, lang
 };
 
 // ---------- U2: Settings ----------
-const SettingsScreen = ({ onBack, user, lang, setLang, theme, setTheme, dark, setDark, density, setDensity, onLogout, onOpenHelp, onResetDemo }) => {
+const SettingsScreen = ({ onBack, onEditProfile, user, lang, setLang, theme, setTheme, dark, setDark, density, setDensity, onLogout, onOpenHelp, onResetDemo }) => {
   const t = useT(lang);
   const [langOpen, setLangOpen] = useStateU(false);
   const [logoutConfirm, setLogoutConfirm] = useStateU(false);
@@ -163,7 +163,7 @@ const SettingsScreen = ({ onBack, user, lang, setLang, theme, setTheme, dark, se
         <div>
           <div style={sectionTitleStyle}>Account</div>
           <div className="form-group">
-            <NavRow label="Edit Profile" icon="user" value={user.name} onClick={() => {}} />
+            <NavRow label="Edit Profile" icon="user" value={user.name} onClick={onEditProfile} />
             <NavRow label="Language" icon="globe" value={langName} onClick={() => setLangOpen(true)} />
             <ToggleRow label="Hide my phone from listings" icon="eye" value={hideContact} onChange={setHideContact} hint="Buyers must request to see number" />
           </div>
