@@ -81,8 +81,8 @@ const DashboardScreen = ({ myListings, orders, onBack, onOpenListing, onPostList
       </div>
 
       {/* Tabs */}
-      <div className="px-3 pt-2 bg-[var(--surface)] border-b border-[var(--border)]">
-        <div className="flex gap-2 overflow-x-auto scrollbar-none">
+      <div className="px-4 py-3 bg-[var(--surface)] border-b border-[var(--border)]">
+        <div className="segmented">
           {[
             { id: "overview", label: "Overview" },
             { id: "listings", label: `Listings (${listings.length})` },
@@ -92,12 +92,10 @@ const DashboardScreen = ({ myListings, orders, onBack, onOpenListing, onPostList
             <button
               key={s.id}
               onClick={() => setTab(s.id)}
-              className={`px-3 py-3 border-b-2 text-xs font-semibold tracking-wide whitespace-nowrap transition-all duration-150 cursor-pointer ${
-                tab === s.id 
-                  ? "border-[var(--primary)] text-[var(--primary)] font-bold" 
-                  : "border-transparent text-[var(--ink-3)] hover:text-[var(--ink)]"
-              }`}
-            >{s.label}</button>
+              className={tab === s.id ? "active" : ""}
+            >
+              {s.label}
+            </button>
           ))}
         </div>
       </div>
