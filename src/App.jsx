@@ -277,6 +277,40 @@ function App() {
   };
   const pushModal = (m) => setModalStack(prev => [...prev, m]);
   const popModal = () => setModalStack(prev => prev.slice(0, -1));
+
+  // ── OS / browser back button closes the top modal instead of leaving ──
+  // Mirror modal-stack depth into browser history. suppressPopRef prevents a
+  // programmatic rewind (UI-initiated close) from being re-handled as a back.
+  const historyDepthRef = useRef(0);
+  const suppressPopRef = useRef(false);
+  const modalDepth = modalStack.length;
+
+  useEffect(() => {
+    const histDepth = historyDepthRef.current;
+    if (modalDepth > histDepth) {
+      for (let i = histDepth; i < modalDepth; i++) {
+        window.history.pushState({ agriModalDepth: i + 1 }, "");
+      }
+      historyDepthRef.current = modalDepth;
+    } else if (modalDepth < histDepth) {
+      historyDepthRef.current = modalDepth;
+      suppressPopRef.current = true;
+      window.history.go(-(histDepth - modalDepth));
+    }
+  }, [modalDepth]);
+
+  useEffect(() => {
+    const onPop = () => {
+      if (suppressPopRef.current) { suppressPopRef.current = false; return; }
+      if (historyDepthRef.current > 0) {
+        historyDepthRef.current -= 1;
+        setModalStack(prev => prev.slice(0, -1));
+      }
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
   const [toasts, setToasts] = useState([]);
 
   const showToast = (msg, icon = "check") => {
