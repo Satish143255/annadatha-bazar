@@ -35,7 +35,7 @@ const MiniSparkline = ({ history, isUp }) => {
   );
 };
 
-const PricesScreen = ({ user, prices, state, lang }) => {
+const PricesScreen = ({ user, prices, state, onRetry, onToast, lang }) => {
   const t = useT(lang);
   const [expanded, setExpanded] = useStateD(null);
   const [q, setQ] = useStateD("");
@@ -52,8 +52,16 @@ const PricesScreen = ({ user, prices, state, lang }) => {
   const filtered = q ? sorted.filter(p => p.commodity.toLowerCase().includes(q.toLowerCase())) : sorted;
 
   // Graph view: which series are visible
-  const initialSel = filtered.filter(p => p.history?.length > 1).slice(0, 5).map(p => p.commodity);
-  const [selected, setSelected] = useStateD(initialSel);
+  const [selected, setSelected] = useStateD([]);
+  // Prices arrive async — seed the selection once data lands and prune
+  // any commodity that no longer exists, but never wipe a user's picks.
+  React.useEffect(() => {
+    setSelected((sel) => {
+      const stillValid = sel.filter(c => all.some(p => p.commodity === c));
+      if (stillValid.length) return stillValid;
+      return all.filter(p => p.history?.length > 1).slice(0, 5).map(p => p.commodity);
+    });
+  }, [all, setSelected]);
   const toggleSeries = (c) => {
     setSelected(sel => sel.includes(c) ? sel.filter(x => x !== c) : [...sel, c]);
   };
@@ -79,8 +87,16 @@ const PricesScreen = ({ user, prices, state, lang }) => {
         </div>
       )}
       {state === "error" && (
-        <div className="px-4 py-2 text-xs text-[var(--terra)] font-medium bg-[var(--terra-soft)] border-y border-[var(--border)]">
-          Live mandi prices are unavailable right now. The app will not substitute demo rates.
+        <div className="px-4 py-2 text-xs text-[var(--terra)] font-medium bg-[var(--terra-soft)] border-y border-[var(--border)] flex items-center justify-between gap-3">
+          <span>Live mandi prices are unavailable right now. The app will not substitute demo rates.</span>
+          {onRetry && (
+            <button
+              onClick={onRetry}
+              className="flex items-center gap-1 shrink-0 px-2.5 py-1 rounded-full bg-[var(--surface)] border border-[var(--border)] text-[var(--ink-2)] font-semibold cursor-pointer"
+            >
+              <Icon name="refresh" size={12} color="var(--ink-2)" /> Retry
+            </button>
+          )}
         </div>
       )}
 
@@ -397,7 +413,10 @@ const PricesScreen = ({ user, prices, state, lang }) => {
                     </div>
 
                     <div className="mt-4">
-                      <button className="w-full h-11 bg-[var(--surface)] border border-[var(--border)] rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold text-[var(--ink-2)] hover:bg-[var(--surface-2)] cursor-pointer transition-colors">
+                      <button
+                        onClick={() => onToast?.(`We'll alert you when ${p.commodity} prices move`, "bell")}
+                        className="w-full h-11 bg-[var(--surface)] border border-[var(--border)] rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold text-[var(--ink-2)] hover:bg-[var(--surface-2)] cursor-pointer transition-colors"
+                      >
                         <Icon name="bell" size={14} color="var(--ink-2)" />
                         Set Price Alert
                         <span className="text-[9px] font-bold uppercase tracking-wider bg-[var(--accent-gold-soft)] text-[var(--gold)] px-1.5 py-0.5 rounded ml-1">Soon</span>

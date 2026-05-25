@@ -80,7 +80,8 @@ function App() {
   }, []);
 
   const screenAttrs = useMemo(() => ({
-    "data-theme":   dark ? "dark" : theme,
+    "data-theme":   theme,
+    "data-mode":    dark ? "dark" : "light",
     "data-density": density,
   }), [dark, theme, density]);
 
@@ -97,6 +98,12 @@ function App() {
   const [notifications, setNotifications] = useState(DEMO_MODE ? DEMO_DATA.NOTIFICATIONS : []);
   const [marketPrices, setMarketPrices] = useState([]);
   const [marketPricesState, setMarketPricesState] = useState("loading");
+  const [marketReloadToken, setMarketReloadToken] = useState(0);
+  const retryMarketData = useCallback(() => {
+    setMarketPricesState("loading");
+    setOfficialUpdatesState("loading");
+    setMarketReloadToken((t) => t + 1);
+  }, []);
   const [officialUpdates, setOfficialUpdates] = useState([]);
   const [officialUpdatesState, setOfficialUpdatesState] = useState("loading");
 
@@ -239,7 +246,7 @@ function App() {
       });
 
     return () => controller.abort();
-  }, [userDistrict, userState]);
+  }, [userDistrict, userState, marketReloadToken]);
 
   // ===== Navigation =====
   const [tab, setTabRaw]  = useState("home");
@@ -601,7 +608,7 @@ function App() {
     switch (tab) {
       case "home":    return <HomeScreen    user={user} listings={listings} prices={marketPrices} pricesState={marketPricesState} weather={weather} updates={officialUpdates} updatesState={officialUpdatesState} onOpenListing={openListing} onNavTab={handleNavTab} onOpenNotifs={openNotifs} unreadNotifs={unreadNotifs} onPostListing={(mode) => openPost(mode || "listing")} lang={lang} />;
       case "browse":  return <BrowseScreen  listings={listings} onOpenListing={openListing} onPostListing={() => openPost()} initialCategory={browseInitialCat} lang={lang} />;
-      case "discover":return <DiscoverWrapper screen={discoverScreen} setScreen={setDiscoverScreen} user={user} listings={listings} marketPrices={marketPrices} marketPricesState={marketPricesState} weather={weather} updates={officialUpdates} updatesState={officialUpdatesState} onOpenListing={openListing} nearbyInitialCat={nearbyInitialCat} lang={lang} />;
+      case "discover":return <DiscoverWrapper screen={discoverScreen} setScreen={setDiscoverScreen} user={user} listings={listings} marketPrices={marketPrices} marketPricesState={marketPricesState} weather={weather} updates={officialUpdates} updatesState={officialUpdatesState} onOpenListing={openListing} nearbyInitialCat={nearbyInitialCat} onRetryMarket={retryMarketData} onToast={showToast} lang={lang} />;
       case "profile": return <ProfileScreen  user={user} myListings={myListings} inquiries={inquiries} orders={orders} onOpenSettings={openSettings} onOpenListings={openMyListings} onOpenDashboard={openDashboard} onOpenInquiries={openInquiries} onLogout={handleLogout} onUpdateProfile={handleUpdateProfile} editing={profileEditing} setEditing={setProfileEditing} lang={lang} />;
       default: return null;
     }
@@ -732,7 +739,7 @@ const LoadingScreen = () => (
 );
 
 // ===== Discover wrapper =====
-const DiscoverWrapper = ({ screen, setScreen, user, listings, marketPrices, marketPricesState, weather, updates, updatesState, onOpenListing, nearbyInitialCat = "all", lang }) => (
+const DiscoverWrapper = ({ screen, setScreen, user, listings, marketPrices, marketPricesState, weather, updates, updatesState, onOpenListing, nearbyInitialCat = "all", onRetryMarket, onToast, lang }) => (
   <div style={{ display:"flex", flexDirection:"column", height:"100%" }}>
     <div style={{ padding:"8px 16px 0", background:"var(--bg)", borderBottom:"1px solid var(--border)" }}>
       <div className="segmented" style={{ background:"var(--surface-2)" }}>
@@ -743,7 +750,7 @@ const DiscoverWrapper = ({ screen, setScreen, user, listings, marketPrices, mark
       </div>
     </div>
     <div style={{ flex:1, overflow:"hidden", display:"flex", flexDirection:"column" }}>
-      {screen==="prices"  && <PricesScreen  user={user} prices={marketPrices} state={marketPricesState} lang={lang} />}
+      {screen==="prices"  && <PricesScreen  user={user} prices={marketPrices} state={marketPricesState} onRetry={onRetryMarket} onToast={onToast} lang={lang} />}
       {screen==="weather" && <WeatherScreen weather={weather} lang={lang} />}
       {screen==="nearby"  && <NearbyScreen  user={user} listings={listings} onOpenListing={onOpenListing} initialCategory={nearbyInitialCat} lang={lang} />}
       {screen==="schemes" && <SchemesScreen user={user} initialUpdates={updates} initialState={updatesState} lang={lang} />}
