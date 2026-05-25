@@ -8,7 +8,7 @@ import { Button, Avatar, Empty, ImgPh, Sheet, useT, formatINR, AnimatedNumber } 
 const { useState: useStateP, useRef: useRefP, useEffect: useEffectP } = React;
 
 // ---------- P1: My Profile ----------
-const ProfileScreen = ({ user, myListings, inquiries, orders = [], onOpenSettings, onOpenListings, onOpenDashboard, onOpenInquiries, onLogout, onUpdateProfile, editing, setEditing, lang }) => {
+const ProfileScreen = ({ user, myListings, inquiries, orders = [], onOpenSettings, onOpenListings, onOpenDashboard, onOpenInquiries, onLogout, onUpdateProfile, editing, setEditing, lang, onToast }) => {
   const t = useT(lang);
   const received = inquiries.filter(i => i.type === "received").length;
   const sent = inquiries.filter(i => i.type === "sent").length;
@@ -132,7 +132,7 @@ const ProfileScreen = ({ user, myListings, inquiries, orders = [], onOpenSetting
         <div className="px-4 pb-4">
           <div className="grid grid-cols-3 gap-3 p-3 bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-sm">
             {[
-              { label: "Phone", verified: true, icon: "phone" },
+              { label: "Phone", verified: false, icon: "phone" },
               { label: "Location", verified: true, icon: "pin" },
               { label: "Aadhaar", verified: false, icon: "user" },
             ].map(v => (
@@ -151,7 +151,18 @@ const ProfileScreen = ({ user, myListings, inquiries, orders = [], onOpenSetting
                 </div>
                 <div className="text-[11px] font-bold text-[var(--ink-2)]">{v.label}</div>
                 {!v.verified ? (
-                  <button className="text-[10px] font-bold text-[var(--primary)] hover:underline mt-1 cursor-pointer">Verify</button>
+                  <button 
+                    onClick={() => {
+                      if (v.label === "Phone") {
+                        onToast?.("Phone verification coming soon!", "info");
+                      } else if (v.label === "Aadhaar") {
+                        onToast?.("Aadhaar verification coming soon!", "info");
+                      }
+                    }}
+                    className="text-[10px] font-bold text-[var(--primary)] hover:underline mt-1 cursor-pointer"
+                  >
+                    Verify
+                  </button>
                 ) : (
                   <div className="text-[9px] font-bold text-[var(--primary)] uppercase tracking-wider mt-1">Verified</div>
                 )}
