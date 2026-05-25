@@ -162,33 +162,46 @@ const OverviewTab = ({ stats, listings, services, orders, onJumpTab, onOpenListi
     .sort((a, b) => (b.orders || 0) - (a.orders || 0))[0];
 
   return (
-    <div className="grid gap-4">
+    <div className="grid gap-4 @container">
       {/* Stat cards */}
-      <div className="grid grid-cols-2 gap-3">
-        {stats.map(s => (
-          <button 
-            key={s.key} 
-            onClick={s.onClick} 
-            className="group relative flex flex-col bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-4 shadow-sm text-left active:scale-[0.98] transition-all duration-200 cursor-pointer overflow-hidden"
-          >
-            <div className="absolute top-0 left-0 right-0 h-1" style={{ backgroundColor: s.accent }} />
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors" style={{ backgroundColor: `color-mix(in srgb, ${s.accent} 15%, transparent)`, color: s.accent }}>
-                <Icon name={s.icon} size={16} />
+      <div className="grid grid-cols-2 @xl:grid-cols-4 gap-4">
+        {stats.map(s => {
+          const isLong = s.compact || (typeof s.value === "string" && s.value.length > 5);
+          return (
+            <button 
+              key={s.key} 
+              onClick={s.onClick} 
+              className="group bg-[var(--surface)] rounded-xl p-6 flex flex-col justify-between border border-[var(--primary)]/10 shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer text-left relative overflow-hidden min-h-[156px] h-full"
+            >
+              {/* Top Row: Circular Icon container + Uppercase label (left) & Chevron (right) */}
+              <div className="flex items-center justify-between w-full gap-2 mb-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 transition-colors" style={{ backgroundColor: `color-mix(in srgb, ${s.accent} 10%, transparent)`, color: s.accent }}>
+                    <Icon name={s.icon} size={22} />
+                  </div>
+                  <span className="text-[10px] font-bold text-[var(--ink-3)] uppercase tracking-widest truncate">
+                    {s.label}
+                  </span>
+                </div>
+                <Icon name="chevron" size={14} className="text-[var(--ink-3)]/40 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
               </div>
-              <div className="text-[11px] font-semibold text-[var(--ink-3)] uppercase tracking-wider">{s.label}</div>
-            </div>
-            <div className={`font-serif font-bold text-[var(--ink)] tracking-tight leading-none ${s.compact ? 'text-xl' : 'text-3xl'}`}>
-              {typeof s.value === "number"
-                ? <AnimatedNumber value={s.value} />
-                : s.value}
-            </div>
-            <div className="text-[11px] text-[var(--ink-3)] font-medium mt-2 flex items-center justify-between">
-              <span>{s.sub}</span>
-              <Icon name="chevron" size={10} color="var(--ink-3)" />
-            </div>
-          </button>
-        ))}
+
+              {/* Center: Bold primary value */}
+              <div className="my-auto py-1">
+                <h3 className={`font-sans font-bold text-[var(--primary)] leading-none ${isLong ? 'text-xl @xl:text-2xl' : 'text-2xl @xl:text-3xl'}`}>
+                  {typeof s.value === "number"
+                    ? <AnimatedNumber value={s.value} />
+                    : s.value}
+                </h3>
+              </div>
+
+              {/* Bottom: Subtle secondary info */}
+              <p className="text-[13px] text-[var(--ink-3)]/80 leading-none mt-1">
+                {s.sub}
+              </p>
+            </button>
+          );
+        })}
       </div>
 
       {/* Sales pipeline */}

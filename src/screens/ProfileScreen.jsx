@@ -78,15 +78,15 @@ const ProfileScreen = ({ user, myListings, inquiries, orders = [], onOpenSetting
         {/* Stats for listings, services, and orders. */}
         <div className="px-4 pb-4 grid grid-cols-3 gap-3">
           <button onClick={onOpenListings} className="flex flex-col items-center bg-[var(--surface)] border border-[var(--border)] rounded-xl p-3 shadow-sm active:scale-[0.98] transition-transform cursor-pointer">
-            <AnimatedNumber value={activeListings} className="font-serif font-bold text-2xl text-[var(--primary)] leading-none mb-1.5" />
+            <AnimatedNumber value={activeListings} className="font-sans font-extrabold text-2xl text-[var(--primary)] leading-none mb-1.5" />
             <div className="text-[10px] font-bold text-[var(--ink-3)] uppercase tracking-wide">Listings</div>
           </button>
           <button onClick={onOpenListings} className="flex flex-col items-center bg-[var(--surface)] border border-[var(--border)] rounded-xl p-3 shadow-sm active:scale-[0.98] transition-transform cursor-pointer">
-            <AnimatedNumber value={activeServices} className="font-serif font-bold text-2xl text-purple-600 dark:text-purple-400 leading-none mb-1.5" />
+            <AnimatedNumber value={activeServices} className="font-sans font-extrabold text-2xl text-purple-600 dark:text-purple-400 leading-none mb-1.5" />
             <div className="text-[10px] font-bold text-[var(--ink-3)] uppercase tracking-wide">Services</div>
           </button>
           <button onClick={onOpenDashboard} className="flex flex-col items-center bg-[var(--surface)] border border-[var(--border)] rounded-xl p-3 shadow-sm active:scale-[0.98] transition-transform relative cursor-pointer">
-            <AnimatedNumber value={openOrders} className="font-serif font-bold text-2xl text-[var(--terra)] leading-none mb-1.5" />
+            <AnimatedNumber value={openOrders} className="font-sans font-extrabold text-2xl text-[var(--terra)] leading-none mb-1.5" />
             <div className="text-[10px] font-bold text-[var(--ink-3)] uppercase tracking-wide">Orders</div>
             {openOrders > 0 && (
               <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[var(--terra)]" />
