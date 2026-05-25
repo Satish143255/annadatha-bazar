@@ -364,21 +364,21 @@ const NewsSchemesSection = ({ items, state }) => {
     <div>
       <div className="flex items-baseline justify-between px-4 py-2">
         <h3 className="font-sans font-bold text-base text-[var(--ink)]">Trending News &amp; Schemes</h3>
-        <div className="flex bg-[var(--surface-2)] rounded-lg p-0.5 gap-0.5">
+        <div className="segmented mini">
           <button
-            className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all h-[32px] flex items-center ${filter === "all" ? "bg-[var(--surface)] text-[var(--ink)] shadow-sm" : "text-[var(--ink-2)]"}`}
+            className={filter === "all" ? "active" : ""}
             onClick={() => setFilter("all")}
           >
             All
           </button>
           <button
-            className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all h-[32px] flex items-center ${filter === "scheme" ? "bg-[var(--surface)] text-[var(--ink)] shadow-sm" : "text-[var(--ink-2)]"}`}
+            className={filter === "scheme" ? "active" : ""}
             onClick={() => setFilter("scheme")}
           >
             Schemes
           </button>
           <button
-            className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all h-[32px] flex items-center ${filter === "news" ? "bg-[var(--surface)] text-[var(--ink)] shadow-sm" : "text-[var(--ink-2)]"}`}
+            className={filter === "news" ? "active" : ""}
             onClick={() => setFilter("news")}
           >
             News

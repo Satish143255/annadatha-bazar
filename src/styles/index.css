@@ -681,8 +681,31 @@ textarea.input { padding: 14px 16px; height: auto; min-height: 96px; resize: non
   border-radius: 8px;
   font-size: 13px; font-weight: 500;
   color: var(--ink-2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
 }
-.segmented button.active { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-sm); font-weight: 600; }
+.segmented button:hover {
+  color: var(--primary);
+}
+.segmented button.active {
+  background: var(--primary) !important;
+  color: var(--primary-ink) !important;
+  box-shadow: var(--shadow-sm);
+  font-weight: 600;
+}
+.segmented button.active:hover {
+  color: var(--primary-ink) !important;
+}
+[data-mode="dark"] .segmented button.active {
+  background: var(--ink) !important;
+  color: var(--bg) !important;
+}
+[data-mode="dark"] .segmented button.active:hover {
+  color: var(--bg) !important;
+}
 
 /* ============== Notch/topnav safe area on iOS-style ============== */
 .bottom-action {
