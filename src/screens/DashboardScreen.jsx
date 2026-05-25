@@ -168,27 +168,25 @@ const OverviewTab = ({ stats, listings, services, orders, onJumpTab, onOpenListi
         {stats.map(s => {
           const isLong = s.compact || (typeof s.value === "string" && s.value.length > 5);
           return (
-            <button 
-              key={s.key} 
-              onClick={s.onClick} 
-              className="group bg-[var(--surface)] rounded-xl p-6 flex flex-col justify-between border border-[var(--primary)]/10 shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer text-left relative overflow-hidden min-h-[156px] h-full"
+            <button
+              key={s.key}
+              onClick={s.onClick}
+              className="group bg-[var(--surface)] rounded-2xl p-6 flex flex-col justify-between border border-[var(--primary)]/10 shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer text-left relative min-h-[170px] h-full"
             >
-              {/* Top Row: Circular Icon container + Uppercase label (left) & Chevron (right) */}
-              <div className="flex items-center justify-between w-full gap-2 mb-3">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 transition-colors" style={{ backgroundColor: `color-mix(in srgb, ${s.accent} 10%, transparent)`, color: s.accent }}>
-                    <Icon name={s.icon} size={22} />
-                  </div>
-                  <span className="text-[10px] font-bold text-[var(--ink-3)] uppercase tracking-widest truncate">
-                    {s.label}
-                  </span>
+              {/* Top: Circular icon container (left) & chevron (right) */}
+              <div className="flex items-start justify-between w-full">
+                <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 transition-colors" style={{ backgroundColor: `color-mix(in srgb, ${s.accent} 12%, transparent)`, color: s.accent }}>
+                  <Icon name={s.icon} size={22} />
                 </div>
-                <Icon name="chevron" size={14} className="text-[var(--ink-3)]/40 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+                <Icon name="chevron" size={14} className="text-[var(--ink-3)]/40 group-hover:translate-x-0.5 transition-all flex-shrink-0 mt-1.5" />
               </div>
 
-              {/* Center: Bold primary value */}
-              <div className="my-auto py-1">
-                <h3 className={`font-sans font-bold text-[var(--primary)] leading-none ${isLong ? 'text-xl @xl:text-2xl' : 'text-2xl @xl:text-3xl'}`}>
+              {/* Center: Muted uppercase label + bold primary value */}
+              <div className="my-auto pt-4">
+                <span className="block text-[10px] font-bold text-[var(--ink-3)] uppercase tracking-widest leading-tight mb-1.5">
+                  {s.label}
+                </span>
+                <h3 className={`font-sans font-bold text-[var(--primary)] leading-none ${isLong ? 'text-2xl @xl:text-3xl' : 'text-3xl @xl:text-4xl'}`}>
                   {typeof s.value === "number"
                     ? <AnimatedNumber value={s.value} />
                     : s.value}
@@ -196,7 +194,7 @@ const OverviewTab = ({ stats, listings, services, orders, onJumpTab, onOpenListi
               </div>
 
               {/* Bottom: Subtle secondary info */}
-              <p className="text-[13px] text-[var(--ink-3)]/80 leading-none mt-1">
+              <p className="text-[13px] text-[var(--ink-3)]/80 leading-none mt-3">
                 {s.sub}
               </p>
             </button>
