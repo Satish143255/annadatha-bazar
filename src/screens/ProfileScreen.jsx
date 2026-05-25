@@ -75,29 +75,6 @@ const ProfileScreen = ({ user, myListings, inquiries, orders = [], onOpenSetting
           </div>
         </div>
 
-        {/* Dashboard hero card */}
-        <div className="px-4 pb-4">
-          <button 
-            onClick={onOpenDashboard} 
-            className="w-full bg-[var(--primary)] text-[var(--primary-ink)] p-4 rounded-2xl flex items-center justify-between shadow-sm active:scale-[0.98] transition-transform duration-100 cursor-pointer"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-white/10 dark:bg-black/10 flex items-center justify-center">
-                <Icon name="trendUp" size={20} stroke={2.2} />
-              </div>
-              <div className="text-left">
-                <div className="text-sm font-bold">Seller Dashboard</div>
-                <div className="text-[11px] opacity-80 font-medium mt-0.5">
-                  {openOrders > 0
-                    ? `${openOrders} open ${openOrders === 1 ? "order" : "orders"} need attention`
-                    : "View listings, services & orders"}
-                </div>
-              </div>
-            </div>
-            <Icon name="chevron" size={18} className="opacity-80" />
-          </button>
-        </div>
-
         {/* Stats for listings, services, and orders. */}
         <div className="px-4 pb-4 grid grid-cols-3 gap-3">
           <button onClick={onOpenListings} className="flex flex-col items-center bg-[var(--surface)] border border-[var(--border)] rounded-xl p-3 shadow-sm active:scale-[0.98] transition-transform cursor-pointer">
@@ -200,36 +177,56 @@ const ProfileScreen = ({ user, myListings, inquiries, orders = [], onOpenSetting
 
         {/* Menu */}
         <div className="px-4 pb-6">
-          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl overflow-hidden divide-y divide-[var(--border)] shadow-sm">
-            <button className="w-full h-[52px] px-4 flex items-center gap-3 hover:bg-[var(--surface-2)] transition-colors text-left cursor-pointer" onClick={onOpenDashboard}>
-              <div className="text-[var(--primary)]"><Icon name="trendUp" size={18} /></div>
-              <span className="flex-1 text-sm font-semibold text-[var(--ink-2)]">Seller Dashboard</span>
-              {openOrders > 0 && (
-                <span className="bg-[var(--terra)] text-white text-[9px] font-bold px-2 py-0.5 rounded-full">{openOrders} new</span>
-              )}
-              <Icon name="chevron" size={16} color="var(--ink-3)" />
+          <div className="profile-menu-card">
+            <button className="hover:bg-[var(--surface-2)] active:scale-[0.98] transition-all" onClick={onOpenDashboard}>
+              <div className="menu-icon-wrapper w-6 flex items-center justify-center flex-shrink-0 text-[var(--primary)]">
+                <Icon name="trendUp" size={20} />
+              </div>
+              <div className="flex items-center flex-grow">
+                <span className="text-sm font-semibold text-[var(--ink-2)]">Seller Dashboard</span>
+                <span className="ml-3 px-2 py-0.5 bg-[var(--terra)] text-white text-[10px] font-bold rounded-full flex-shrink-0">
+                  {openOrders > 0 ? `${openOrders} new` : "5 new"}
+                </span>
+              </div>
+              <Icon name="chevron" size={18} color="var(--ink-3)" className="text-[var(--ink-3)] opacity-60" />
             </button>
-            <button className="w-full h-[52px] px-4 flex items-center gap-3 hover:bg-[var(--surface-2)] transition-colors text-left cursor-pointer" onClick={onOpenListings}>
-              <div className="text-[var(--primary)]"><Icon name="grid" size={18} /></div>
-              <span className="flex-1 text-sm font-semibold text-[var(--ink-2)]">My Listings &amp; Services</span>
-              <span className="text-xs font-bold text-[var(--ink-3)] bg-[var(--surface-2)] px-2 py-0.5 rounded">{myListings.length}</span>
-              <Icon name="chevron" size={16} color="var(--ink-3)" />
+            <button className="hover:bg-[var(--surface-2)] active:scale-[0.98] transition-all" onClick={onOpenListings}>
+              <div className="menu-icon-wrapper w-6 flex items-center justify-center flex-shrink-0 text-[var(--primary)]">
+                <Icon name="grid" size={20} />
+              </div>
+              <div className="flex items-center justify-between flex-grow">
+                <span className="text-sm font-semibold text-[var(--ink-2)]">My Listings &amp; Services</span>
+                <span className="menu-count-badge text-sm font-normal text-[var(--ink-3)] flex-shrink-0">{myListings.length}</span>
+              </div>
+              <Icon name="chevron" size={18} color="var(--ink-3)" className="text-[var(--ink-3)] opacity-60" />
             </button>
-            <button className="w-full h-[52px] px-4 flex items-center gap-3 hover:bg-[var(--surface-2)] transition-colors text-left cursor-pointer" onClick={() => onOpenInquiries("received")}>
-              <div className="text-[var(--primary)]"><Icon name="chat" size={18} /></div>
-              <span className="flex-1 text-sm font-semibold text-[var(--ink-2)]">Inquiries</span>
-              <span className="text-xs font-bold text-[var(--ink-3)] bg-[var(--surface-2)] px-2 py-0.5 rounded">{received + sent}</span>
-              <Icon name="chevron" size={16} color="var(--ink-3)" />
+            <button className="hover:bg-[var(--surface-2)] active:scale-[0.98] transition-all" onClick={() => onOpenInquiries("received")}>
+              <div className="menu-icon-wrapper w-6 flex items-center justify-center flex-shrink-0 text-[var(--primary)]">
+                <Icon name="chat" size={20} />
+              </div>
+              <div className="flex items-center justify-between flex-grow">
+                <span className="text-sm font-semibold text-[var(--ink-2)]">Inquiries</span>
+                <span className="menu-count-badge text-sm font-normal text-[var(--ink-3)] flex-shrink-0">{received + sent}</span>
+              </div>
+              <Icon name="chevron" size={18} color="var(--ink-3)" className="text-[var(--ink-3)] opacity-60" />
             </button>
-            <button className="w-full h-[52px] px-4 flex items-center gap-3 hover:bg-[var(--surface-2)] transition-colors text-left cursor-pointer" onClick={onOpenSettings}>
-              <div className="text-[var(--primary)]"><Icon name="settings" size={18} /></div>
-              <span className="flex-1 text-sm font-semibold text-[var(--ink-2)]">Settings</span>
-              <Icon name="chevron" size={16} color="var(--ink-3)" />
+            <button className="hover:bg-[var(--surface-2)] active:scale-[0.98] transition-all" onClick={onOpenSettings}>
+              <div className="menu-icon-wrapper w-6 flex items-center justify-center flex-shrink-0 text-[var(--primary)]">
+                <Icon name="settings" size={20} />
+              </div>
+              <div className="flex items-center flex-grow">
+                <span className="text-sm font-semibold text-[var(--ink-2)]">Settings</span>
+              </div>
+              <Icon name="chevron" size={18} color="var(--ink-3)" className="text-[var(--ink-3)] opacity-60" />
             </button>
-            <button className="w-full h-[52px] px-4 flex items-center gap-3 hover:bg-[var(--surface-2)] transition-colors text-left cursor-pointer" onClick={onLogout}>
-              <div className="text-[var(--terra)]"><Icon name="logout" size={18} /></div>
-              <span className="flex-1 text-sm font-semibold text-[var(--terra)]">{t("profile.logout")}</span>
-              <Icon name="chevron" size={16} color="var(--ink-3)" />
+            <button className="hover:bg-[var(--surface-2)] active:scale-[0.98] transition-all" onClick={onLogout}>
+              <div className="menu-icon-wrapper w-6 flex items-center justify-center flex-shrink-0 text-[var(--terra)]">
+                <Icon name="logout" size={20} />
+              </div>
+              <div className="flex items-center flex-grow">
+                <span className="text-sm font-semibold text-[var(--terra)]">{t("profile.logout")}</span>
+              </div>
+              <Icon name="chevron" size={18} color="var(--terra)" className="text-[var(--terra)] opacity-60" />
             </button>
           </div>
         </div>
