@@ -224,14 +224,20 @@ function App() {
   useEffect(() => {
     const controller = new AbortController();
 
-    fetchMarketPrices({ district: userDistrict, signal: controller.signal })
-      .then((prices) => {
-        setMarketPrices(prices);
-        setMarketPricesState(prices.length ? "ready" : "empty");
-      })
-      .catch((error) => {
-        if (error.name !== "AbortError") setMarketPricesState("error");
-      });
+    // background = silent refresh: keep last good data on failure, no
+    // loading/error flicker; only the value diff drives the live flash.
+    const loadPrices = (background) => {
+      fetchMarketPrices({ district: userDistrict, signal: controller.signal })
+        .then((prices) => {
+          setMarketPrices(prices);
+          setMarketPricesState(prices.length ? "ready" : "empty");
+        })
+        .catch((error) => {
+          if (error.name !== "AbortError" && !background) setMarketPricesState("error");
+        });
+    };
+
+    loadPrices(false);
 
     fetchOfficialUpdates({ state: userState, signal: controller.signal })
       .then((updates) => {
@@ -245,7 +251,15 @@ function App() {
         }
       });
 
-    return () => controller.abort();
+    // Lightweight polling so a genuine upstream price change appears live.
+    // Mandi data updates slowly, so this is intentionally infrequent and
+    // pauses while the tab is hidden.
+    const POLL_MS = 120000;
+    const id = setInterval(() => {
+      if (document.visibilityState === "visible") loadPrices(true);
+    }, POLL_MS);
+
+    return () => { controller.abort(); clearInterval(id); };
   }, [userDistrict, userState, marketReloadToken]);
 
   // ===== Navigation =====

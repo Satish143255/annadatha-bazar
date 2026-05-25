@@ -62,6 +62,29 @@ const PricesScreen = ({ user, prices, state, onRetry, onToast, lang }) => {
       return all.filter(p => p.history?.length > 1).slice(0, 5).map(p => p.commodity);
     });
   }, [all, setSelected]);
+
+  // Live price flash: when a poll delivers a *real* modal-price change,
+  // briefly flash the affected rows green (up) / clay (down). Never fires
+  // on first load, and never on unchanged data.
+  const prevModalRef = React.useRef(null);
+  const [flashes, setFlashes] = useStateD({});
+  React.useEffect(() => {
+    const prev = prevModalRef.current;
+    const next = {};
+    const changed = {};
+    for (const p of all) {
+      next[p.commodity] = p.modal;
+      if (prev && prev[p.commodity] != null && prev[p.commodity] !== p.modal) {
+        changed[p.commodity] = p.modal > prev[p.commodity] ? "up" : "down";
+      }
+    }
+    prevModalRef.current = next;
+    if (Object.keys(changed).length) {
+      setFlashes(changed);
+      const id = setTimeout(() => setFlashes({}), 750);
+      return () => clearTimeout(id);
+    }
+  }, [all, setFlashes]);
   const toggleSeries = (c) => {
     setSelected(sel => sel.includes(c) ? sel.filter(x => x !== c) : [...sel, c]);
   };
@@ -200,7 +223,7 @@ const PricesScreen = ({ user, prices, state, onRetry, onToast, lang }) => {
                   <div style={{ textAlign: "right", fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--ink-2)" }}>
                     {p.min.toLocaleString("en-IN")}
                   </div>
-                  <div style={{ textAlign: "right", fontFamily: "var(--font-mono)", fontSize: 13, fontWeight: 600, color: "var(--primary)" }}>
+                  <div data-flash={flashes[p.commodity]} style={{ textAlign: "right", fontFamily: "var(--font-mono)", fontSize: 13, fontWeight: 600, color: "var(--primary)" }}>
                     {p.modal.toLocaleString("en-IN")}
                   </div>
                   <div style={{ textAlign: "right", fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--ink-2)" }}>
@@ -360,7 +383,7 @@ const PricesScreen = ({ user, prices, state, onRetry, onToast, lang }) => {
                   </div>
 
                   {/* Price and trend on the right */}
-                  <div className="text-right flex-shrink-0">
+                  <div className="text-right flex-shrink-0" data-flash={flashes[p.commodity]} style={{ borderRadius: 8, padding: "2px 4px" }}>
                     <div className="font-serif font-bold text-xl text-[var(--primary)] tracking-tight leading-none">
                       {formatINR(p.modal)}
                       <span className="font-sans font-normal text-[10px] text-[var(--ink-3)] ml-0.5">/q</span>

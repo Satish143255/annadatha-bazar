@@ -1293,6 +1293,12 @@ body {
   }
 }
 
+/* Live price flash — fires only on a real modal-price change from a poll. */
+@keyframes flashUp   { 0% { background-color: var(--primary-soft); } 100% { background-color: transparent; } }
+@keyframes flashDown { 0% { background-color: var(--terra-soft);   } 100% { background-color: transparent; } }
+[data-flash="up"]   { animation: flashUp   750ms var(--out-quart); }
+[data-flash="down"] { animation: flashDown 750ms var(--out-quart); }
+
 /* Keyboard focus identity — visible only for keyboard users, never on tap. */
 :where(button, a, [role="button"], [role="switch"], [role="radio"], input, select, textarea, [tabindex]):focus-visible {
   outline: 2px solid var(--primary);
