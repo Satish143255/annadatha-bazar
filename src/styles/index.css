@@ -88,7 +88,7 @@
   --advisory-tip-text: #6B4E14;
 }
 
-[data-theme="dark"] {
+[data-mode="dark"] {
   --bg: #101410;
   --surface: #181c17;
   --surface-2: #20251f;
@@ -119,6 +119,31 @@
   --advisory-info-text: #ADCCF0;
   --advisory-tip-bg: #3B2A0F;
   --advisory-tip-text: #FFE082;
+}
+
+/* ── Accent themes — orthogonal to light/dark mode ──
+   Only the primary family changes; brightness comes from data-mode. */
+[data-theme="terra"] {
+  --primary: #B05E2E;
+  --primary-2: #8F4A22;
+  --primary-soft: #FAE5D8;
+  --primary-ink: #ffffff;
+}
+[data-theme="indigo"] {
+  --primary: #2E4A7F;
+  --primary-2: #243A66;
+  --primary-soft: #DCE6F7;
+  --primary-ink: #ffffff;
+}
+[data-mode="dark"][data-theme="terra"] {
+  --primary: #F0B48F;
+  --primary-soft: #43210F;
+  --primary-ink: #2A1305;
+}
+[data-mode="dark"][data-theme="indigo"] {
+  --primary: #AAC4F5;
+  --primary-soft: #16233F;
+  --primary-ink: #0A1830;
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -395,6 +420,7 @@ textarea.input { padding: 14px 16px; height: auto; min-height: 96px; resize: non
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 16px;
+  box-shadow: var(--shadow-sm);
 }
 .card.tight { padding: 12px; }
 .card.flat { box-shadow: none; }
@@ -548,7 +574,7 @@ textarea.input { padding: 14px 16px; height: auto; min-height: 96px; resize: non
   border-radius: var(--radius-lg);
   color: #1B3854;
 }
-[data-theme="dark"] .weather-strip {
+[data-mode="dark"] .weather-strip {
   background: linear-gradient(135deg, #1E2D38 0%, #243B4A 100%);
   color: #D4E4EF;
 }
@@ -1069,16 +1095,13 @@ textarea.input { padding: 14px 16px; height: auto; min-height: 96px; resize: non
   opacity: 0;
   animation: staggerUp 420ms var(--out-expo) forwards;
 }
+/* Tighter cadence (35ms step) capped at 6 items so data lists settle fast. */
 .stagger-list > *:nth-child(1)  { animation-delay:   0ms; }
-.stagger-list > *:nth-child(2)  { animation-delay:  55ms; }
-.stagger-list > *:nth-child(3)  { animation-delay: 110ms; }
-.stagger-list > *:nth-child(4)  { animation-delay: 165ms; }
-.stagger-list > *:nth-child(5)  { animation-delay: 220ms; }
-.stagger-list > *:nth-child(6)  { animation-delay: 275ms; }
-.stagger-list > *:nth-child(7)  { animation-delay: 330ms; }
-.stagger-list > *:nth-child(8)  { animation-delay: 385ms; }
-.stagger-list > *:nth-child(9)  { animation-delay: 440ms; }
-.stagger-list > *:nth-child(10) { animation-delay: 495ms; }
+.stagger-list > *:nth-child(2)  { animation-delay:  35ms; }
+.stagger-list > *:nth-child(3)  { animation-delay:  70ms; }
+.stagger-list > *:nth-child(4)  { animation-delay: 105ms; }
+.stagger-list > *:nth-child(5)  { animation-delay: 140ms; }
+.stagger-list > *:nth-child(n+6) { animation-delay: 175ms; }
 
 /* ── Enhanced button/card spring ── */
 .btn          { transition: transform 90ms var(--spring), background 120ms ease, opacity 120ms ease; }
@@ -1248,4 +1271,39 @@ textarea.input { padding: 14px 16px; height: auto; min-height: 96px; resize: non
 .app-body + div button:active {
   transform: scale(0.92);
 }
+
+/* ============================================================
+   ACCESSIBILITY & DATA-DENSITY POLISH
+   ============================================================ */
+
+/* Tabular figures everywhere so live/animated numbers don't reflow.
+   Digits become fixed-width — the "trading terminal" alignment. */
+body {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "ss01", "cv11";
+}
+
+/* Respect the OS "reduce motion" setting — neutralize all animation. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Live price flash — fires only on a real modal-price change from a poll. */
+@keyframes flashUp   { 0% { background-color: var(--primary-soft); } 100% { background-color: transparent; } }
+@keyframes flashDown { 0% { background-color: var(--terra-soft);   } 100% { background-color: transparent; } }
+[data-flash="up"]   { animation: flashUp   750ms var(--out-quart); }
+[data-flash="down"] { animation: flashDown 750ms var(--out-quart); }
+
+/* Keyboard focus identity — visible only for keyboard users, never on tap. */
+:where(button, a, [role="button"], [role="switch"], [role="radio"], input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+:where(button, a, [role="button"]):focus:not(:focus-visible) { outline: none; }
 

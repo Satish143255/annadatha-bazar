@@ -232,13 +232,11 @@ const WeatherIcon = ({ name, size = 36 }) => {
 };
 
 // ---------- Toast ----------
+// Auto-dismiss is owned solely by the toast stack in App (single timer).
+// onClose here is wired to tap-to-dismiss so the two can't race.
 const Toast = ({ message, icon, onClose }) => {
-  useEffect(() => {
-    const id = setTimeout(onClose, 2400);
-    return () => clearTimeout(id);
-  }, [onClose]);
   return (
-    <div className="toast">
+    <div className="toast" onClick={onClose} style={{ pointerEvents: "auto", cursor: "pointer" }}>
       {icon && <Icon name={icon} size={18} color="#9DD5A5" />}
       <span style={{ flex: 1 }}>{message}</span>
     </div>
