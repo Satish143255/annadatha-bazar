@@ -96,11 +96,7 @@ const BrowseScreen = ({ listings, onOpenListing, onPostListing, initialCategory 
       {/* Category chips */}
       <div className="flex gap-2.5 px-4 pb-3 overflow-x-auto scrollbar-none">
         <button 
-          className={`h-11 px-5 rounded-full flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap transition-all ${
-            cat === "all" 
-              ? "bg-[var(--primary)] text-[var(--primary-ink)] shadow-sm" 
-              : "bg-[var(--surface)] border border-[var(--border)] text-[var(--ink-2)] hover:bg-[var(--surface-2)]"
-          }`} 
+          className={`chip ${cat === "all" ? "active" : ""}`} 
           onClick={() => setCat("all")}
         >
           All
@@ -108,11 +104,7 @@ const BrowseScreen = ({ listings, onOpenListing, onPostListing, initialCategory 
         {CATEGORIES.map(c => (
           <button 
             key={c.id} 
-            className={`h-11 px-5 rounded-full flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap transition-all ${
-              cat === c.id 
-                ? "bg-[var(--primary)] text-[var(--primary-ink)] shadow-sm" 
-                : "bg-[var(--surface)] border border-[var(--border)] text-[var(--ink-2)] hover:bg-[var(--surface-2)]"
-            }`} 
+            className={`chip ${cat === c.id ? "active" : ""}`} 
             onClick={() => setCat(c.id)}
           >
             {c.label}

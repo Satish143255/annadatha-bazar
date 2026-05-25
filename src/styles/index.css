@@ -424,7 +424,31 @@ textarea.input { padding: 14px 16px; height: auto; min-height: 96px; resize: non
   white-space: nowrap;
   flex-shrink: 0;
 }
-.chip.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.chip.active {
+  background: var(--primary);
+  color: var(--primary-ink);
+  border-color: var(--primary);
+}
+[data-mode="dark"] .chip.active {
+  background: var(--ink);
+  color: var(--bg);
+  border-color: var(--ink);
+}
+.chip:hover {
+  border-color: var(--primary);
+  background: var(--surface-2);
+  color: var(--primary);
+}
+.chip.active:hover {
+  background: var(--primary) !important;
+  color: var(--primary-ink) !important;
+  border-color: var(--primary) !important;
+}
+[data-mode="dark"] .chip.active:hover {
+  background: var(--ink) !important;
+  color: var(--bg) !important;
+  border-color: var(--ink) !important;
+}
 .chip.soft { background: var(--surface-2); border-color: transparent; }
 .chip.gold { background: var(--gold-soft); border-color: transparent; color: #6B4E14; }
 .chip.terra { background: var(--terra-soft); border-color: transparent; color: #7A3A14; }
@@ -919,6 +943,26 @@ textarea.input { padding: 14px 16px; height: auto; min-height: 96px; resize: non
   background: var(--primary);
   color: var(--primary-ink);
   border-color: var(--primary);
+}
+[data-mode="dark"] .status-chip.active {
+  background: var(--ink);
+  color: var(--bg);
+  border-color: var(--ink);
+}
+.status-chip:hover {
+  border-color: var(--primary);
+  background: var(--surface-2);
+  color: var(--primary);
+}
+.status-chip.active:hover {
+  background: var(--primary) !important;
+  color: var(--primary-ink) !important;
+  border-color: var(--primary) !important;
+}
+[data-mode="dark"] .status-chip.active:hover {
+  background: var(--ink) !important;
+  color: var(--bg) !important;
+  border-color: var(--ink) !important;
 }
 .status-chip-count {
   background: rgba(0,0,0,0.08);
